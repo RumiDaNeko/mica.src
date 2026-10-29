@@ -192,6 +192,9 @@ namespace Xilium.CefGlue
         /// </summary>
         Layout_3_1_Back,
 
+        // Mica: CEF 135-156.
+        Layout_5_1_4,
+        Layout_7_1_4,
         NumValues,
     }
 }

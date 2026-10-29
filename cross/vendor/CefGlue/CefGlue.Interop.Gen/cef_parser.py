@@ -291,6 +291,26 @@ def format_translation_includes(header, body):
   return result
 
 
+# Mica: the API version CefGlue binds (CEF_API_VERSION_LAST of the headers). Members marked added=experimental, added
+# after it or removed at or before it are not in that version's C structs, so they are left out of the bindings.
+target_api_version = None
+
+
+def in_target_api(attrib):
+  if target_api_version is None:
+    return True
+  attribs = str_to_dict(attrib)
+  added = attribs.get('added')
+  removed = attribs.get('removed')
+  if added == 'experimental' or (added and added.isdigit() and
+                                 int(added) > target_api_version):
+    return False
+  if removed and (removed == 'experimental' or
+                  (removed.isdigit() and int(removed) <= target_api_version)):
+    return False
+  return True
+
+
 def str_to_dict(str):
   """ Convert a string to a dictionary. If the same key has multiple values
         the values will be stored in a list. """
@@ -559,6 +579,13 @@ class obj_header:
     return self.root_directory
 
   def add_directory(self, directory, excluded_files=[]):
+    global target_api_version
+    versions = os.path.join(directory, 'cef_api_versions.h')
+    if os.path.exists(versions):
+      m = re.search(r'#define CEF_API_VERSION_LAST CEF_API_VERSION_(\d+)',
+                    open(versions, encoding='utf-8').read())
+      if m:
+        target_api_version = int(m.group(1))
     """ Add all header files from the specified directory. """
     files = get_files(os.path.join(directory, '*.h'))
     for file in files:
@@ -609,6 +636,8 @@ class obj_header:
 
       # build the global function objects
       for attrib, retval, argval in list:
+        if not in_target_api(attrib):
+          continue
         comment = get_comment(data, retval + '(' + argval + ');')
         validate_comment(filename, retval, comment)
         self.funcs.append(
@@ -657,6 +686,8 @@ class obj_header:
 
       # build the class objects
       for attrib, name, parent_name, body in list:
+        if not in_target_api(attrib):
+          continue
         # Style may place the ':' on the next line.
         comment = get_comment(data, name + ' :')
         if len(comment) == 0:
@@ -859,6 +890,8 @@ class obj_class:
     # build the static function objects
     self.staticfuncs = []
     for attrib, retval, argval in list:
+      if not in_target_api(attrib):
+        continue
       comment = get_comment(body, retval + '(' + argval + ')')
       validate_comment(filename, retval, comment)
       self.staticfuncs.append(
@@ -874,6 +907,8 @@ class obj_class:
     # build the virtual function objects
     self.virtualfuncs = []
     for attrib, retval, argval, vfmod in list:
+      if not in_target_api(attrib):
+        continue
       comment = get_comment(body, retval + '(' + argval + ')')
       validate_comment(filename, retval, comment)
       self.virtualfuncs.append(

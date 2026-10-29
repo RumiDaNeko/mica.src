@@ -72,6 +72,8 @@ namespace Xilium.CefGlue
         /// Creates a new document picture-in-picture window showing a child WebView.
         /// </summary>
         NewPictureInPicture,
+        // Mica: CEF 135-156.
+        NewSplitView,
         NumValues,
     }
 }

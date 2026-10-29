@@ -16,6 +16,11 @@ namespace Xilium.CefGlue
         Download,
         SendTabToSelf,
         SidePanel,
+        // Mica: CEF 135-156.
+        Media,
+        TabSearch,
+        BatterySaver,
+        Avatar,
         NumValues,
     }
 }

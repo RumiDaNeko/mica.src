@@ -32,6 +32,7 @@ namespace Xilium.CefGlue.Interop
         public cef_string_t locale;
         public cef_string_t log_file;
         public CefLogSeverity log_severity;
+        public int log_items; // Mica: cef_log_items_t, missing before (it sat in padding)
         public cef_string_t javascript_flags;
         public cef_string_t resources_dir_path;
         public cef_string_t locales_dir_path;
@@ -44,6 +45,10 @@ namespace Xilium.CefGlue.Interop
         public cef_string_t chrome_policy_id;
         public int chrome_app_icon_id;
         public int disable_signal_handlers;
+        // Mica: CEF 146 / 156 (API 14600 / 15600).
+        public int use_views_default_popup;
+        public cef_string_t keychain_service_name;
+        public cef_string_t keychain_account_name;
 
         #region Alloc & Free
         private static int _sizeof;

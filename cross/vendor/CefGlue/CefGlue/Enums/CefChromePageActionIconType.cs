@@ -46,6 +46,23 @@ namespace Xilium.CefGlue
         OptimizationGuide,
         CollaborationMessaging,
         ChangePassword,
+        // Mica: CEF 135-156.
+        LensOverlayHomework,
+        AiMode,
+        ReadingMode,
+        ContextualSidePanel,
+        JsOptimizations,
+        RecordReplay,
+        Indigo,
+        Federation,
+        Glic,
+        AnchoredContextualCue,
+        WebAuthnAmbientSignin,
+        AutofillPayment,
+        MultistepFilter,
+        PaymentsChurnedUsers,
+        FakePageActionForDebug,
+        WalletReminderNotice,
         NumValues,
     }
 }

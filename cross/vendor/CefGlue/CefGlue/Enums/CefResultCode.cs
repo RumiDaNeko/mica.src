@@ -41,6 +41,11 @@ namespace Xilium.CefGlue
         ChromeFirst,
 
         /// <summary>
+        /// The process is of an unknown type. Mica: CEF 138+.
+        /// </summary>
+        BadProcessType = 6,
+
+        /// <summary>
         /// A critical chrome file is missing.
         /// </summary>
         MissingData = 7,
@@ -92,7 +97,18 @@ namespace Xilium.CefGlue
         /// </summary>
         SystemResourceExhausted = 37,
 
-        ChromeLast = 38,
+        // Mica: CEF 138-156.
+        NormalExitAutoDeElevated = 38,
+
+        TerminatedByOtherProcessOnCommitFailure = 39,
+
+        InvalidIsolatedBrowserProcess = 40,
+
+        NormalExitRelaunchRequested = 41,
+
+        NormalExitRelaunchBackground = 42,
+
+        ChromeLast = 43,
 
         // The following values should be kept in sync with Chromium's
         // sandbox::TerminationCodes type.

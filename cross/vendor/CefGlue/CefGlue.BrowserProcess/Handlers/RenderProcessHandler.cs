@@ -49,6 +49,7 @@ namespace Xilium.CefGlue.BrowserProcess.Handlers
                 using (CefObjectTracker.StartTracking())
                 {
                     base.OnContextCreated(browser, frame, context);
+                    JavascriptHelper.InstallInContext(context); // Mica: replaces the V8 extension CEF 154 removed
                     _javascriptToNativeDispatcher.HandleContextCreated(context, frame.IsMain);
 
                     var message = new Messages.JsContextCreated();

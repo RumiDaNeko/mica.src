@@ -293,6 +293,24 @@
         /// </summary>
         public bool DisableSignalHandlers { get; set; }
 
+        /// <summary>
+        /// Set to true to use the default popup implementation with Views-hosted
+        /// browsers (Chrome style). Mica: added in CEF 146.
+        /// </summary>
+        public bool UseViewsDefaultPopup { get; set; }
+
+        /// <summary>
+        /// macOS only: the Keychain service name used to store the cookie encryption
+        /// key. Defaults to "&lt;app name&gt; Safe Storage". Mica: added in CEF 156.
+        /// </summary>
+        public string KeychainServiceName { get; set; }
+
+        /// <summary>
+        /// macOS only: the Keychain account name used to store the cookie encryption
+        /// key. Defaults to the app name. Mica: added in CEF 156.
+        /// </summary>
+        public string KeychainAccountName { get; set; }
+
         internal cef_settings_t* ToNative()
         {
             var ptr = cef_settings_t.Alloc();
@@ -324,6 +342,9 @@
             cef_string_t.Copy(ChromePolicyId, &ptr->chrome_policy_id);
             ptr->chrome_app_icon_id = ChromeAppIconId;
             ptr->disable_signal_handlers = DisableSignalHandlers ? 1 : 0;
+            ptr->use_views_default_popup = UseViewsDefaultPopup ? 1 : 0;
+            cef_string_t.Copy(KeychainServiceName, &ptr->keychain_service_name);
+            cef_string_t.Copy(KeychainAccountName, &ptr->keychain_account_name);
             return ptr;
         }
 
@@ -343,6 +364,9 @@
             libcef.string_clear(&ptr->locales_dir_path);
             libcef.string_clear(&ptr->accept_language_list);
             libcef.string_clear(&ptr->cookieable_schemes_list);
+            libcef.string_clear(&ptr->chrome_policy_id);
+            libcef.string_clear(&ptr->keychain_service_name);
+            libcef.string_clear(&ptr->keychain_account_name);
         }
 
         internal static void Free(cef_settings_t* ptr)

@@ -465,6 +465,22 @@ namespace Xilium.CefGlue
         /// Content settings for access to the Controlled Frame API.
         ControlledFrame,
 
+        // Mica: CEF 135-156.
+        RevokedDisruptiveNotificationPermissions,
+        LocalNetworkAccess,
+        OnDeviceSpeechRecognitionLanguagesDownloaded,
+        InitializedTranslations,
+        SuspiciousNotificationIds,
+        GeolocationWithOptions,
+        DeviceAttributes,
+        PermissionActionsHistory,
+        SuspiciousNotificationShowOriginal,
+        LocalNetwork,
+        LoopbackNetwork,
+        SubAppsWithoutPrompts,
+        InlineCueMenu,
+        SuspiciousSiteWarningData,
+
         NumValues,
     }
 }

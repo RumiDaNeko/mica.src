@@ -406,6 +406,10 @@ struct CefSettingsTraits {
     cef_string_clear(&s->accept_language_list);
     cef_string_clear(&s->cookieable_schemes_list);
     cef_string_clear(&s->chrome_policy_id);
+#if CEF_API_ADDED(15600)
+    cef_string_clear(&s->keychain_service_name);
+    cef_string_clear(&s->keychain_account_name);
+#endif
   }
 
   static inline void set(const struct_type* src,
@@ -467,6 +471,25 @@ struct CefSettingsTraits {
 
 #if defined(OS_POSIX) && !defined(OS_ANDROID)
     target->disable_signal_handlers = src->disable_signal_handlers;
+#endif
+
+#if CEF_API_ADDED(14600)
+    if (CEF_MEMBER_EXISTS(src, use_views_default_popup)) {
+      target->use_views_default_popup = src->use_views_default_popup;
+    }
+#endif
+
+#if CEF_API_ADDED(15600)
+    if (CEF_MEMBER_EXISTS(src, keychain_service_name)) {
+      cef_string_set(src->keychain_service_name.str,
+                     src->keychain_service_name.length,
+                     &target->keychain_service_name, copy);
+    }
+    if (CEF_MEMBER_EXISTS(src, keychain_account_name)) {
+      cef_string_set(src->keychain_account_name.str,
+                     src->keychain_account_name.length,
+                     &target->keychain_account_name, copy);
+    }
 #endif
   }
 };
@@ -567,13 +590,20 @@ struct CefBrowserSettingsTraits {
     target->text_area_resize = src->text_area_resize;
     target->tab_to_links = src->tab_to_links;
     target->local_storage = src->local_storage;
+#if !CEF_API_ADDED(13800)
     target->databases = src->databases;
+#endif
     target->webgl = src->webgl;
 
     target->background_color = src->background_color;
 
     target->chrome_status_bubble = src->chrome_status_bubble;
     target->chrome_zoom_bubble = src->chrome_zoom_bubble;
+#if CEF_API_ADDED(CEF_EXPERIMENTAL)
+    if (CEF_MEMBER_EXISTS(src, ax_viewport_collapse)) {
+      target->ax_viewport_collapse = src->ax_viewport_collapse;
+    }
+#endif
   }
 };
 

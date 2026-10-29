@@ -40,5 +40,11 @@ namespace Xilium.CefGlue
         WebAppInstallation = 1 << 22,
         WindowManagement = 1 << 23,
         FileSystemAccess = 1 << 24,
+        // Mica: CEF 136-156.
+        LocalNetworkAccessDeprecated = 1 << 25,
+        LocalNetwork = 1 << 26,
+        LoopbackNetwork = 1 << 27,
+        Sensors = 1 << 28,
+        AmbientLogin = 1 << 29,
     }
 }

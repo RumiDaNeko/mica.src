@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using Xilium.CefGlue.Common.Shared.Helpers;
 using Xilium.CefGlue.Common.Shared.RendererProcessCommunication;
 using Xilium.CefGlue.Common.Shared.Serialization;
@@ -16,6 +18,12 @@ namespace Xilium.CefGlue.BrowserProcess.ObjectBinding
         private const string BindNativeFunctionName = "Bind";
         private const string UnbindNativeFunctionName = "Unbind";
 
+        // Mica: CEF 154 removed V8 extensions (CefRegisterExtension), so the global script is no longer installed
+        // once for every context by V8. InstallInContext runs it in each new context instead, as a function that
+        // receives the native Bind/Unbind functions the extension used to declare with "native function".
+        private static string _globalScriptFactory;
+        private static CefV8Handler _builtinFunctionHandler;
+
         public static void Register(INativeObjectRegistry nativeObjectRegistry)
         {
             var currentType = typeof(JavascriptHelper);
@@ -23,8 +31,38 @@ namespace Xilium.CefGlue.BrowserProcess.ObjectBinding
             var currentAssembly = currentType.Assembly;
             using (var stream = new StreamReader(currentAssembly.GetManifestResourceStream($"{currentNamespace}.{CefGlueGlobalScriptFileName}")))
             {
-                var cefGlueGlobalScript = FillScriptPlaceholders(stream.ReadToEnd());
-                CefRuntime.RegisterExtension("cefglue", cefGlueGlobalScript, new V8BuiltinFunctionHandler(nativeObjectRegistry));
+                var cefGlueGlobalScript = Regex.Replace(FillScriptPlaceholders(stream.ReadToEnd()), @"native\s+function\s+\w+\s*\(\s*\)\s*;", "");
+                _globalScriptFactory = $"(function ({BindNativeFunctionName}, {UnbindNativeFunctionName}) {{\n{cefGlueGlobalScript}\nreturn {GlobalObjectName};\n}})";
+                _builtinFunctionHandler = new V8BuiltinFunctionHandler(nativeObjectRegistry);
+            }
+        }
+
+        /// <summary>
+        /// Defines the global helper object in a newly created context, before any page script runs.
+        /// </summary>
+        public static void InstallInContext(CefV8Context context)
+        {
+            if (_globalScriptFactory == null || !context.Enter())
+            {
+                return;
+            }
+            try
+            {
+                if (!context.TryEval(_globalScriptFactory, "", 0, out var factory, out var exception) || factory == null || !factory.IsFunction)
+                {
+                    throw new InvalidOperationException("Couldn't install the " + GlobalObjectName + " helper: " + exception?.Message);
+                }
+                var bind = CefV8Value.CreateFunction(BindNativeFunctionName, _builtinFunctionHandler);
+                var unbind = CefV8Value.CreateFunction(UnbindNativeFunctionName, _builtinFunctionHandler);
+                var helper = factory.ExecuteFunctionWithContext(context, null, new[] { bind, unbind });
+                if (helper != null && helper.IsObject)
+                {
+                    context.GetGlobal().SetValue(GlobalObjectName, helper, CefV8PropertyAttribute.DontEnum);
+                }
+            }
+            finally
+            {
+                context.Exit();
             }
         }
 
