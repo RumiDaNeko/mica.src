@@ -23,7 +23,9 @@ namespace Mica {
   // The extension showing in the panel now, if any.
   AiExtension aiExtension;
   bool claudeExtensionActive {get {return aiExtension!=null&&aiExtension.FollowsTab;}}
-  string claudeBoundTab;bool claudeBinding;
+  // The panel is bound to a page, not just a Mica tab: a rested tab comes back with a new page, which the
+  // extension knows by a new id.
+  string claudeBoundTab;Microsoft.Web.WebView2.Wpf.WebView2 claudeBoundView;bool claudeBinding;
 
   // Extensions that drive pages (Claude for Chrome) attach the engine's debugger, which otherwise puts Edge's
   // "started debugging this browser" bar above the page and shrinks it while Claude works.
@@ -117,14 +119,14 @@ namespace Mica {
     string result=await panel.CallDevToolsProtocolMethodAsync("Runtime.evaluate",new JavaScriptSerializer().Serialize(new {expression=lookup,awaitPromise=true,returnByValue=true}));
     var found=Regex.Match(result,"\"value\":\"(\\d+)\"");
     if(!found.Success||closing||LiveCore(aiView)!=panel)return;
-    claudeBoundTab=tabId;string want=ClaudePanelPage+"?tabId="+found.Groups[1].Value;
+    claudeBoundTab=tabId;claudeBoundView=page;string want=ClaudePanelPage+"?tabId="+found.Groups[1].Value;
     if(!string.Equals(panel.Source,want,StringComparison.OrdinalIgnoreCase))panel.Navigate(want);
    }catch(Exception){}
    finally {claudeBinding=false;}
   }
-  // Called as tabs change; binds again only when another tab came to the front. Tabs Claude opened for its own
+  // Called as tabs change; binds again only when another tab (or a new page in the bound tab) came to the front. Tabs Claude opened for its own
   // work don't take the panel along, or the chat would reload in the middle of a task.
-  void FollowTabForClaude() {if(claudeExtensionActive&&aiOpen&&state.ActiveId!=claudeBoundTab&&!claudeOpenedTabs.Contains(state.ActiveId??""))BindClaudePanel();}
+  void FollowTabForClaude() {if(claudeExtensionActive&&aiOpen&&(state.ActiveId!=claudeBoundTab||CurrentView()!=claudeBoundView)&&!claudeOpenedTabs.Contains(state.ActiveId??""))BindClaudePanel();}
   readonly System.Collections.Generic.HashSet<string> claudeOpenedTabs=new System.Collections.Generic.HashSet<string>();
 
   // The extension asks for a tab through this address (the engine can't open one in Mica): the page to open

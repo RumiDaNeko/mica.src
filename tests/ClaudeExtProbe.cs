@@ -79,6 +79,15 @@ namespace Mica {
      Navigate("https://example.org/",true);await WaitFor(()=>panel()!=first&&panel().Contains("tabId="),20000).ContinueWith(t=>{});
      string second=panel();log.Add("after switching tabs: "+second);
      RegressionCheck("switching tabs points the panel at the new tab",delegate {Require(second!=first&&second.StartsWith(ClaudePanelPage+"?tabId=",StringComparison.Ordinal),second);});
+     // What Claude reads as "this page": the bound tab's address, after going to another site in the same tab,
+     // and after the tab's page is made again (a rested tab coming back).
+     Func<Task<string>> panelSees=async()=>{var core=LiveCore(aiView);if(core==null)return "no panel";string r=await core.CallDevToolsProtocolMethodAsync("Runtime.evaluate","{\"expression\":\"(async()=>{try{const t=await chrome.tabs.get(Number(new URL(location.href).searchParams.get('tabId')));return t.url;}catch(e){return 'ERR '+e.message;}})()\",\"awaitPromise\":true,\"returnByValue\":true}");var m=System.Text.RegularExpressions.Regex.Match(r,"\"value\":\"([^\"]*)\"");return m.Success?m.Groups[1].Value:r;};
+     CurrentView().CoreWebView2.Navigate("https://www.iana.org/help/example-domains");await Task.Delay(6000);
+     string moved=await panelSees();log.Add("after another site in the same tab: panel "+panel()+" sees "+moved+", page "+LiveCore(CurrentView()).Source);
+     RegressionCheck("after going to another site, the panel sees the new address",delegate {Require(moved.Contains("iana.org"),moved);});
+     string restedId=state.ActiveId;DisposeView(restedId);SelectTab(restedId);await WaitFor(()=>CurrentView()!=null&&LiveCore(CurrentView())!=null&&Navigation.IsWeb(LiveCore(CurrentView()).Source),20000).ContinueWith(t=>{});await Task.Delay(5000);
+     string remade=await panelSees();log.Add("after the tab's page is made again: panel "+panel()+" sees "+remade+", page "+(CurrentView()==null?"":LiveCore(CurrentView()).Source));
+     RegressionCheck("after a rested tab comes back, the panel follows its new page",delegate {Require(remade.Contains("iana.org"),remade);});
      ShowExtensions();await Task.Delay(2500);bool listed=displayedExtensions.Any(e=>e.Id==ClaudeExtensionId);if(activeExtensionsWindow!=null)activeExtensionsWindow.Close();
      RegressionCheck("the extensions page leaves the AI extension out",delegate {Require(!listed,"listed");});
      ShowAiSettings();await Task.Delay(1500);
