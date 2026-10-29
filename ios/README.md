@@ -1,7 +1,7 @@
 # Mica for iOS
 
 Status (2026-10-26): a first version is written, but it hasn't been compiled yet, because there's no Mac here.
-It will be built by GitHub Actions on a macOS runner (`.github/workflows/ios.yml`). That workflow builds for the
+It will be built by GitHub Actions on a macOS runner (`.github/workflows/ios.yml` at the repository root). That workflow builds for the
 simulator, takes screenshots in English, in Vietnamese and in dark mode, and uploads them with the build log.
 
 It's a port of Mica for Android (`android\`), which is itself a port of desktop. It uses UIKit with no storyboards,

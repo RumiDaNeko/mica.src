@@ -1,0 +1,67 @@
+# Builds Mica for Android in the cloud: the debug APK and the release AAB.
+# The release AAB is signed only when the upload key is in the repository's secrets (MICA_UPLOAD_KEYSTORE as base64,
+# MICA_UPLOAD_STORE_PASSWORD, MICA_UPLOAD_KEY_ALIAS, MICA_UPLOAD_KEY_PASSWORD); otherwise it's left unsigned.
+name: Android
+
+on:
+  push:
+    paths:
+      - android/**
+      - src/*.html
+      - src/Reader.js
+      - src/Strings.vi.tsv
+      - extensions/mica-blocker/rules/**
+      - .github/workflows/android.yml
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Upload key from secrets
+        env:
+          KEYSTORE: ${{ secrets.MICA_UPLOAD_KEYSTORE }}
+          STORE_PASSWORD: ${{ secrets.MICA_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.MICA_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.MICA_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then echo "No upload key in secrets: the AAB stays unsigned."; exit 0; fi
+          dir="$RUNNER_TEMP/upload"
+          mkdir -p "$dir"
+          echo "$KEYSTORE" | base64 -d > "$dir/upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$dir/upload.jks" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > "$dir/upload.properties"
+          echo "UPLOAD_ARG=-Pmica.upload=$dir/upload.properties" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug bundleRelease ${UPLOAD_ARG:-}
+
+      - name: Remove the upload key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/upload"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mica-android
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

@@ -1,31 +1,32 @@
 # Builds Mica for iOS on a GitHub macOS runner (no Mac needed here) and takes simulator screenshots.
 # The shared resources are generated on Windows first (node ios/tools/prepare.js) and pushed with the sources.
+# Runs from the repository root; the app is in ios/.
 name: iOS
 
 on:
   push:
+    paths:
+      - ios/**
+      - .github/workflows/ios.yml
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-latest
     timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ios
     steps:
       - uses: actions/checkout@v4
 
-      - name: Find the app
-        # Works whether the repository is the whole project (ios/ inside) or just the iOS folder.
-        run: echo "APP_DIR=$(test -d ios && echo ios || echo .)" >> "$GITHUB_ENV"
-
       - name: Generate the Xcode project
-        working-directory: ${{ env.APP_DIR }}
         run: |
           brew install xcodegen
           xcodegen generate
           xcodebuild -version
 
       - name: Build for the simulator
-        working-directory: ${{ env.APP_DIR }}
         run: |
           set -o pipefail
           xcodebuild -project Mica.xcodeproj -scheme Mica -configuration Debug -sdk iphonesimulator \
@@ -34,10 +35,9 @@ jobs:
           grep -q "BUILD SUCCEEDED" build.log
 
       - name: Screenshots
-        working-directory: ${{ env.APP_DIR }}
         run: |
           mkdir -p shots
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];print(next(x['udid'] for r in d for x in d[r] if x['name'].startswith('iPhone 16')))")
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];print(next(x['udid'] for r in d for x in d[r] if x['name'].startswith('iPhone')))")
           xcrun simctl boot "$DEVICE"
           xcrun simctl bootstatus "$DEVICE" -b
           xcrun simctl install "$DEVICE" build/Build/Products/Debug-iphonesimulator/Mica.app
@@ -65,6 +65,6 @@ jobs:
         with:
           name: mica-ios
           path: |
-            ${{ env.APP_DIR }}/build.log
-            ${{ env.APP_DIR }}/shots
+            ios/build.log
+            ios/shots
           if-no-files-found: ignore
