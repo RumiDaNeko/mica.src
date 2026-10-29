@@ -1,9 +1,9 @@
 # Publishes the built installers as a GitHub release that Mica's updater picks up.
-# Usage: .\publish-release.ps1 -Repo owner/name [-Notes 'What changed']
+# Usage: .\publish-release.ps1 -Repo owner/name [-Notes 'What changed'] [-CrossRun id | -NoCross]
 # Needs the GitHub CLI (gh) signed in. GitHub lists each asset's SHA-256 digest, and the release carries
 # Mica's own signature for each installer; Mica checks both before it installs anything. Keep double quotes out of -Notes: Windows PowerShell
 # splits them into separate gh arguments.
-param([Parameter(Mandatory=$true)][string]$Repo,[string]$Notes='',[string]$Installer='')
+param([Parameter(Mandatory=$true)][string]$Repo,[string]$Notes='',[string]$Installer='',[string]$CrossRun='',[switch]$NoCross,[string]$SourceRepo='RumiDaNeko/mica.src')
 $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
 $version=([regex]::Match((Get-Content "$root\src\BrowserUpdates.cs" -Raw),'AppVersion="([^"]+)"')).Groups[1].Value
@@ -19,6 +19,23 @@ $update=Join-Path (Split-Path $Installer) "Mica-$version-Update.exe";$engine=Joi
 if((Test-Path -LiteralPath $update) -and (Test-Path -LiteralPath $engine)){$assets+="$update#engine $((Get-Content -LiteralPath $engine -Raw).Trim())"}
 else {Write-Warning 'No app-only update was built; installed copies will download the full installer.'}
 $lite=Join-Path (Split-Path $Installer) "Mica-$version-Setup-Lite.exe";if(Test-Path -LiteralPath $lite){$assets+=$lite}
+# The Mac disk images and the Linux AppImage come from the cloud: the Cross run for the commit being released
+# (or -CrossRun). They ride along in the same release, signed like the rest, and the website offers them.
+if(!$NoCross) {
+ $commit=(git -C $root rev-parse HEAD).Trim()
+ if(!$CrossRun){$CrossRun=(gh run list --repo $SourceRepo --workflow Cross --commit $commit --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>$null)}
+ if(!$CrossRun){Write-Warning "No successful Cross run for $commit; this release carries Windows only. Pass -CrossRun <id> or -NoCross."}
+ else {
+  $crossDir=Join-Path (Split-Path $Installer) 'cross';if(Test-Path -LiteralPath $crossDir){Remove-Item -LiteralPath $crossDir -Recurse -Force}
+  gh run download $CrossRun --repo $SourceRepo --dir $crossDir --pattern 'mica-*'
+  if($LASTEXITCODE -ne 0){throw "Couldn't download the Mac and Linux files from Cross run $CrossRun"}
+  $crossFiles=@(Get-ChildItem -LiteralPath $crossDir -Recurse -File | Where-Object {$_.Name -match '\.(dmg|AppImage)$'})
+  $stale=@($crossFiles | Where-Object {$_.Name -notlike "Mica-$version-*"})
+  if($stale){throw "Cross run $CrossRun built another version ($($stale[0].Name)); release $version needs its own build."}
+  foreach($file in $crossFiles){$assets+=$file.FullName}
+  Write-Host "Mac and Linux from Cross run ${CrossRun}: $(($crossFiles | ForEach-Object Name) -join ', ')"
+ }
+}
 # Every installer is signed with Mica's release key ("<name>\n<sha-256>", RSA SHA-256): installed copies only run
 # an update whose signature checks out against src\ReleaseKey.cs. The private key stays on this PC; back it up,
 # because without it no further update can reach anyone.
