@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Builds Mica's cross-platform shell and runs its self-test on macOS or Linux. The window opens off-screen; results
-# land in cross/out/self-test.txt. Pass --claude to also install Claude for Chrome (from the Chrome Web Store) into
-# the throwaway test profile and check it in the AI panel.
+# Builds Mica's cross-platform shell and runs its self-tests on macOS or Linux: the engine chooser and updater (no
+# window, nothing downloaded; cross/out/engine-self-test.txt), then the browser itself. The window opens off-screen;
+# results land in cross/out/self-test.txt. Pass --claude to also install Claude for Chrome (from the Chrome Web Store)
+# into the throwaway test profile and check it in the AI panel.
 #   ./cross/test.sh            ./cross/test.sh --claude
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -15,6 +16,8 @@ app="bin/$platform/Debug/net8.0/$rid"
 chmod +x "$app/Mica" "$app/CefGlueBrowserProcess/Xilium.CefGlue.BrowserProcess" 2>/dev/null || true
 
 mkdir -p out
+"$app/Mica" --engine-self-test "$PWD/out/engine-self-test.txt" || { cat out/engine-self-test.txt; exit 1; }
+grep -v '^PASS' out/engine-self-test.txt
 result="$PWD/out/self-test.txt"; profile="$PWD/out/test-profile"; rm -rf "$result" "$profile"
 args=(--self-test "$result" --profile "$profile")
 [ "${1:-}" = "--claude" ] && args+=(--install-extension fcoeoabgfenejglbffodgkkbkcdhcgfn)

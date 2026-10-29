@@ -24,6 +24,7 @@ namespace Mica {
   }
   [STAThread]
   static int Main(string[] args) {
+   if(args.Length>=2&&args[0]=="--engine-self-test")return CefEngineSelfTest.Run(Path.GetFullPath(args[1]),args.Length>2?args[2]:null);
    for(int i=0;i<args.Length;i++) {
     if(args[i]=="--self-test"&&i+1<args.Length)SelfTestResult=Path.GetFullPath(args[++i]);
     else if(args[i]=="--preview"&&i+1<args.Length)PreviewFolder=Path.GetFullPath(args[++i]);
@@ -32,6 +33,7 @@ namespace Mica {
    }
    if(Profile==null)Profile=SelfTestResult!=null?Path.Combine(Path.GetTempPath(),"mica-cross-test-"+Guid.NewGuid().ToString("N").Substring(0,8)):DefaultProfile();
    Directory.CreateDirectory(Profile);
+   CefEngine.Use(SelfTestResult==null); // the newest verified Chromium engine; daily update checks outside self-tests
    // --install-extension <store id or address>: installs before the engine starts, so it loads this run.
    foreach(var input in installs) {
     try {CrossExtensions.Install(Profile,input,CefRuntime.ChromeVersion).GetAwaiter().GetResult();}

@@ -1,6 +1,6 @@
 # Mica cross-platform shell (macOS, Linux)
 
-Mica's shell for macOS and Linux: Avalonia UI + Chromium 134 through CefGlue, in Chrome style, so Chrome extensions run. The plan behind it is in `docs/porting-mac-linux.md`. Windows keeps shipping WPF + WebView2 from `build.ps1`. This folder only builds on Windows for testing.
+Mica's shell for macOS and Linux: Avalonia UI + Chromium 156 (CEF 156.0.14) through CefGlue, in Chrome style, so Chrome extensions run. The plan behind it is in `docs/porting-mac-linux.md`. Windows keeps shipping WPF + WebView2 from `build.ps1`. This folder only builds on Windows for testing.
 
 ## What works
 
@@ -12,6 +12,7 @@ Mica's shell for macOS and Linux: Avalonia UI + Chromium 134 through CefGlue, in
 | Built-in ad blocking (uBlock Origin Lite + Mica blocker) | ✅ blocks a Google ad script | not run yet |
 | **Claude for Chrome** in the AI panel (✦ button, Ctrl/Cmd+Shift+Space): installed from the Chrome Web Store, shown as its side panel, bound to the tab in front, reaches pages through `chrome.debugger` | ✅ up to sign-in (not signed in) | not run yet |
 | Links opening new windows (target=_blank, window.open, Claude's tabs) open as Mica tabs | written, not exercised by the test | not run yet |
+| Engine updates: newer CEF 156 builds from the CEF CDN, verified, used from the next launch, with fallback | ✅ chooser, install, fallback (`--engine-self-test`; no real download run) | not run yet; Mac app bundles need an opt-in, see below |
 
 Shortcuts: Ctrl/Cmd+T, W, L, R, F5, Alt+←/→, Ctrl/Cmd+Shift+Space. They work while focus is in Mica's toolbar, not yet inside a page.
 
@@ -35,7 +36,7 @@ chmod +x cross/test.sh cross/package.sh
 ./cross/test.sh --claude
 ```
 
-The first build downloads Chromium for your Mac (about 300 MB) and builds CefGlue, so it takes a few minutes. The test window opens off-screen. The results print at the end and are kept in `cross/out/self-test.txt`, with the engine log in `cross/out/test-profile/engine.log`. Leave out `--claude` to skip installing Claude for Chrome.
+The first build downloads Chromium for your Mac (CEF's minimal distribution, about 135 MB, unpacked into `cross/cef/`) and builds CefGlue, so it takes a few minutes. The engine self-test runs first, without a window (`cross/out/engine-self-test.txt`). Then the test window opens off-screen. The results print at the end and are kept in `cross/out/self-test.txt`, with the engine log in `cross/out/test-profile/engine.log`. Leave out `--claude` to skip installing Claude for Chrome.
 
 To use it normally, run:
 
@@ -48,13 +49,26 @@ Your profile goes to `~/Library/Application Support/Mica`. To try Claude, click 
 ## Files
 
 - `Mica.Cross.csproj`: links `../src/Core.cs`, `ExtensionPackage.cs` (verified Chrome Web Store installs) and `AiExtensions.cs` (the AI extension list and side-panel shim), embeds the game pages, and copies `../extensions`. Nothing is copied by hand.
-- `vendor/CefGlue/`: CefGlue built from source on CEF 134 (draft OutSystems/CefGlue#208). See `VENDOR.md`.
+- `vendor/CefGlue/`: CefGlue built from source, its interop regenerated for CEF 156 (it started from draft OutSystems/CefGlue#208 on CEF 134). See `VENDOR.md`.
+- `cef.lock`, `fetch-cef.ps1`, `fetch-cef.sh`: the CEF build the shell ships with, downloaded from Spotify's CEF build CDN (`cef-builds.spotifycdn.com`) and checked against the SHA-1 in `cef.lock`. The build runs the right script when `cross/cef/<rid>/` is missing or older. NuGet's `cef.redist.*` packages stop at 134, so they aren't used any more.
+- `src/CefEngine.cs`, `src/CefEngineUpdater.cs`, `src/CefEngineSelfTest.cs`: which engine runs, the daily engine update, and `--engine-self-test` (see *Engine updates*).
 - `src/JsonShim.cs`: stands in for `JavaScriptSerializer`, so the shared files compile unchanged.
 - `src/BrowserWindow.cs`, `src/AiPanel.cs`, `src/Extensions.cs`, `src/BuiltInPages.cs`: the window, the Claude panel, extension loading, the games and new tab hosts.
 - `src/Theme.axaml`, `src/Home.html`: Mica's look, matching the Windows build: its colors (light and dark), the sidebar with vertical tabs, the page in a rounded frame, and the new tab page.
-- `src/SelfTest.cs`: `--self-test`. `src/Preview.cs`: `--preview <folder>` saves screenshots of a few scenes from the off-screen window. `test.sh`: build and test on macOS/Linux. `package.sh`: packages.
+- `src/SelfTest.cs`: `--self-test`. `src/Preview.cs`: `--preview <folder>` saves screenshots of a few scenes from the off-screen window. `test.sh`: build and test on macOS/Linux (`test.ps1` on Windows). `package.sh`: packages.
 
 Profile folder: `%LOCALAPPDATA%\MicaCross` (Windows, kept apart from the real Mica profile), `~/Library/Application Support/Mica` (macOS), `~/.local/share/Mica` (Linux). `--profile <dir>` overrides it. `--install-extension <store id or URL>` installs a Chrome Web Store extension before start.
+
+## Engine updates
+
+Like the Windows build's `EngineUpdater`, the shell keeps Chromium patched between app updates:
+
+- Once a day (3 minutes after start, then while running; never during `--self-test`), `CefEngineUpdater` reads the CDN's `index.json`, only when it changed (ETag). When there is a newer **stable build of the same CEF major** (156), it downloads the minimal distribution over HTTPS, checks the SHA-1 the index lists, and unpacks it into the per-user `Engines` folder: `~/Library/Application Support/Mica/Engines` (macOS), `~/.local/share/Mica/Engines` (Linux), `%LOCALAPPDATA%\MicaCross\Engines` (Windows, development only). The app folder is never changed.
+- New majors don't come this way: CefGlue's bindings are generated for one CEF API version (15600), so a new major needs regenerated bindings and ships with an app update.
+- At the next launch `CefEngine` picks the newest engine that loads and reports CefGlue's API hash, and points CEF at it (libcef, resources, locales; the helper processes inherit it through `CEFGLUE_LIBCEF_DIR`). An engine that fails that check is set aside at once. One that twice didn't stay up for 20 seconds is set aside on the next launch. Either way the next one, and in the end the bundled engine, runs instead. Older and set-aside engines are deleted, and a set-aside version isn't downloaded again. `Engines/engines.log` records the decisions.
+- `Mica --engine-self-test <file> [saved index.json]` checks all of this with fake engines, a tiny archive and a made-up index, without a 300 MB download.
+- **macOS app bundles:** a signed, notarized `Mica.app` runs with the hardened runtime. Its library validation refuses a libcef that isn't signed with Mica's Team ID, and CDN builds never are. So inside an `.app` the updater stays off unless `Info.plist` has `<key>MicaEngineUpdates</key><true/>`. See *macOS signing* in `docs/porting-mac-linux.md` for the options and their trade-offs.
+- **Linux:** the minimal distribution keeps debug symbols (`libcef.so` is about 1 GB unpacked). The updater and `fetch-cef.sh` strip it when `strip` (binutils) is installed.
 
 ## How extensions work here
 
@@ -96,8 +110,8 @@ Publishing for macOS/Linux also works from Windows (`dotnet publish -r osx-arm64
 
 ## Known gaps
 
-- **Not run on macOS or Linux yet.** The CefGlue branch's author reports macOS working on CEF 134, but nobody has retested since its last fixes. In Chrome style on macOS, Chromium is hosted in a native NSView. That's the part most likely to need work.
-- **Old Chromium.** CEF 134 is Chromium 134 (spring 2025), still well behind current Chrome. It's fine for testing, but newer CEF is needed before real users.
+- **Not run on macOS or Linux yet.** The CEF 156 bindings have only run on Windows (the CefGlue branch's author reported macOS working on CEF 134). In Chrome style on macOS, Chromium is hosted in a native NSView. That's the part most likely to need work.
+- **Engine updates on macOS** need a signing decision first (see *Engine updates*).
 - **Not tested end to end:** signing in to Claude and Claude actually doing a task, and Claude Code's connection to the extension. Claude Code talks to it over native messaging, which it registers for Chrome and Edge, not Mica.
 - **Missing from Windows Mica:** home page, history/downloads pages, settings, vault, and most menus.
 - **No real sandbox:** CefGlue runs Chromium with `NoSandbox`. This must be fixed before release.
