@@ -123,7 +123,6 @@ namespace Mica {
    if(state.RecentlyClosed.Count==0){Status("No closed tabs to bring back.");return;}
    var last=state.RecentlyClosed[0];state.RecentlyClosed.RemoveAt(0);Navigate(last.Url,true);UpdateHomeSites();
   }
-  void Print() {var view=ActiveView();var host=view==null?null:view.Host;if(host!=null&&Active.Entry.Url!="mica://home")host.Print();}
   // Chromium's DevTools, in a window of their own.
   void ShowDevTools() {var view=ActiveView();if(view!=null&&view.IsBrowserInitialized)view.ShowDeveloperTools();}
 
@@ -225,6 +224,7 @@ namespace Mica {
    }
    protected override bool OnConsoleMessage(CefBrowser browser,CefLogSeverity level,string message,string source,int line) {
     if(message.StartsWith("__mica_ai:",StringComparison.Ordinal)){string json=message.Substring(10);Dispatcher.UIThread.Post(delegate {window.AiSelection(tab,json);});return true;}
+    if(message=="__mica_print"){Dispatcher.UIThread.Post(delegate {if(tab==window.Active)window.Print();});return true;}
     if(message=="__mica_zoom:+"||message=="__mica_zoom:-"){int direction=message.EndsWith("+")?1:-1;Dispatcher.UIThread.Post(delegate {window.WheelZoom(tab,direction);});return true;}
     if(message=="__mica_media:1"||message=="__mica_media:0"){bool on=message.EndsWith("1");Dispatcher.UIThread.Post(delegate {window.MediaChanged(tab,on);});return true;}
     return false;

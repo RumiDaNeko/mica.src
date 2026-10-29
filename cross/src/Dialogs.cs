@@ -20,16 +20,18 @@ namespace Mica {
   static string DialogGlyph(string title) {
    switch(title) {
     case "Keyboard shortcuts":return Glyphs.Keys;case "Clear browsing data":return Glyphs.Trash;case "Browser task manager":return Glyphs.Work;
-    case "Personalize":return Glyphs.Palette;case "AI side panel":return Glyphs.Chat;case "Your own AI address":return Glyphs.Chat;
+    case "Personalize":return Glyphs.Palette;case "Print this page":return Glyphs.Print;case "AI side panel":return Glyphs.Chat;case "Your own AI address":return Glyphs.Chat;
    }
    return Glyphs.Info;
   }
   static string DialogSubtitle(string title) {
-   if(title=="Keyboard shortcuts")return "Quick reference";if(title=="Personalize")return "Look and feel";
+   if(title=="Keyboard shortcuts")return "Quick reference";if(title=="Print this page")return "Page tool";if(title=="Personalize")return "Look and feel";
    return "Your data";
   }
-  // Built and shown at once; close() takes it down. Escape closes it too.
-  Popup MicaDialog(string title,double width,out StackPanel body,out StackPanel actions) {
+  // Built and shown at once; close() takes it down. Escape closes it too. A page tool (Print) sits in the island's
+  // corner instead of the middle, as on Windows (DockToIsland).
+  Popup MicaDialog(string title,double width,out StackPanel body,out StackPanel actions) {return MicaDialog(title,width,out body,out actions,false);}
+  Popup MicaDialog(string title,double width,out StackPanel body,out StackPanel actions,bool corner) {
    CloseDialog();if(openMenu!=null)openMenu.IsOpen=false;
    var layout=new Grid {RowDefinitions=new RowDefinitions("Auto,*,Auto")};
    var card=Res(Res(new Border {Width=width,CornerRadius=new CornerRadius(14),BorderThickness=new Thickness(1),Padding=new Thickness(22,18,22,20),Margin=new Thickness(12,8,12,18),Child=layout,BoxShadow=BoxShadows.Parse("0 5 26 0 #29252032")},Border.BackgroundProperty,"Canvas"),Border.BorderBrushProperty,"Line");
@@ -42,7 +44,9 @@ namespace Mica {
    layout.Children.Add(header);
    body=new StackPanel();var scroll=new ScrollViewer {Content=body,MaxHeight=Math.Max(200,Bounds.Height-220),HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled};Grid.SetRow(scroll,1);layout.Children.Add(scroll);
    actions=new StackPanel {Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,18,0,0)};Grid.SetRow(actions,2);layout.Children.Add(actions);
-   var popup=new Popup {Child=card,PlacementTarget=root,Placement=PlacementMode.Center,IsLightDismissEnabled=false};
+   var popup=corner?new Popup {Child=card,PlacementTarget=pages,Placement=PlacementMode.AnchorAndGravity,PlacementAnchor=Avalonia.Controls.Primitives.PopupPositioning.PopupAnchor.BottomRight,PlacementGravity=Avalonia.Controls.Primitives.PopupPositioning.PopupGravity.TopLeft,IsLightDismissEnabled=false}
+    :new Popup {Child=card,PlacementTarget=root,Placement=PlacementMode.Center,IsLightDismissEnabled=false};
+   if(corner)card.Margin=new Thickness(26,22,8,14);
    close.Click+=delegate {popup.IsOpen=false;};
    card.KeyDown+=delegate(object s,KeyEventArgs e) {if(e.Key==Key.Escape){popup.IsOpen=false;e.Handled=true;}};
    popup.Closed+=delegate {root.Children.Remove(popup);if(openDialog==popup)openDialog=null;};

@@ -180,6 +180,18 @@ return JSON.stringify(out);})()";
    if(openDialog!=null){foreach(var b in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(openDialog.Child))if(b is Button&&(string)((Button)b).Tag=="dialog-ok"){((Button)b).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));break;}}
    await Task.Delay(300);string said=await Js(web,"String(window.__said)");
    Check("a page's confirm() is Mica's dialog and gets its answer",ours&&said=="true"&&seenNow=="",ours+" said="+said+" chromium="+seenNow);
+   // Print is Mica's card, from the keyboard and from the page, and Save as PDF writes a PDF.
+   HandleKey(Avalonia.Input.Key.P,Mac?Avalonia.Input.KeyModifiers.Meta:Avalonia.Input.KeyModifiers.Control);await Task.Delay(400);
+   bool fromKeys=printCard!=null&&printCard.IsOpen;CloseDialog();await Task.Delay(200);
+   web.View.ExecuteJavaScript("setTimeout(()=>window.print(),0)","",1);
+   for(int i=0;i<30&&printCard==null;i++)await Task.Delay(100);
+   bool fromPage=printCard!=null;seenNow=measured?chromium():"";
+   PrintSaveOverride=Path.Combine(profile,"Downloads","mica-print.pdf");
+   if(printCard!=null){foreach(var b in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(printCard.Child))if(b is Button&&(string)((Button)b).Tag=="print-go"){((Button)b).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));break;}}
+   for(int i=0;i<100&&(printNote==null||printNote.Text!="PDF saved.");i++)await Task.Delay(100);
+   bool pdf=File.Exists(PrintSaveOverride)&&File.ReadAllBytes(PrintSaveOverride).Take(4).SequenceEqual(new byte[]{0x25,0x50,0x44,0x46});
+   Check("print is Mica's card (keys and window.print()), and Save as PDF writes a PDF",fromKeys&&fromPage&&pdf&&seenNow=="","keys="+fromKeys+" page="+fromPage+" pdf="+pdf+" note="+(printNote==null?"-":printNote.Text)+" chromium="+seenNow);
+   CloseDialog();PrintSaveOverride=null;
    // Permissions ask through Mica's card.
    foreach(var probe in new[]{new[]{"camera","navigator.mediaDevices.getUserMedia({video:true}).then(()=>'yes',e=>e.name)"},new[]{"location","new Promise(r=>navigator.geolocation.getCurrentPosition(()=>r('yes'),e=>r('code '+e.code)))"},new[]{"notifications","Notification.requestPermission()"}}) {
     web.View.ExecuteJavaScript("window.__asked=null;Promise.resolve("+probe[1]+").then(v=>window.__asked=String(v))","",1);

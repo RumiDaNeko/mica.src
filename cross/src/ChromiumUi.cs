@@ -35,7 +35,8 @@ namespace Mica {
     File.WriteAllText(path,root.ToJsonString());
    } catch(Exception) {}
   }
-  // Switches for the same: no print preview (the system's own print dialog instead).
+  // Switches for the same. Print is Mica's own card (PrintCard.cs); should anything still reach Chromium's printing,
+  // it gets no print preview.
   internal static readonly string[] Switches={"disable-print-preview"};
 
   // Chrome style puts icons and bubbles on its own toolbar; Mica has none of it.

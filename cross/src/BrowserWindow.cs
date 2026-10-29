@@ -441,7 +441,7 @@ namespace Mica {
     RefreshTab(tab);if(tab==Active)Title=(tab.Entry.Url=="mica://home"?"A fresh start":TabTitle(tab.Entry))+" — Mica";
    });};
    // Mica's scrollbar on every page, as on Windows, from the start so the default one never shows.
-   view.LoadStart+=delegate(object s,Xilium.CefGlue.Common.Events.LoadStartEventArgs e) {if(Navigation.IsWeb(FromEngine(e.Frame.Url)))e.Frame.ExecuteJavaScript(ScrollbarScript,"",1);};
+   view.LoadStart+=delegate(object s,Xilium.CefGlue.Common.Events.LoadStartEventArgs e) {if(Navigation.IsWeb(FromEngine(e.Frame.Url))){e.Frame.ExecuteJavaScript(ScrollbarScript,"",1);e.Frame.ExecuteJavaScript(PrintScript,"",1);}};
    view.LoadStart+=delegate(object s,Xilium.CefGlue.Common.Events.LoadStartEventArgs e) {if(e.Frame.IsMain)Dispatcher.UIThread.Post(delegate {if(tab==Active)notice.IsVisible=false;});};
    view.LoadEnd+=delegate(object s,Xilium.CefGlue.Common.Events.LoadEndEventArgs e) {
     if(!e.Frame.IsMain)return;int status=e.HttpStatusCode;
