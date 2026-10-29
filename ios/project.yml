@@ -18,9 +18,12 @@ targets:
     platform: iOS
     sources:
       - path: Mica/Sources
-      - path: Mica/Resources/Assets.xcassets
-      - path: Mica/Resources/en.lproj
-      - path: Mica/Resources/vi.lproj
+      # The icon and the en/vi .lproj folders: XcodeGen makes localized resources only from their parent folder.
+      - path: Mica/Resources
+        excludes:
+          - Shared
+          - Blocker
+          - strings-ios.json
       # Folder references: the app reads them by subdirectory (Shared/games, Shared/scripts, Blocker).
       - path: Mica/Resources/Shared
         type: folder
