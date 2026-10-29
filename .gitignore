@@ -39,3 +39,5 @@ node_modules/
 *.pem
 *.p8
 *.mobileprovision
+# Other sessions' worktrees
+.claude/worktrees/
