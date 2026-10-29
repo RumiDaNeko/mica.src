@@ -4,9 +4,9 @@
         <DotnetVersion>net8.0</DotnetVersion>
         <LangVersion>latest</LangVersion>
         <AvaloniaVersion>11.0.9</AvaloniaVersion>
-        <CefRedistVersion>134.3.9</CefRedistVersion>
-        <CefRedistOSXVersion>134.3.9</CefRedistOSXVersion>
-        <CefRedistLinuxVersion>134.3.9</CefRedistLinuxVersion>
+        <CefRedistVersion>156.0.14</CefRedistVersion>
+        <CefRedistOSXVersion>156.0.14</CefRedistOSXVersion>
+        <CefRedistLinuxVersion>156.0.14</CefRedistLinuxVersion>
         <Platforms>x64;ARM64</Platforms>
         <Configurations>Debug;DebugWindowlessRender;Release;ReleaseWPFAvalonia</Configurations>
     </PropertyGroup>
@@ -19,7 +19,7 @@
 
     <PropertyGroup>
         <PackageOutputPath>$(MSBuildProjectDirectory)\..\Nuget\output</PackageOutputPath>
-        <Version>134.6998.178</Version>
+        <Version>156.8078.48</Version>
         <Authors>XiliumHQ,OutSystems</Authors>
         <Product>CefGlue</Product>
         <AssemblyTitle>CefGlue</AssemblyTitle>

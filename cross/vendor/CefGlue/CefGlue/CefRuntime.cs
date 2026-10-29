@@ -72,6 +72,8 @@
         {
             if (_loaded) return;
 
+            InstallLibCefResolver();
+
             if (!string.IsNullOrEmpty(path))
             {
                 if (Platform == CefRuntimePlatform.Windows)
@@ -83,6 +85,80 @@
             CheckVersion();
 
             _loaded = true;
+        }
+
+        /// <summary>
+        /// Mica: names a folder holding libcef (libcef.dll, libcef.so or libcef.dylib) to load instead of the one
+        /// next to the application. The browser process sets it before CEF starts; the helper processes inherit it
+        /// through the environment, so every process runs the same engine.
+        /// </summary>
+        public const string LibCefDirectoryVariable = "CEFGLUE_LIBCEF_DIR";
+
+        private static bool _resolverInstalled;
+
+        /// <summary>
+        /// Mica: libcef's file name on this platform.
+        /// </summary>
+        public static string LibCefFileName
+        {
+            get
+            {
+                switch (Platform)
+                {
+                    case CefRuntimePlatform.Windows: return libcef.DllName + ".dll";
+                    case CefRuntimePlatform.MacOS: return libcef.DllName + ".dylib";
+                    default: return libcef.DllName + ".so";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mica: the folder named by <see cref="LibCefDirectoryVariable"/>, or null.
+        /// </summary>
+        public static string LibCefDirectory
+        {
+            get
+            {
+                var directory = Environment.GetEnvironmentVariable(LibCefDirectoryVariable);
+                return string.IsNullOrEmpty(directory) ? null : directory;
+            }
+        }
+
+        /// <summary>
+        /// Mica: the CEF API version these bindings were generated for, and the API hash libcef must report for it
+        /// on this platform (cef_api_hash(version, 0)). A libcef of the same CEF branch matches.
+        /// </summary>
+        public static int ApiVersion => libcef.CEF_API_VERSION;
+
+        public static string ApiHash
+        {
+            get
+            {
+                switch (Platform)
+                {
+                    case CefRuntimePlatform.Windows: return libcef.CEF_API_HASH_PLATFORM_WIN;
+                    case CefRuntimePlatform.MacOS: return libcef.CEF_API_HASH_PLATFORM_MACOS;
+                    default: return libcef.CEF_API_HASH_PLATFORM_LINUX;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mica: the CEF version the bindings were generated from, such as "156.0.14+g4fa4ab5+chromium-156.0.8078.48".
+        /// </summary>
+        public static string BindingsCefVersion => libcef.CEF_VERSION;
+
+        public static int BindingsCefVersionMajor => libcef.CEF_VERSION_MAJOR;
+
+        private static void InstallLibCefResolver()
+        {
+            var directory = LibCefDirectory;
+            if (directory == null || _resolverInstalled) return;
+            _resolverInstalled = true;
+
+            var file = Path.Combine(directory, LibCefFileName);
+            NativeLibrary.SetDllImportResolver(typeof(CefRuntime).Assembly, (name, assembly, searchPath) =>
+                name == libcef.DllName ? NativeLibrary.Load(file) : IntPtr.Zero);
         }
 
         private static void LoadLibraryWindows(string path)
@@ -112,7 +188,8 @@
         private static void CheckVersionByApiHash()
         {
             // We need to load libCEF.so before getting API Hash on Linux.
-            if (Platform == CefRuntimePlatform.Linux) 
+            // Mica: not when the resolver above names the engine, or the process would map a second libcef.
+            if (Platform == CefRuntimePlatform.Linux && !_resolverInstalled) 
             {
                 // find all the libcef.so files inside the application folder and its subfolders
                 var libCefFile = Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, libcef.DllName + ".so", SearchOption.AllDirectories).FirstOrDefault();

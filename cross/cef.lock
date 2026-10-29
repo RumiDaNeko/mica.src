@@ -1,0 +1,11 @@
+# The Chromium Embedded Framework build the shell ships with. fetch-cef.ps1 (Windows) and fetch-cef.sh (macOS, Linux)
+# download its minimal distribution from Spotify's CEF build CDN and check it against these SHA-1s, which come from
+# the CDN's index.json (https://cef-builds.spotifycdn.com/index.json). CefGlue's bindings in vendor/CefGlue are
+# generated for this major version (API 15600); see vendor/CefGlue/VENDOR.md before changing the major.
+version 156.0.14+g4fa4ab5+chromium-156.0.8078.48
+windows64 72dc1dd1636acc2391609fa6f410aa09f09168d4
+windowsarm64 354b78d53044c429a004bf1c293948d483af9d7f
+macosx64 bc46c83878741fa2b23486940dacebabb294bf39
+macosarm64 7359a9d293dd5c480bec3f18b762731b483b0e13
+linux64 d091c82a8655113a34616c08cb340bf92310298d
+linuxarm64 7907f1d0319a8d920be9b3ba54c0c60e2d22a7fb

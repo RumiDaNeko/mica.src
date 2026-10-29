@@ -45,10 +45,18 @@ namespace Xilium.CefGlue.Common
                 case CefRuntimePlatform.Linux:
                     settings.NoSandbox = true;
                     settings.MultiThreadedMessageLoop = true;
+                    // Mica: an engine chosen through CEFGLUE_LIBCEF_DIR keeps its resources and locales beside libcef.
+                    if (CefRuntime.LibCefDirectory != null)
+                    {
+                        settings.ResourcesDirPath = CefRuntime.LibCefDirectory;
+                        settings.LocalesDirPath = Path.Combine(CefRuntime.LibCefDirectory, "locales");
+                    }
                     break;
 
                 case CefRuntimePlatform.MacOS:
-                    var resourcesPath = Path.Combine(basePath, "Resources");
+                    // Mica: an engine chosen through CEFGLUE_LIBCEF_DIR has the same flat layout in its own folder.
+                    var frameworkPath = CefRuntime.LibCefDirectory ?? basePath;
+                    var resourcesPath = Path.Combine(frameworkPath, "Resources");
                     if (!Directory.Exists(resourcesPath))
                     {
                         throw new FileNotFoundException($"Unable to find Resources folder");
@@ -58,7 +66,7 @@ namespace Xilium.CefGlue.Common
                     settings.MultiThreadedMessageLoop = false;
                     settings.ExternalMessagePump = true;
                     settings.MainBundlePath = basePath;
-                    settings.FrameworkDirPath = basePath;
+                    settings.FrameworkDirPath = frameworkPath;
                     settings.ResourcesDirPath = resourcesPath;
                     break;
             }

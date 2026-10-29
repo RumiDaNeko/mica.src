@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Mica's cross-platform shell (Avalonia + Chromium through CefGlue). It shares Core.cs and the game
        pages with the Windows build, which keeps compiling from build.ps1 and never sees this folder.
-       CefGlue is built from source (vendor/CefGlue, CEF 134): no CefGlue release on CEF 128+ exists yet,
-       and Chrome extensions need it. -->
+       CefGlue is built from source (vendor/CefGlue, CEF 156): no CefGlue release on CEF 128+ exists yet,
+       and Chrome extensions need it. CEF itself comes from Spotify's CEF build CDN (fetch-cef.ps1 / fetch-cef.sh,
+       pinned in cef.lock), since the NuGet CEF packages stop at 134. -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -23,7 +24,8 @@
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-$(Arch)</RuntimeIdentifier>
     <SelfContained Condition="'$(SelfContained)' == ''">false</SelfContained>
     <CefGlueTargetPlatform>$(RuntimeIdentifier)</CefGlueTargetPlatform>
-    <CefVersion>134.3.9</CefVersion>
+    <CefVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)cef.lock')), 'version (\S+)').Groups[1].Value)</CefVersion>
+    <CefDir>$(MSBuildThisFileDirectory)cef\$(RuntimeIdentifier)\</CefDir>
     <CefGlueDir>$(MSBuildThisFileDirectory)vendor\CefGlue\</CefGlueDir>
   </PropertyGroup>
   <ItemGroup>
@@ -36,17 +38,36 @@
     <ProjectReference Include="vendor\CefGlue\CefGlue.Common.Shared\CefGlue.Common.Shared.csproj" />
     <ProjectReference Include="vendor\CefGlue\CefGlue\CefGlue.csproj" />
   </ItemGroup>
-  <!-- Chromium for the target platform, and CefGlue's helper process (published by its project for each OS). -->
-  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-'))">
-    <PackageReference Include="chromiumembeddedframework.runtime" Version="$(CefVersion)" PrivateAssets="None" />
-    <PackageReference Include="chromiumembeddedframework.runtime.$(RuntimeIdentifier)" Version="$(CefVersion)" PrivateAssets="None" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Condition="'$(RuntimeIdentifier)' == 'osx-x64'" Include="cef.redist.osx64" Version="$(CefVersion)" PrivateAssets="None" />
-    <PackageReference Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" Include="cef.redist.osx.arm64" Version="$(CefVersion)" PrivateAssets="None" />
-    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-x64'" Include="cef.redist.linux64" Version="$(CefVersion)" PrivateAssets="None" />
-    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-arm64'" Include="cef.redist.linuxarm64" Version="$(CefVersion)" PrivateAssets="None" />
-  </ItemGroup>
+  <!-- Chromium for the target platform: fetched into cef/<rid>/ when cef.lock names a version that isn't there yet
+       (about 135-430 MB per platform), then copied where the old packages put it: beside the app on Windows and
+       macOS, beside CefGlue's helper process on Linux. cef.version records the version for the engine updater. -->
+  <Target Name="MicaFetchCef">
+    <PropertyGroup>
+      <MicaCefStamp Condition="Exists('$(CefDir).version')">$([System.IO.File]::ReadAllText('$(CefDir).version').Trim())</MicaCefStamp>
+    </PropertyGroup>
+    <Exec Condition="'$(MicaCefStamp)' != '$(CefVersion)' and $([MSBuild]::IsOSPlatform('Windows'))" Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)fetch-cef.ps1&quot; -Rid $(RuntimeIdentifier)" />
+    <Exec Condition="'$(MicaCefStamp)' != '$(CefVersion)' and !$([MSBuild]::IsOSPlatform('Windows'))" Command="bash &quot;$(MSBuildThisFileDirectory)fetch-cef.sh&quot; $(RuntimeIdentifier)" />
+  </Target>
+  <Target Name="MicaCefFiles" AfterTargets="ResolveProjectReferences" DependsOnTargets="MicaFetchCef">
+    <PropertyGroup>
+      <MicaCefTarget Condition="$(RuntimeIdentifier.StartsWith('linux-'))">CefGlueBrowserProcess\</MicaCefTarget>
+    </PropertyGroup>
+    <ItemGroup>
+      <MicaCefFile Include="$(CefDir)**\*" Exclude="$(CefDir).version" />
+      <None Include="@(MicaCefFile)">
+        <Visible>false</Visible>
+        <Link>$(MicaCefTarget)%(MicaCefFile.RecursiveDir)%(MicaCefFile.Filename)%(MicaCefFile.Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </None>
+      <None Include="$(CefDir).version">
+        <Visible>false</Visible>
+        <Link>$(MicaCefTarget)cef.version</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </None>
+    </ItemGroup>
+  </Target>
   <!-- The helper process is published while CefGlue builds, after this project was evaluated, so its files are
        collected here rather than in a static item. -->
   <Target Name="MicaBrowserProcessFiles" AfterTargets="ResolveProjectReferences">
@@ -74,10 +95,10 @@
     <EmbeddedResource Include="src\Home.html" LogicalName="Mica.Home.html" />
     <!-- Mica's wordmark face, as in Shell.xaml. -->
     <AvaloniaResource Include="..\src\Assets\Brand\Caveat.ttf" Link="Assets\Caveat.ttf" />
-    <Compile Remove="vendor\**;out\**" />
-    <None Remove="vendor\**;out\**" />
-    <EmbeddedResource Remove="vendor\**;out\**" />
-    <AvaloniaXaml Remove="vendor\**;out\**" />
+    <Compile Remove="vendor\**;out\**;cef\**" />
+    <None Remove="vendor\**;out\**;cef\**" />
+    <EmbeddedResource Remove="vendor\**;out\**;cef\**" />
+    <AvaloniaXaml Remove="vendor\**;out\**;cef\**" />
   </ItemGroup>
   <Import Project="$(CefGlueDir)CefGlue.Common\build\CefGlue.Common.targets" />
 </Project>
