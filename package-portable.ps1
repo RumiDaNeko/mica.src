@@ -7,6 +7,7 @@ $expectedHash='CB4612CE79A62A0BE094301A72F73CF91BB250F5E83DC51886F66A083FC0694F'
 $cab=Join-Path $root '.deps/webview2-fixed-x64.cab'
 $extract=Join-Path $root '.deps/fixed-extracted'
 $source=Join-Path $extract "Microsoft.WebView2.FixedVersionRuntime.$version.x64"
+New-Item -ItemType Directory -Force (Split-Path $cab) | Out-Null
 if(!(Test-Path $cab)){Invoke-WebRequest $url -OutFile $cab}
 if((Get-FileHash $cab -Algorithm SHA256).Hash -ne $expectedHash){throw 'Runtime download hash does not match the pinned Microsoft package.'}
 New-Item -ItemType Directory -Force $extract | Out-Null
