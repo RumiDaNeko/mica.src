@@ -105,7 +105,7 @@ main > section.closeup { padding: 0; margin-top: clamp(80px, 12vw, 150px); backg
 /* Scroll-driven version (app.js adds .animated): the stage pins while the section scrolls past. */
 .closeup.animated { height: 380vh; }
 .closeup.animated .closeup-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: block; padding: 0; }
-.closeup.animated .closeup-head { position: absolute; left: 0; right: 0; top: 13vh; z-index: 2; padding: 0 16px; opacity: 0; }
+.closeup.animated .closeup-head { position: absolute; left: 0; right: 0; top: max(13vh, 66px); z-index: 2; padding: 0 16px; opacity: 0; }
 .closeup.animated .closeup-device { position: absolute; left: 50%; top: 50%; opacity: 0; will-change: transform, opacity; }
 .closeup.animated .closeup-caption { position: absolute; left: 0; right: 0; bottom: 7vh; margin: 0 auto; padding: 0 16px; opacity: 0; z-index: 2; }
 .closeup.animated .beam { display: block; position: absolute; inset: 0; pointer-events: none; z-index: 1; }
@@ -150,7 +150,7 @@ main > section.themes { margin-top: clamp(80px, 12vw, 150px); padding-bottom: cl
 .animated .keys-sticky, .animated .themes-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: block; padding: 0; overflow: hidden; }
 main > section.keys.animated { height: 340vh; padding: 0; }
 main > section.themes.animated { height: 320vh; padding: 0; transition: none; }
-.animated .keys-head, .animated .themes-head { position: absolute; left: 0; right: 0; top: 9vh; padding: 0 16px; z-index: 3; }
+.animated .keys-head, .animated .themes-head { position: absolute; left: 0; right: 0; top: max(9vh, 66px); padding: 0 16px; z-index: 3; }
 .animated .keycaps { position: absolute; left: 50%; top: 50%; z-index: 4; transform: translate(-50%, -50%); }
 .animated .keys-monitor, .animated .themes-laptop { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); width: min(880px, 84vw, 80vh); will-change: transform; }
 .animated .keys-caption, .animated .themes-caption { position: absolute; left: 0; right: 0; bottom: 6vh; margin: 0 auto; padding: 0 16px; opacity: 0; z-index: 3; }

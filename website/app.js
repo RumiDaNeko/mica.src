@@ -266,6 +266,20 @@
     function mix(a, b, t) { return "rgb(" + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], t)); }).join(",") + ")"; }
     function pinned(section) { var r = section.getBoundingClientRect(); return clamp(-r.top / (r.height - window.innerHeight)); }
     function fadeUp(el, t) { el.style.opacity = t; el.style.transform = "translateY(" + lerp(16, 0, t) + "px)"; }
+    // A pinned device sits between its heading and its caption: on a short window it shrinks to fit
+    // instead of sliding under the heading.
+    function fitBelow(head, device, caption) {
+      var vh = device.parentNode.clientHeight || window.innerHeight;
+      var keep = device.style.transform;
+      device.style.width = ""; device.style.top = ""; device.style.transform = "none";
+      var r = device.getBoundingClientRect(), ratio = r.height / r.width;
+      device.style.transform = keep;
+      var top = head.offsetTop + head.offsetHeight + 24;
+      var bottom = vh - (caption ? caption.offsetHeight + vh * .06 + 16 : vh * .05);
+      var w = Math.max(220, Math.min(r.width, (bottom - top) / ratio));
+      device.style.width = w + "px";
+      device.style.top = (top + w * ratio / 2) + "px";
+    }
     var list = [];
 
     // 1. Hero: the laptop starts nearly closed and its lid opens over the first part of the scroll.
@@ -341,7 +355,7 @@
       var monitor = keys.querySelector(".keys-monitor"), after = keys.querySelector(".layer-after");
       var head = keys.querySelector(".keys-head"), caption = keys.querySelector(".keys-caption");
       monitor.style.transformOrigin = "50% 36%";
-      list.push({ render: function () {
+      list.push({ measure: function () { fitBelow(head, monitor, null); }, render: function () {
         var p = pinned(keys);
         var rise = ease(span(p, .06, .18)), press = span(p, .24, .30), gone = span(p, .36, .44);
         caps.style.opacity = rise * (1 - gone);
@@ -365,7 +379,7 @@
       themes.classList.add("animated");
       var laptop = themes.querySelector(".themes-laptop"), after = themes.querySelector(".layer-after"), sweep = themes.querySelector(".sweep");
       var caption = themes.querySelector(".themes-caption"), head = themes.querySelector(".themes-head"), eyebrow = head.querySelector(".eyebrow");
-      list.push({ render: function () {
+      list.push({ measure: function () { fitBelow(head, laptop, caption); }, render: function () {
         var p = pinned(themes);
         var wipe = ease(span(p, .22, .70)), edge = lerp(100, 0, wipe);
         after.style.clipPath = "inset(0 0 0 " + edge + "%)";
