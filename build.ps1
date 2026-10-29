@@ -36,6 +36,8 @@ Copy-Item "$dependency\runtimes\win-x64\native\WebView2Loader.dll" $output
 Copy-Item "$root\src\Mica.exe.config" $output
 # Built-in extensions (uBlock Origin Lite).
 robocopy "$root\extensions" "$output\Extensions" /MIR /NFL /NDL /NJH /NJS /NP | Out-Null;if($LASTEXITCODE -ge 8){throw 'Copying built-in extensions failed'}
+# robocopy reports 1-7 for success; don't let it become the script's exit code.
+$global:LASTEXITCODE=0
 Copy-Item "$root\src\Assets\Brand\OFL.txt" "$output\Caveat-OFL.txt"
 Write-Host "Built $output\Mica.exe"
 if ($Test) { & "$root\test.ps1" }
