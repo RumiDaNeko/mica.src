@@ -18,8 +18,14 @@ jobs:
         include:
           - os: ubuntu-latest
             target: linux
+            arch: x64
           - os: macos-latest
             target: macos
+            arch: arm64
+          # Intel Macs: a native x64 runner, so the self-test runs on Intel too.
+          - os: macos-15-intel
+            target: macos
+            arch: x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +48,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: self-test-${{ matrix.target }}
+          name: self-test-${{ matrix.target }}-${{ matrix.arch }}
           path: |
             cross/out/self-test.txt
             cross/out/test-profile/engine.log
@@ -50,11 +56,11 @@ jobs:
           retention-days: 14
       - name: Package
         if: success() || failure()
-        run: bash cross/package.sh ${{ matrix.target }}
+        run: ARCH=${{ matrix.arch }} bash cross/package.sh ${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: mica-${{ matrix.target }}
+          name: mica-${{ matrix.target }}-${{ matrix.arch }}
           path: |
             cross/out/*.tar.gz
             cross/out/*.AppImage

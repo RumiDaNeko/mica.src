@@ -91,8 +91,47 @@ EOF
 EOF
     codesign --force --deep --options runtime --timestamp --entitlements out/entitlements.plist --sign "$SIGN_ID" "$bundle"
   fi
-  rm -f "out/Mica-$version-$arch.dmg"
-  hdiutil create -volname Mica -srcfolder "$bundle" -ov -format UDZO "out/Mica-$version-$arch.dmg"
+  # The usual drag-to-install window: Mica beside a shortcut to Applications, big icons, no toolbar. Finder lays
+  # the window out on a writable copy of the image; where Finder can't be scripted (some build machines), the
+  # image still opens to the same two icons, just in Finder's default arrangement.
+  dmg="out/Mica-$version-$arch.dmg"; stage="out/dmg-stage"; scratch="out/Mica-scratch.dmg"
+  rm -rf "$stage" "$dmg" "$scratch"; mkdir -p "$stage"
+  cp -a "$bundle" "$stage/"; ln -s /Applications "$stage/Applications"
+  hdiutil create -volname Mica -srcfolder "$stage" -ov -fs HFS+ -format UDRW "$scratch"
+  attached="$(hdiutil attach -readwrite -noverify -noautoopen "$scratch")"
+  device="$(echo "$attached" | awk 'NR==1 {print $1}')"; volume="$(echo "$attached" | grep -o '/Volumes/.*' | head -n 1)"
+  if [ -f "$bundle/Contents/Resources/Mica.icns" ] && [ -n "$volume" ]; then
+    cp "$bundle/Contents/Resources/Mica.icns" "$volume/.VolumeIcon.icns"
+    command -v SetFile >/dev/null && SetFile -a C "$volume" || true
+  fi
+  disk=Mica
+  osascript <<APPLESCRIPT &
+tell application "Finder"
+  tell disk "$disk"
+    open
+    set current view of container window to icon view
+    set toolbar visible of container window to false
+    set statusbar visible of container window to false
+    set the bounds of container window to {200, 120, 740, 480}
+    set viewOptions to the icon view options of container window
+    set arrangement of viewOptions to not arranged
+    set icon size of viewOptions to 112
+    set text size of viewOptions to 13
+    set position of item "Mica.app" of container window to {140, 170}
+    set position of item "Applications" of container window to {400, 170}
+    update without registering applications
+    delay 1
+    close
+  end tell
+end tell
+APPLESCRIPT
+  finder=$!; ( sleep 90; kill $finder 2>/dev/null ) & guard=$!
+  if wait $finder; then echo "dmg: window laid out"; else echo "dmg: Finder couldn't be scripted here; default layout"; fi
+  kill $guard 2>/dev/null || true
+  if [ -n "$volume" ] && [ -f "$volume/.DS_Store" ]; then echo "dmg: layout saved (.DS_Store)"; fi
+  sync; hdiutil detach "$device" -quiet || hdiutil detach "$device" -force
+  hdiutil convert "$scratch" -format UDZO -imagekey zlib-level=9 -o "$dmg"
+  rm -rf "$stage" "$scratch"
   ;;
 *) echo "unknown target: $target" >&2; exit 2 ;;
 esac
