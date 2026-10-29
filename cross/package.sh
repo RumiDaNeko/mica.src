@@ -101,6 +101,7 @@ EOF
   hdiutil create -volname Mica -srcfolder "$stage" -ov -fs HFS+ -format UDRW "$scratch"
   attached="$(hdiutil attach -readwrite -noverify -noautoopen "$scratch")"
   device="$(echo "$attached" | awk 'NR==1 {print $1}')"; volume="$(echo "$attached" | grep -o '/Volumes/.*' | head -n 1)"
+  [ -n "$volume" ] && mdutil -i off "$volume" >/dev/null 2>&1 || true
   if [ -f "$bundle/Contents/Resources/Mica.icns" ] && [ -n "$volume" ]; then
     cp "$bundle/Contents/Resources/Mica.icns" "$volume/.VolumeIcon.icns"
     command -v SetFile >/dev/null && SetFile -a C "$volume" || true
@@ -130,7 +131,13 @@ APPLESCRIPT
   if wait $finder; then echo "dmg: window laid out"; else echo "dmg: Finder couldn't be scripted here; default layout"; fi
   kill $guard 2>/dev/null || true
   if [ -n "$volume" ] && [ -f "$volume/.DS_Store" ]; then echo "dmg: layout saved (.DS_Store)"; fi
-  sync; hdiutil detach "$device" -quiet || hdiutil detach "$device" -force
+  # Finder or Spotlight can still hold the volume for a moment after the layout ("Resource busy").
+  sync; detached=
+  for try in 1 2 3 4 5; do
+    if hdiutil detach "$device" -quiet; then detached=1; break; fi
+    sleep $((try * 2))
+  done
+  [ -n "$detached" ] || hdiutil detach "$device" -force
   hdiutil convert "$scratch" -format UDZO -imagekey zlib-level=9 -o "$dmg"
   rm -rf "$stage" "$scratch"
   ;;
