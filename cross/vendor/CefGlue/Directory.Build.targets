@@ -1,0 +1,12 @@
+<Project>
+  <!-- For any non-packable projects, suppress generate documentation. -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'false'">
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DocumentationFile />
+  </PropertyGroup>
+
+  <!-- Mica: no NuGet packages from a normal build. -->
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+</Project>

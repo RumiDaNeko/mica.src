@@ -24,7 +24,9 @@ release-v*/
 *.aab
 cross/bin/
 cross/obj/
-cross/vendor/
+# CefGlue's source is needed to build cross/; its build output isn't.
+cross/vendor/**/bin/
+cross/vendor/**/obj/
 node_modules/
 .wrangler/
 .dev.vars
