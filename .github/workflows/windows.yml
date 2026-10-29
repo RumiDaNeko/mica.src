@@ -13,6 +13,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+      # Keep files byte for byte as committed (the runner would turn LF into CRLF), so the app matches a local build.
+      - name: Keep line endings
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - name: Build
         shell: powershell
