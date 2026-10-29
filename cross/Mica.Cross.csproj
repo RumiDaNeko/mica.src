@@ -64,6 +64,7 @@
     <Compile Include="..\src\Core.cs" Link="Shared\Core.cs" />
     <Compile Include="..\src\ExtensionPackage.cs" Link="Shared\ExtensionPackage.cs" />
     <Compile Include="..\src\AiExtensions.cs" Link="Shared\AiExtensions.cs" />
+    <Compile Include="..\src\DownloadModel.cs" Link="Shared\DownloadModel.cs" />
     <!-- The built-in blockers, as in the Windows build's Extensions\ folder. -->
     <None Include="..\extensions\**\*" Link="Extensions\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
     <EmbeddedResource Include="..\src\Tetris.html;..\src\GameHub.html;..\src\Snake.html;..\src\Game2048.html;..\src\Minesweeper.html;..\src\Breakout.html;..\src\Sudoku.html;..\src\Memory.html;..\src\Flappy.html;..\src\Pong.html;..\src\Invaders.html;..\src\ConnectFour.html">
@@ -72,6 +73,10 @@
     <EmbeddedResource Include="..\src\Assets\Brand\Mica.ico" LogicalName="Mica.Brand.ico" />
     <!-- The new tab page; on Windows it is drawn in WPF, here it is a page so it sits in the engine view. -->
     <EmbeddedResource Include="src\Home.html" LogicalName="Mica.Home.html" />
+    <EmbeddedResource Include="src\Library.html" LogicalName="Mica.Library.html" />
+    <EmbeddedResource Include="..\src\Reader.js" LogicalName="Mica.Reader.js" />
+    <!-- The Vietnamese table (as on Windows). WithCulture=false keeps MSBuild from moving a ".vi." file into a satellite assembly. -->
+    <EmbeddedResource Include="..\src\Strings.vi.tsv" LogicalName="Mica.Strings.vi.tsv" WithCulture="false" />
     <!-- Mica's wordmark face, as in Shell.xaml. -->
     <AvaloniaResource Include="..\src\Assets\Brand\Caveat.ttf" Link="Assets\Caveat.ttf" />
     <Compile Remove="vendor\**;out\**" />

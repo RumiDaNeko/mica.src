@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>History</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--ink:#302D38;--muted:#716B7A;--canvas:#FAF9F6;--panel:#FFFFFF;--line:#E9E5E9;--hover:#ECE7F2;--accent:#71608C}
+html.dark{--ink:#F0EBF5;--muted:#B0A7BC;--canvas:#24212A;--panel:#302B38;--line:#403948;--hover:#453C52;--accent:#C8B4E0}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--canvas);color:var(--ink);font:13px "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Ubuntu,Cantarell,sans-serif;-webkit-font-smoothing:antialiased}
+.page{max-width:1000px;margin:0 auto;padding:28px 38px 18px;min-height:100%;display:flex;flex-direction:column}
+button{font:inherit;color:inherit;background:transparent;border:0;border-radius:9px;padding:8px 13px;cursor:pointer}
+button:hover,button.on{background:var(--hover)}
+button:disabled{opacity:.35;cursor:default;background:transparent}
+.crumbs{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;font-size:10px;color:var(--muted)}
+.crumbs b{color:var(--accent)}
+.crumbs nav button{font-size:13px;color:var(--ink)}
+.title{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+h1{font:400 40px Georgia,Cambria,"Noto Serif",serif;margin:0}
+.sub{color:var(--muted);font-size:12px;margin:10px 0 0 1px}
+#clear{font-size:11px;color:var(--muted)}
+.search{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:14px}
+.search input{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font:inherit}
+.search input::placeholder{color:var(--muted)}
+.filters{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.filters button{font-size:11px;padding:7px 13px;margin-right:4px}
+#count{font-size:11px;color:var(--muted)}
+.confirm{display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.confirm.open{display:block}
+.confirm p{color:var(--muted);font-size:11px;margin:6px 0 12px}
+.day{font-size:10px;font-weight:600;color:var(--muted);margin:15px 0 12px 2px;letter-spacing:.02em}
+.card{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:6px}
+.card:hover{border-color:var(--hover)}
+.icon{width:22px;height:22px;border-radius:6px;background:var(--hover);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none}
+.what{flex:1;min-width:0}
+.what a,.what b{display:block;color:var(--ink);font-weight:600;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.what a:hover{text-decoration:underline}
+.what span{display:block;color:var(--muted);font-size:11px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:3px;border-radius:2px;background:var(--line);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.time{color:var(--muted);font-size:11px;flex:none}
+.card button{font-size:11px;padding:6px 10px;flex:none}
+main{flex:1}
+.empty{display:none;text-align:center;margin:70px 20px}
+.empty.open{display:block}
+.empty .glyph{font-size:30px;color:var(--accent);margin-bottom:22px}
+.empty h2{font:400 26px Georgia,Cambria,"Noto Serif",serif;margin:0}
+.empty p{color:var(--muted);max-width:370px;margin:12px auto 0}
+footer{font-size:10px;color:var(--muted);margin-top:14px}
+html[lang=vi] h1,html[lang=vi] .serif{font-family:Cambria,"Noto Serif","DejaVu Serif",Georgia,serif}
+</style>
+</head>
+<body>
+<div class="page">
+ <div class="crumbs"><span><b>MICA</b> /&nbsp; YOUR LIBRARY</span><nav><button id="toHistory">History</button><button id="toDownloads">Downloads</button></nav></div>
+ <div class="title"><div><h1 id="title">History</h1><div class="sub" id="sub"></div></div><button id="clear"></button></div>
+ <label class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round"><circle cx="13.5" cy="10.5" r="6.5"/><path d="M8.8 15.2 4 20"/></svg><input id="q" autocomplete="off"></label>
+ <div class="filters"><div><button data-f="all" class="on">All</button><button data-f="second"></button><button data-f="third"></button></div><span id="count"></span></div>
+ <div class="confirm" id="confirm"><b>Clear all browsing history?</b><p>Cookies, bookmarks and downloaded files will stay.</p><button class="on" id="yes">Clear history</button> <button id="no">Keep history</button></div>
+ <main id="rows"></main>
+ <div class="empty" id="empty"><div class="glyph" id="eglyph"></div><h2 id="etitle"></h2><p id="edetail"></p></div>
+ <footer id="foot"></footer>
+</div>
+<script>
+const vi=/*VI*/null;
+// Mica's words in the chosen language (src/Strings.vi.tsv), as the page draws them; file names and page titles stay.
+if(vi){const skip='.what';const walk=n=>{if(n.nodeType===3){const t=n.nodeValue.trim();if(t&&vi[t]&&!(n.parentElement&&n.parentElement.closest(skip)))n.nodeValue=n.nodeValue.replace(t,vi[t]);}else if(n.nodeType===1&&!n.closest(skip)){for(const c of n.childNodes)walk(c);for(const at of ['placeholder','title','aria-label'])if(n.getAttribute(at)&&vi[n.getAttribute(at)])n.setAttribute(at,vi[n.getAttribute(at)]);}};
+ addEventListener('DOMContentLoaded',()=>{walk(document.body);new MutationObserver(m=>{for(const r of m)for(const n of r.addedNodes)walk(n);}).observe(document.body,{childList:true,subtree:true});document.documentElement.lang='vi';});}
+const kind=/*KIND*/'history',key=/*KEY*/'',mac=/*MAC*/false;let data=/*DATA*/null||{history:[],downloads:[]};
+const history=kind==='history';let filter='all';
+const $=id=>document.getElementById(id);
+document.title=history?'History':'Downloads';
+$('title').textContent=history?'History':'Downloads';
+$('sub').textContent=history?'Pick up a thought where you left it.':'Everything you brought back from the web.';
+$('clear').textContent=history?'Clear history':'Clear finished';
+$('q').placeholder=history?'Search title or website':'Search file name or source';
+document.querySelector('[data-f=second]').textContent=history?'Today':'Active';
+document.querySelector('[data-f=third]').textContent=history?'Past 7 days':'Completed';
+$('foot').textContent=history?'Your latest 500 unique pages, stored on this device.':'Up to 200 recent finished records. Removing a record keeps its file on disk.';
+(history?$('toHistory'):$('toDownloads')).classList.add('on');
+$('toHistory').onclick=()=>location.href='/history';$('toDownloads').onclick=()=>location.href='/downloads';
+function call(action,args){const p=new URLSearchParams(Object.assign({k:key,do:action},args||{}));return fetch('/act?'+p).then(()=>setTimeout(refresh,120));}
+function refresh(){return fetch('/data?k='+key,{cache:'no-store'}).then(r=>r.json()).then(d=>{data=d;render();}).catch(()=>{});}
+function day(ms){const d=new Date(ms),t=new Date();t.setHours(0,0,0,0);const x=new Date(d);x.setHours(0,0,0,0);const diff=Math.round((t-x)/864e5);
+ return diff===0?'TODAY':diff===1?'YESTERDAY':d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();}
+function size(n){if(n<0)return '?';const u=['B','KB','MB','GB'];let i=0;while(n>=1024&&i<3){n/=1024;i++;}return (i?n.toFixed(1):n)+' '+u[i];}
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function host(u){try{return new URL(u).hostname.replace(/^www\./,'');}catch(e){return u;}}
+function render(){
+ const q=$('q').value.trim().toLowerCase(),rows=$('rows');rows.textContent='';let count=0,last=null;
+ const today=new Date();today.setHours(0,0,0,0);
+ const list=history?data.history.filter(h=>(h.t+' '+h.u).toLowerCase().includes(q)&&(filter==='all'||(filter==='second'?h.d>=+today:h.d>=+today-6*864e5)))
+  :data.downloads.filter(d=>(d.n+' '+d.u).toLowerCase().includes(q)&&(filter==='all'||(filter==='second'?/InProgress|Paused|Starting/.test(d.s):d.s==='Completed')));
+ for(const item of list){
+  const label=day(item.d);if(label!==last){rows.append(el('div','day',label));last=label;}
+  const card=el('div','card');count++;
+  if(history){
+   card.append(el('div','icon',(host(item.u)[0]||'?').toUpperCase()));
+   const what=el('div','what');const a=el('a',null,item.t||item.u);a.href=item.u;what.append(a,el('span',null,item.u));card.append(what);
+   card.append(el('span','time',new Date(item.d).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})));
+   const forget=el('button',null,'Remove');forget.title='Remove from history';forget.onclick=()=>call('forget',{u:item.u});card.append(forget);
+  }else{
+   const live=/InProgress|Paused|Starting/.test(item.s);
+   card.append(el('div','icon','↓'));
+   const what=el('div','what');what.append(el('b',null,item.n));
+   const state=item.s==='Completed'?size(item.t>0?item.t:item.r)+' · '+host(item.u)+(item.e?'':' · file moved or deleted'):item.s==='Cancelled'?'Cancelled · '+host(item.u):item.s==='Interrupted'?(item.x||'Interrupted'):size(item.r)+(item.t>0?' of '+size(item.t):'')+' · '+host(item.u);
+   what.append(el('span',null,state));
+   if(live){const bar=el('div','bar'),fill=el('i');fill.style.width=(item.t>0?Math.min(100,item.r*100/item.t):30)+'%';bar.append(fill);what.append(bar);}
+   card.append(what);
+   const add=(text,action)=>{const b=el('button',null,text);b.onclick=()=>call(action,{id:item.id});card.append(b);};
+   if(live)add('Cancel','cancel');
+   else{if(item.s==='Completed'&&item.e){add('Open','open');add(mac?'Show in Finder':'Show in folder','reveal');}if(item.s!=='Completed')add('Retry','retry');add('Remove','remove');}
+  }
+  rows.append(card);
+ }
+ $('count').textContent=count+(history?(count===1?' page':' pages'):(count===1?' file':' files'));
+ const filtered=q.length>0||filter!=='all';
+ $('empty').classList.toggle('open',count===0);
+ $('eglyph').textContent=history?'◷':'↓';
+ $('etitle').textContent=filtered?'Nothing matches yet.':history?'A fresh page.':'Nothing downloaded yet.';
+ $('edetail').textContent=filtered?'Try another search or choose All.':history?'Your visited pages will appear here.':'Save a file from the web to see its progress here.';
+ $('clear').disabled=history?data.history.length===0:!data.downloads.some(d=>!/InProgress|Paused|Starting/.test(d.s));
+ if(!history&&data.downloads.some(d=>/InProgress|Paused|Starting/.test(d.s)))setTimeout(refresh,1000);
+}
+for(const b of document.querySelectorAll('[data-f]'))b.onclick=()=>{filter=b.dataset.f;for(const o of document.querySelectorAll('[data-f]'))o.classList.toggle('on',o===b);render();};
+$('q').oninput=render;
+$('clear').onclick=()=>{if(history)$('confirm').classList.add('open');else call('clear-finished');};
+$('yes').onclick=()=>{$('confirm').classList.remove('open');call('clear-history');};
+$('no').onclick=()=>$('confirm').classList.remove('open');
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+addEventListener('micatheme',()=>{});
+render();
+</script>
+</body>
+</html>

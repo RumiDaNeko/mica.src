@@ -12,20 +12,55 @@ namespace Mica {
  // offline. CEF hands those requests to this factory instead of the network. The new tab page lives on
  // https://home.mica.invalid/ the same way.
  static class BuiltInPages {
-  internal const string HomeHost="home.mica.invalid",Home="https://"+HomeHost+"/";
+  internal const string HomeHost="home.mica.invalid",Home="https://"+HomeHost+"/",LibraryHost="library.mica.invalid";
   internal static Func<bool> Dark=delegate {return false;};
+  // The new tab page's look (background, glass, private, language) as JSON, and the photo behind it.
+  internal static Func<string> Look=delegate {return "null";};
+  internal static Func<string> PhotoPath=delegate {return null;};
+  internal static Func<string,string> Translations=delegate(string html) {return "null";};
   // The new tab page's most visited sites, as JSON; kept current by the window, read here on the engine's thread.
-  internal static volatile string HomeSites="[]";
+  internal static volatile string HomeSites="[]",HomeRecent="[]";
+  // The library's history and downloads, as JSON; and where its buttons' requests go (on the UI thread's side).
+  internal static volatile string LibraryJson="{\"history\":[],\"downloads\":[]}";
+  internal static Action<string,Dictionary<string,string>> Act;
+  // The library page carries this run's key with each request, so no other page can ask on its behalf.
+  static readonly string token=Guid.NewGuid().ToString("N");
+  const string LibraryPolicy="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; frame-ancestors 'none'";
   const string Policy="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:";
+  const string HomePolicy="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: 'self'";
   static readonly Dictionary<string,byte[]> pages=new Dictionary<string,byte[]>();
 
   // Handed to CefRuntimeLoader.Initialize, which registers them once the engine is up.
   internal static Xilium.CefGlue.Common.Shared.CustomScheme[] Schemes() {
    var factory=new Factory();
-   return new[]{Navigation.TetrisHost,Navigation.GamesHost,HomeHost}.Select(host=>new Xilium.CefGlue.Common.Shared.CustomScheme {SchemeName="https",DomainName=host,SchemeHandlerFactory=factory}).ToArray();
+   return new[]{Navigation.TetrisHost,Navigation.GamesHost,HomeHost,LibraryHost}.Select(host=>new Xilium.CefGlue.Common.Shared.CustomScheme {SchemeName="https",DomainName=host,SchemeHandlerFactory=factory}).ToArray();
   }
   internal static bool IsBuiltIn(string address) {
-   Uri uri;return Uri.TryCreate(address,UriKind.Absolute,out uri)&&(uri.Host==Navigation.TetrisHost||uri.Host==Navigation.GamesHost||uri.Host==HomeHost);
+   Uri uri;return Uri.TryCreate(address,UriKind.Absolute,out uri)&&(uri.Host==Navigation.TetrisHost||uri.Host==Navigation.GamesHost||uri.Host==HomeHost||uri.Host==LibraryHost);
+  }
+  // mica://history and mica://downloads live on the library host.
+  internal static string LibraryAddress(string url) {return "https://"+LibraryHost+"/"+url.Substring("mica://".Length);}
+  internal static string LibraryPage(string address) {
+   Uri uri;if(!Uri.TryCreate(address??"",UriKind.Absolute,out uri)||uri.Host!=LibraryHost)return null;
+   return uri.AbsolutePath=="/downloads"?"mica://downloads":"mica://history";
+  }
+  static Dictionary<string,string> Query(Uri uri) {
+   var map=new Dictionary<string,string>();
+   foreach(var part in uri.Query.TrimStart('?').Split('&')){int eq=part.IndexOf('=');if(eq>0)map[part.Substring(0,eq)]=Uri.UnescapeDataString(part.Substring(eq+1).Replace('+',' '));}
+   return map;
+  }
+  // The library's requests: /data (what to show) and /act?do=... (a button), both with this run's key.
+  static byte[] LibraryCall(Uri uri,out string mime) {
+   mime="application/json";var q=Query(uri);string key;
+   if(!q.TryGetValue("k",out key)||key!=token)return null;
+   if(uri.AbsolutePath=="/data")return Encoding.UTF8.GetBytes(LibraryJson);
+   string action;if(uri.AbsolutePath!="/act"||!q.TryGetValue("do",out action))return null;
+   var act=Act;if(act!=null)act(action,q);
+   return Encoding.UTF8.GetBytes("{}");
+  }
+  static byte[] LibraryHtml(bool dark,string kind) {
+   string html=Encoding.UTF8.GetString(Page("Library.html",dark));
+   return Encoding.UTF8.GetBytes(html.Replace("/*KIND*/'history'","'"+kind+"'").Replace("/*KEY*/''","'"+token+"'").Replace("/*DATA*/null",LibraryJson.Replace("</","<\\/")).Replace("/*MAC*/false",OperatingSystem.IsMacOS()?"true":"false").Replace("/*VI*/null",Translations(html).Replace("</","<\\/")));
   }
   // The page inside Mica for an address on the games hosts, or null (404).
   internal static string Resource(string method,string address) {
@@ -50,7 +85,8 @@ namespace Mica {
   // The new tab page with this moment's sites filled in (not cached: it changes as you browse).
   static byte[] HomePage(bool dark) {
    string html=Encoding.UTF8.GetString(Page("Home.html",dark));
-   return Encoding.UTF8.GetBytes(html.Replace("/*SITES*/[]",HomeSites.Replace("</","<\\/")).Replace("/*MAC*/false",OperatingSystem.IsMacOS()?"true":"false"));
+   html=html.Replace("/*SITES*/[]",HomeSites.Replace("</","<\\/")).Replace("/*RECENT*/[]",HomeRecent.Replace("</","<\\/")).Replace("/*MAC*/false",OperatingSystem.IsMacOS()?"true":"false");
+   return Encoding.UTF8.GetBytes(html.Replace("/*LOOK*/null",Look().Replace("</","<\\/")).Replace("/*VI*/null",Translations(html).Replace("</","<\\/")));
   }
   // The search box on the new tab page sends what you typed to /go?q=; it goes where the address bar would take it.
   internal static string GoTarget(string address) {
@@ -70,20 +106,33 @@ namespace Mica {
    protected override CefResourceHandler Create(CefBrowser browser,CefFrame frame,string schemeName,CefRequest request) {
     string go=request.Method=="GET"?GoTarget(request.Url):null;
     if(go!=null)return new Handler(null,go);
+    Uri uri;
+    if(request.Method=="GET"&&Uri.TryCreate(request.Url,UriKind.Absolute,out uri)&&uri.Host==LibraryHost) {
+     string mime;
+     if(uri.AbsolutePath=="/data"||uri.AbsolutePath=="/act")return new Handler(LibraryCall(uri,out mime),null) {Mime=mime};
+     if(uri.AbsolutePath=="/history"||uri.AbsolutePath=="/downloads")return new Handler(LibraryHtml(Dark(),uri.AbsolutePath.Substring(1)),null) {Csp=LibraryPolicy};
+     return new Handler(null,null);
+    }
+    // The photo behind the new tab page.
+    if(request.Method=="GET"&&Uri.TryCreate(request.Url,UriKind.Absolute,out uri)&&uri.Host==HomeHost&&uri.AbsolutePath=="/photo") {
+     string path=PhotoPath();byte[] photo=null;try {if(path!=null&&File.Exists(path))photo=File.ReadAllBytes(path);} catch(IOException) {}
+     return new Handler(photo,null) {Mime="image/*"};
+    }
     string resource=Resource(request.Method,request.Url);
-    return new Handler(resource==null?null:resource=="Home.html"?HomePage(Dark()):Page(resource,Dark()),null);
+    return new Handler(resource==null?null:resource=="Home.html"?HomePage(Dark()):Page(resource,Dark()),null) {Csp=resource=="Home.html"?HomePolicy:Policy};
    }
   }
   sealed class Handler : CefResourceHandler {
    readonly byte[] body;readonly bool found;readonly string redirect;int offset;
+   internal string Mime="text/html",Csp=Policy;
    public Handler(byte[] page,string redirectTo) {body=page??new byte[0];found=page!=null;redirect=redirectTo;}
    protected override bool Open(CefRequest request,out bool handleRequest,CefCallback callback) {handleRequest=true;return true;}
    protected override void GetResponseHeaders(CefResponse response,out long responseLength,out string redirectUrl) {
     redirectUrl=redirect;responseLength=body.Length;
     if(redirect!=null){response.Status=302;response.StatusText="Found";response.SetHeaderByName("Location",redirect,true);return;}
     response.Status=found?200:404;response.StatusText=found?"OK":"Not Found";
-    response.MimeType="text/html";response.Charset="utf-8";
-    if(found) {response.SetHeaderByName("Cache-Control","no-store",true);response.SetHeaderByName("Content-Security-Policy",Policy,true);}
+    response.MimeType=Mime;response.Charset="utf-8";
+    if(found) {response.SetHeaderByName("Cache-Control","no-store",true);response.SetHeaderByName("Content-Security-Policy",Csp,true);response.SetHeaderByName("X-Content-Type-Options","nosniff",true);}
    }
    protected override bool Skip(long bytesToSkip,out long bytesSkipped,CefResourceSkipCallback callback) {
     int skip=(int)Math.Min(bytesToSkip,body.Length-offset);offset+=skip;bytesSkipped=skip;return skip>0;

@@ -12,7 +12,11 @@ using Xilium.CefGlue.Common;
 namespace Mica {
  static class Program {
   internal static string Profile,SelfTestResult,PreviewFolder;
+  // --shots: the preview walks the same states as the Windows capture harness, with the same file names.
+  internal static bool Shots;
   internal static int ExitCode;
+  // --private: a window whose profile is thrown away when it closes.
+  internal static bool Private;
   static readonly List<string> installs=new List<string>();
   internal static readonly List<string> InstallErrors=new List<string>();
   // Mica's profile for this shell. On Windows it is kept apart from the Windows build's MicaBrowser folder,
@@ -29,9 +33,14 @@ namespace Mica {
     else if(args[i]=="--preview"&&i+1<args.Length)PreviewFolder=Path.GetFullPath(args[++i]);
     else if(args[i]=="--profile"&&i+1<args.Length)Profile=Path.GetFullPath(args[++i]);
     else if(args[i]=="--install-extension"&&i+1<args.Length)installs.Add(args[++i]);
+    else if(args[i]=="--private")Private=true;
+    else if(args[i]=="--shots")Shots=true;
    }
+   if(Profile==null&&Private)Profile=Path.Combine(Path.GetTempPath(),"mica-private-"+Guid.NewGuid().ToString("N").Substring(0,8));
    if(Profile==null)Profile=SelfTestResult!=null?Path.Combine(Path.GetTempPath(),"mica-cross-test-"+Guid.NewGuid().ToString("N").Substring(0,8)):DefaultProfile();
    Directory.CreateDirectory(Profile);
+   string chosen=null;try {chosen=File.ReadAllText(Path.Combine(Profile,"language")).Trim();} catch(Exception) {}
+   Localizer.Use(Localizer.Resolve(chosen));
    // --install-extension <store id or address>: installs before the engine starts, so it loads this run.
    foreach(var input in installs) {
     try {CrossExtensions.Install(Profile,input,CefRuntime.ChromeVersion).GetAwaiter().GetResult();}
@@ -49,6 +58,7 @@ namespace Mica {
     flags.Add(new KeyValuePair<string,string>("silent-debugger-extension-api",""));
     CefRuntimeLoader.Initialize(new CefSettings {RootCachePath=engine,CachePath=Path.Combine(engine,"Default"),PersistSessionCookies=true,LogSeverity=CefLogSeverity.Warning,LogFile=Path.Combine(Profile,"engine.log"),LocalesDirPath=Directory.Exists(locales)?locales:null},flags.ToArray(),BuiltInPages.Schemes());
    }).StartWithClassicDesktopLifetime(args);
+   if(Private)try {Directory.Delete(Profile,true);} catch(Exception) {}
    return ExitCode;
   }
  }

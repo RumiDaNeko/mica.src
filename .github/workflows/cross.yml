@@ -1,0 +1,59 @@
+# Builds Mica's cross-platform shell (cross/: Avalonia + Chromium through CefGlue) on macOS and Linux, runs its
+# self-test (off-screen; Linux under a virtual display), and uploads the self-test results and the packages.
+# Packages are unsigned: signing and notarizing stay on the release machine.
+name: Cross
+
+on:
+  push:
+    paths: ['cross/**', 'src/Core.cs', 'src/ExtensionPackage.cs', 'src/AiExtensions.cs', 'src/DownloadModel.cs', 'src/Strings.vi.tsv', 'src/Reader.js', 'extensions/**', '.github/workflows/cross.yml']
+  pull_request:
+    paths: ['cross/**', 'src/Core.cs', 'src/ExtensionPackage.cs', 'src/AiExtensions.cs', 'src/DownloadModel.cs', 'src/Strings.vi.tsv', 'src/Reader.js', 'extensions/**', '.github/workflows/cross.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: macos-latest
+            target: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Chromium's libraries and a virtual display
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgtk-3-0 libxss1 libasound2t64 || \
+          sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgtk-3-0 libxss1 libasound2
+      - name: Build and self-test
+        run: bash cross/test.sh
+      - name: Self-test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-test-${{ matrix.target }}
+          path: |
+            cross/out/self-test.txt
+            cross/out/test-profile/engine.log
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Package
+        if: success() || failure()
+        run: bash cross/package.sh ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: mica-${{ matrix.target }}
+          path: |
+            cross/out/*.tar.gz
+            cross/out/*.AppImage
+            cross/out/*.dmg
+          if-no-files-found: ignore
+          retention-days: 14

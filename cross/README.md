@@ -12,8 +12,19 @@ Mica's shell for macOS and Linux: Avalonia UI + Chromium 134 through CefGlue, in
 | Built-in ad blocking (uBlock Origin Lite + Mica blocker) | ✅ blocks a Google ad script | not run yet |
 | **Claude for Chrome** in the AI panel (✦ button, Ctrl/Cmd+Shift+Space): installed from the Chrome Web Store, shown as its side panel, bound to the tab in front, reaches pages through `chrome.debugger` | ✅ up to sign-in (not signed in) | not run yet |
 | Links opening new windows (target=_blank, window.open, Claude's tabs) open as Mica tabs | written, not exercised by the test | not run yet |
+| Spotlight (Ctrl/Cmd+K, L): tabs, bookmarks, history, the web; `>` for the command palette; tab search (Ctrl+Shift+A) | ✅ | not run yet |
+| The island: memory use, short messages, downloads in progress, what a background tab is playing (play/pause, mute); steps aside from the pointer | ✅ | not run yet |
+| Sidebar like Windows: spaces (new, rename, remove, move a tab), pinned tabs, site icons, the slim rail (Ctrl/Cmd+Shift+B), tab menu (pin, mute, duplicate, copy, close others) | ✅ | not run yet |
+| Menu, site card (zoom, memory saver per site, clear its cookies), extensions card (list, add from the Web Store, remove), Personalize (frame colour), task manager (Shift+Esc), clear browsing data, keyboard shortcuts | ✅ | not run yet |
+| Bookmarks (Ctrl/Cmd+D), find in page (Ctrl/Cmd+F), zoom per site, print, DevTools (F12), reading mode (F9), page full screen, private window (Ctrl/Cmd+Shift+N) | ✅ | not run yet |
+| History and Downloads pages (`library.mica.invalid`), downloads to the Downloads folder (`downloads.json`, shared format with Windows) | ✅ | not run yet |
+| Error page ("A small detour."), resting background tabs (Core's TabLifecycle, never one that's playing) | ✅ | not run yet |
 
-Shortcuts: Ctrl/Cmd+T, W, L, R, F5, Alt+←/→, Ctrl/Cmd+Shift+Space. They work while focus is in Mica's toolbar, not yet inside a page.
+Shortcuts are the Windows set (Cmd for Ctrl on a Mac; Cmd+[ / ] for back and forward, Cmd+Y history, Cmd+Option+L downloads). They work inside pages too: Chromium hands keys to Mica first (`PageKeys`).
+
+Also as on Windows: the AI side panel (ChatGPT, Claude, Gemini, Copilot, Perplexity or your own; with Claude for Chrome or ChatGPT for Chrome it uses the extension), Personalize (text size, home backgrounds and your photo, frosted glass, frame colour), profiles, and Vietnamese (Menu → Language, from `src/Strings.vi.tsv`).
+
+Not in this shell yet: tab groups, split view, sign-in and sync, passwords, import, closing animations, YouTube ambient.
 
 ## Run the test on a Mac (or Linux)
 
@@ -50,9 +61,10 @@ Your profile goes to `~/Library/Application Support/Mica`. To try Claude, click 
 - `Mica.Cross.csproj`: links `../src/Core.cs`, `ExtensionPackage.cs` (verified Chrome Web Store installs) and `AiExtensions.cs` (the AI extension list and side-panel shim), embeds the game pages, and copies `../extensions`. Nothing is copied by hand.
 - `vendor/CefGlue/`: CefGlue built from source on CEF 134 (draft OutSystems/CefGlue#208). See `VENDOR.md`.
 - `src/JsonShim.cs`: stands in for `JavaScriptSerializer`, so the shared files compile unchanged.
-- `src/BrowserWindow.cs`, `src/AiPanel.cs`, `src/Extensions.cs`, `src/BuiltInPages.cs`: the window, the Claude panel, extension loading, the games and new tab hosts.
+- `src/BrowserWindow.cs`, `src/AiPanel.cs`, `src/Extensions.cs`, `src/BuiltInPages.cs`: the window, the AI side panel, extension loading, the games and new tab hosts.
 - `src/Theme.axaml`, `src/Home.html`: Mica's look, matching the Windows build: its colors (light and dark), the sidebar with vertical tabs, the page in a rounded frame, and the new tab page.
-- `src/SelfTest.cs`: `--self-test`. `src/Preview.cs`: `--preview <folder>` saves screenshots of a few scenes from the off-screen window. `test.sh`: build and test on macOS/Linux. `package.sh`: packages.
+- `src/Commands.cs` (Spotlight, palette, menus, keys), `src/PageTools.cs` (find, zoom, bookmarks, error page, site icons, resting), `src/Library.cs` + `src/Library.html` (downloads, History and Downloads pages), `src/Extras.cs` (reading mode, extensions, site card, private window, Personalize, task manager), `src/Island.cs` + `src/Ticker.cs` (the island and its rolling numbers), `src/Personalize.cs`, `src/Account.cs` (account card, profiles, language), `src/Dialogs.cs` (Mica's dialogs), `src/Localization.cs` (Vietnamese), `src/Corners.cs` (rounded page corners).
+- `src/SelfTest.cs`, `src/SelfTestFeatures.cs`: `--self-test`. `src/Preview.cs`: `--preview <folder>` saves screenshots of a few scenes from the off-screen window. `test.sh`: build and test on macOS/Linux. `package.sh`: packages.
 
 Profile folder: `%LOCALAPPDATA%\MicaCross` (Windows, kept apart from the real Mica profile), `~/Library/Application Support/Mica` (macOS), `~/.local/share/Mica` (Linux). `--profile <dir>` overrides it. `--install-extension <store id or URL>` installs a Chrome Web Store extension before start.
 

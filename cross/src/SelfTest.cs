@@ -12,7 +12,7 @@ namespace Mica {
  sealed partial class BrowserWindow {
   readonly List<string> results=new List<string>();
   int failures;
-  void Check(string name,bool ok,string detail) {results.Add((ok?"PASS ":"FAIL ")+name+(ok||detail==null?"":": "+detail));if(!ok)failures++;}
+  void Check(string name,bool ok,string detail) {results.Add((ok?"PASS ":"FAIL ")+name+(ok||detail==null?"":": "+detail));if(!ok)failures++;if(Program.SelfTestResult!=null)try {File.WriteAllLines(Program.SelfTestResult+".partial",results);} catch(IOException) {}}
   void Skip(string name,string why) {results.Add("SKIP "+name+": "+why);}
 
   // Runs an action that starts a load and waits until the tab stops loading.
@@ -36,12 +36,13 @@ namespace Mica {
 
   async Task RunSelfTest(string resultFile) {
    trace=new System.Collections.Concurrent.ConcurrentQueue<string>();
+   DownloadFolderOverride=Path.Combine(profile,"Downloads");
    try {
     var first=Active;
     var ready=new TaskCompletionSource<bool>();
     if(first.View.IsBrowserInitialized)ready.TrySetResult(true);else first.View.BrowserInitialized+=delegate {ready.TrySetResult(true);};
     Check("engine starts",await Task.WhenAny(ready.Task,Task.Delay(30000))==ready.Task,"browser never initialized");
-    Check("starts on a new tab",state.Tabs.Count==1&&first.Entry.Url=="mica://home"&&address.Text=="","tabs="+state.Tabs.Count+" url="+first.Entry.Url);
+    Check("starts on a new tab",state.Tabs.Count==1&&first.Entry.Url=="mica://home"&&address.Text=="A fresh start","tabs="+state.Tabs.Count+" url="+first.Entry.Url);
 
     await Page("games hub from the address bar",first,delegate {Navigate("mica://games");},"mica://games","Games");
     Check("address bar shows mica://games",address.Text=="mica://games",address.Text);
@@ -71,7 +72,7 @@ namespace Mica {
     Check("game arrives dark",await Js(first,"document.documentElement.className")=="dark",null);
 
     NewTab();var second=Active;
-    Check("new tab",state.Tabs.Count==2&&second!=first&&address.Text=="","tabs="+state.Tabs.Count);
+    Check("new tab",state.Tabs.Count==2&&second!=first&&address.Text=="A fresh start","tabs="+state.Tabs.Count);
     bool web=await Load(second,delegate {Navigate("example.com");},25);
     string webTitle=web?await Js(second,"document.title"):"";
     if(web&&webTitle=="Example Domain")Check("web page",second.Entry.Url=="https://example.com/",second.Entry.Url);
@@ -83,13 +84,22 @@ namespace Mica {
      string plain=await EvalAsync(second.View,"(async()=>{try{await fetch('https://example.com/',{mode:'no-cors',cache:'no-store'});return 'loaded';}catch(e){return 'blocked';}})()",15);
      Check("ad blocker stops an ad script",ad=="blocked"&&plain=="loaded","ad="+ad+" plain="+plain);
     } else Skip("ad blocker","needs the network");
+    if(web)await NewFeatures(first,second);else Skip("page tools","need a web page");
+    await Spotlights();
     if(Program.InstallErrors.Count>0)Check("Claude for Chrome installs",false,string.Join("; ",Program.InstallErrors));
     else if(!claudeLoaded)Skip("Claude for Chrome","not installed; run with --install-extension "+BrowserApp.ClaudeExtensionId);
     else if(!web)Skip("Claude for Chrome","needs a web page to bind to");
     else {
+     Show(second.Entry.Id);
+     Check("AI panel is off until turned on",!aiToggle.IsVisible,null);
+     state.AiProvider="claude";SetAiEnabled(true);
+     double before=Width;
      ToggleAi();
-     for(int i=0;i<100&&!(aiView.IsBrowserInitialized&&(aiView.Address??"").Contains("tabId="));i++)await Task.Delay(200);
+     for(int i=0;i<100&&(aiView==null||!(aiView.IsBrowserInitialized&&(aiView.Address??"").Contains("tabId=")));i++)await Task.Delay(200);
      await Task.Delay(1500);
+     Check("AI panel is a card beside the page; the window grows by its width",aiDock.IsVisible&&Math.Abs(Width-before-AiWidth)<1&&Math.Abs(aiDock.Bounds.Width-(AiWidth-7))<1.5,"width "+before+" -> "+Width+", card "+aiDock.Bounds.Width);
+     Check("the window's buttons move into the panel's header",aiCaptionSlot.Children.Count==4,null);
+     Check("the header names the AI and its extension",aiTitle.Text=="Claude"&&aiSite.Text=="Claude for Chrome",aiTitle.Text+" / "+aiSite.Text);
      Check("Claude panel binds to the tab in front",(aiView.Address??"").StartsWith(Claude.PanelUrl+"?tabId=")&&aiBoundTab==second.Entry.Id,aiView.Address);
      Check("Claude panel runs as the extension",await Js(aiView,"chrome.runtime.id")==BrowserApp.ClaudeExtensionId,null);
      Check("panel shim: no tab of its own",await EvalAsync(aiView,"(async()=>String(await chrome.tabs.getCurrent()))()",15)=="undefined",null);
@@ -98,7 +108,8 @@ namespace Mica {
      // How Claude reads and acts on a page: the debugger API on the tab, here reading the page's title through it.
      string driven=await EvalAsync(aiView,"(async()=>{const t=(await chrome.tabs.query({})).find(x=>x.url==='https://example.com/');const d={tabId:t.id};await chrome.debugger.attach(d,'1.3');try{const r=await chrome.debugger.sendCommand(d,'Runtime.evaluate',{expression:'document.title',returnByValue:true});return r.result.value;}finally{await chrome.debugger.detach(d);}})()",15);
      Check("Claude's debugger reaches the page",driven=="Example Domain",driven);
-     ToggleAi();
+     ToggleAi();await Task.Delay(500);
+     Check("closing gives the width back and the buttons return",Math.Abs(Width-before)<1&&aiCaptionSlot.Children.Count==0&&!aiDock.IsVisible,"width "+Width);
     }
     Show(first.Entry.Id);
     Check("switching tabs swaps the address",address.Text=="mica://2048"&&first.View.IsVisible&&!second.View.IsVisible,address.Text);
