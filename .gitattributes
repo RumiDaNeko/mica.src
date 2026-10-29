@@ -1,0 +1,4 @@
+# Keep every file byte for byte as it is on the build machine, so a cloud build matches a local one.
+* -text
+# CefGlue's source keeps Git's usual line-ending handling (its upgrade branch was made that way).
+cross/vendor/** text=auto
