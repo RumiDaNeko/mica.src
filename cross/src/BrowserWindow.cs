@@ -444,7 +444,7 @@ namespace Mica {
    view.LoadEnd+=delegate(object s,Xilium.CefGlue.Common.Events.LoadEndEventArgs e) {
     if(!e.Frame.IsMain)return;int status=e.HttpStatusCode;
     if(Navigation.IsWeb(FromEngine(e.Frame.Url))){e.Frame.ExecuteJavaScript(MediaScript,"",1);e.Frame.ExecuteJavaScript(WheelZoomScript,"",1);if(AiEnabled)e.Frame.ExecuteJavaScript(AskAiScript,"",1);}
-    Dispatcher.UIThread.Post(delegate {tab.LastStatus=status;if(!Program.Private)state.Visit(tab.Entry.Url,tab.Entry.Title);if(tab==Active)readerButton.Classes.Set("on",false);UpdateHomeSites();UpdateLibrary();Save();});
+    Dispatcher.UIThread.Post(delegate {tab.LastStatus=status;if(!Program.Private)state.Visit(tab.Entry.Url,tab.Entry.Title);if(tab==Active){readerButton.Classes.Set("on",false);BindClaudePanel(false);}UpdateHomeSites();UpdateLibrary();Save();});
    };
    view.LoadError+=delegate(object s,Xilium.CefGlue.Common.Events.LoadErrorEventArgs e) {
     if(!e.Frame.IsMain||e.ErrorCode==Xilium.CefGlue.CefErrorCode.Aborted)return;

@@ -41,7 +41,7 @@ namespace Mica {
   readonly TextBlock aiEmpty=new TextBlock {Text="Opening…",FontSize=12,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(24),TextAlignment=TextAlignment.Center};
   Button aiToggle;
   internal bool aiOpen;
-  MicaView aiView;string aiLoaded,aiBoundTab;bool aiBinding;AiExtension aiExtension;
+  MicaView aiView,aiBoundView;string aiLoaded,aiBoundTab;bool aiBinding;AiExtension aiExtension;
   double aiGrown,aiShift;DateTime aiClosedAt;DispatcherTimer aiRest,aiSlide;Action aiSlideEnd;
   // The window's own buttons (and the line before them): they move into the panel's header while it's open.
   readonly List<Control> captionParts=new List<Control>();StackPanel captionHome;
@@ -190,7 +190,7 @@ namespace Mica {
    await Task.CompletedTask;
   }
   internal void DisposeAiView() {
-   if(aiRest!=null)aiRest.Stop();var view=aiView;if(view==null)return;aiView=null;aiLoaded=null;aiBoundTab=null;
+   if(aiRest!=null)aiRest.Stop();var view=aiView;if(view==null)return;aiView=null;aiLoaded=null;aiBoundTab=null;aiBoundView=null;
    aiHost.Children.Remove(view);try {view.Dispose();}catch(Exception){}
    aiEmpty.Text="Opening…";
   }
@@ -306,17 +306,18 @@ namespace Mica {
   }
 
   // Points Claude's panel at the tab in front. Claude's panel works for one tab (sidepanel.html?tabId=N), by the
-  // extension's own tab ids; the panel page asks chrome.tabs which tab shows the active page.
+  // extension's own tab ids; the panel page asks chrome.tabs which tab shows the active page. It follows the page, not
+  // just Mica's tab: a tab that rested and woke has a new page under it, with a new id (as on Windows, claudeBoundView).
   internal async void BindClaudePanel(bool force) {
    var tab=Active;
    if(aiExtension==null||!aiExtension.FollowsTab||aiBinding||aiView==null||!aiOpen||tab==null||tab.View==null||!Navigation.IsWeb(tab.Entry.Url))return;
-   if(!force&&aiBoundTab==tab.Entry.Id&&aiExtension.IsPanel(aiView.Address)&&aiView.Address.Contains("tabId="))return;
+   if(!force&&aiBoundTab==tab.Entry.Id&&aiBoundView==tab.View&&aiExtension.IsPanel(aiView.Address)&&aiView.Address.Contains("tabId="))return;
    aiBinding=true;
    try {
     string url=new JavaScriptSerializer().Serialize(tab.View.Address);
     string id=await EvalAsync(aiView,"(async()=>{const ts=await chrome.tabs.query({});const t=ts.find(x=>x.url==="+url+");return t?String(t.id):'';})()",10);
     if(string.IsNullOrEmpty(id)||aiView==null)return;
-    aiBoundTab=tab.Entry.Id;
+    aiBoundTab=tab.Entry.Id;aiBoundView=tab.View;
     string want=aiExtension.PanelUrl+"?tabId="+id;
     if(!string.Equals(aiView.Address,want,StringComparison.OrdinalIgnoreCase))aiView.Address=want;
    } catch(Exception e) {Trace("bind failed: "+e.Message);}

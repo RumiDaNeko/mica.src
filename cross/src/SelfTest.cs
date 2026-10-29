@@ -117,6 +117,21 @@ namespace Mica {
      string driven=await EvalAsync(aiView,"(async()=>{const t=(await chrome.tabs.query({})).find(x=>x.url==='https://example.com/');const d={tabId:t.id};await chrome.debugger.attach(d,'1.3');try{const r=await chrome.debugger.sendCommand(d,'Runtime.evaluate',{expression:'document.title',returnByValue:true});return r.result.value;}finally{await chrome.debugger.detach(d);}})()",15);
      Check("Claude's debugger reaches the page",driven=="Example Domain",driven);
      await ClaudeTools();
+     // The panel follows the page under the tab (as on Windows, claudeBoundView): another site in the same tab, then
+     // the tab resting and waking with a new page under it, a new engine tab id.
+     Func<string> boundId=()=>{string at=aiView.Address??"";int i=at.IndexOf("tabId=",StringComparison.Ordinal);return i<0?"":at.Substring(i+6);};
+     Func<Task<string>> boundUrl=async()=>await EvalAsync(aiView,"(async()=>{try{return (await chrome.tabs.get("+boundId()+")).url;}catch(e){return 'error: '+e.message;}})()",15);
+     string idBefore=boundId();
+     await Load(second,delegate {Navigate("https://example.org/");},20);await Task.Delay(800);
+     string seen=await boundUrl();
+     Check("Claude sees the new address after going to another site",seen=="https://example.org/"&&boundId()==idBefore,seen+" id "+idBefore+" -> "+boundId());
+     Show(first.Entry.Id);await Task.Delay(300);RestTab(second);
+     bool rested=second.View==null;
+     await Load(second,delegate {Show(second.Entry.Id);},20);
+     for(int i=0;i<50&&!(aiBoundView==second.View&&boundId()!=idBefore);i++)await Task.Delay(200);
+     seen=await boundUrl();
+     Check("Claude's panel follows a tab that rested and woke",rested&&aiBoundView==second.View&&boundId()!=idBefore&&seen=="https://example.org/",seen+" id "+idBefore+" -> "+boundId());
+     await Load(second,delegate {Navigate("https://example.com/");},20);
      ToggleAi();await Task.Delay(500);
      Check("closing gives the width back and the buttons return",Math.Abs(Width-before)<1&&aiCaptionSlot.Children.Count==0&&!aiDock.IsVisible,"width "+Width);
     }
