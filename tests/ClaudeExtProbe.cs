@@ -32,6 +32,7 @@ namespace Mica {
      Navigate("https://example.com/",false);await WaitFor(()=>CurrentView()!=null&&CurrentView().CoreWebView2!=null,20000);await WaitForPage().ContinueWith(t=>{});
      // Claude Code drives the extension from its worker, with no panel open and often with Mica in the background.
      LoadExtensionRecords();RememberExtension(ClaudeExtensionId,prepared.Folder,"Chrome Web Store",prepared.Version);
+     if(aiExtensionsRepaired!=null)await aiExtensionsRepaired;
      aiPatchChecked.Remove(ClaudeExtensionId);await ClaudeExtensionInstalled();await Task.Delay(3000);
      await RunClaudeWorkerProbe(log);
      SetAiEnabled(true);ChooseAiProvider("claude",null);SetAiOpen(true);

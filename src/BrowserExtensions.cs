@@ -43,13 +43,13 @@ namespace Mica {
    CoreWebView2Profile ready;
    try {ready=await extensionProfileTask;}
    catch {extensionProfileTask=null;throw;}
-   if(!privateMode&&!aiExtensionsRepaired){aiExtensionsRepaired=true;RepairAiExtensions();}
+   if(!privateMode&&aiExtensionsRepaired==null)aiExtensionsRepaired=RepairAiExtensions();
    return ready;
   }
   // Claude Code drives Claude for Chrome from its worker, often with no panel open, so the AI extensions get Mica's
   // current shim at start, not only when the panel shows them.
-  bool aiExtensionsRepaired;
-  async void RepairAiExtensions() {foreach(var ai in AiExtensions)await AiExtensionInstalled(ai);}
+  Task aiExtensionsRepaired;
+  async Task RepairAiExtensions() {await Task.Yield();foreach(var ai in AiExtensions)await AiExtensionInstalled(ai);}
   async Task<CoreWebView2Profile> CreateExtensionProfile() {
    var sharedEnvironment=await EnsureEnvironment();
    if(closing)throw new OperationCanceledException("The browser is closing.");
