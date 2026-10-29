@@ -101,14 +101,25 @@ EOF
   <key>com.apple.security.personal-information.location</key><true/>
 </dict></plist>
 EOF
-    codesign --force --deep --options runtime --timestamp --entitlements out/entitlements.plist --sign "$SIGN_ID" "$bundle"
+    sign=(--force --options runtime --timestamp --sign "$SIGN_ID"); entitled=(--entitlements out/entitlements.plist)
   else
-    # Unsigned builds still get an ad-hoc signature over the whole bundle. The .NET apphost arrives ad-hoc signed
-    # on its own, which seals none of the bundle; once downloaded, Gatekeeper calls such an app "damaged" with no
-    # way to open it. Sealed ad-hoc, it is only "unverified", which Privacy & Security lets the user open.
-    codesign --force --deep --sign - "$bundle"
+    # Unsigned builds are still signed ad-hoc, all of it. Apple Silicon runs no unsigned code, and an app whose
+    # pieces aren't sealed together is "damaged" to Gatekeeper once downloaded, with no way to open it; sealed
+    # ad-hoc it is only "unverified", which Privacy & Security lets the user open.
+    sign=(--force --timestamp=none --sign -); entitled=()
   fi
-  codesign --verify --deep --strict "$bundle"
+  # Inside out: every Mach-O file (Chromium's framework and libraries, .NET's, the helper process), deepest first,
+  # then each framework, then the app. Nothing in the app changes after this.
+  find "$bundle/Contents" -type f | awk '{print length($0) " " $0}' | sort -rn | cut -d' ' -f2- | while IFS= read -r f; do
+    file -b "$f" | grep -q 'Mach-O' || continue
+    if file -b "$f" | grep -q 'executable'; then codesign "${sign[@]}" ${entitled[@]+"${entitled[@]}"} "$f"; else codesign "${sign[@]}" "$f"; fi
+  done
+  find "$bundle/Contents" -type d \( -name '*.framework' -o -name '*.app' \) | awk '{print length($0) " " $0}' | sort -rn | cut -d' ' -f2- | while IFS= read -r d; do
+    codesign "${sign[@]}" "$d"
+  done
+  codesign "${sign[@]}" ${entitled[@]+"${entitled[@]}"} "$bundle"
+  codesign --verify --deep --strict --verbose=2 "$bundle"
+  spctl -a -vv "$bundle" || true  # only reports: an unsigned (ad-hoc) app is expected to be rejected here
   # The usual drag-to-install window: Mica beside a shortcut to Applications, big icons, no toolbar. Finder lays
   # the window out on a writable copy of the image; where Finder can't be scripted (some build machines), the
   # image still opens to the same two icons, just in Finder's default arrangement.

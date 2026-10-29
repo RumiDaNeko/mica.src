@@ -70,6 +70,25 @@ jobs:
       - name: Package
         if: success() || failure()
         run: ARCH=${{ matrix.arch }} bash cross/package.sh ${{ matrix.target }}
+      # The app as a user gets it: out of the disk image, its signature whole, named Mica, and it starts and passes
+      # the self-test from there (helper processes included).
+      - name: Check the Mac disk image
+        if: matrix.target == 'macos'
+        env:
+          MICA_NO_GPU: '1'
+        run: |
+          dmg="$(ls cross/out/Mica-*.dmg | head -n 1)"; mount="$RUNNER_TEMP/mica-dmg"
+          hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount"
+          trap 'hdiutil detach "$mount" -force >/dev/null 2>&1 || true' EXIT
+          app="$mount/Mica.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app" 2>&1 | grep -E 'Identifier|Signature|Sealed'
+          test -L "$mount/Applications"
+          [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$app/Contents/Info.plist")" = Mica ]
+          set +e; "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt"; code=$?; set -e
+          tail -n 5 "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || echo "No result file: the app from the image exited early (code $code)."
+          grep '^FAIL' "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || true
+          exit $code
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:

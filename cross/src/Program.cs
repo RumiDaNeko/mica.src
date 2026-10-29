@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
@@ -80,7 +81,17 @@ namespace Mica {
   }
   public override void OnFrameworkInitializationCompleted() {
    var desktop=ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-   if(desktop!=null)desktop.MainWindow=new BrowserWindow(Program.Profile,Program.SelfTestResult);
+   if(desktop!=null) {
+    var window=new BrowserWindow(Program.Profile,Program.SelfTestResult);desktop.MainWindow=window;
+    // The Mac app menu: Mica's own items instead of Avalonia's "About Avalonia". macOS adds Services, Hide Mica,
+    // Hide Others, Show All and Quit Mica (Cmd+Q) after them.
+    if(OperatingSystem.IsMacOS()) {
+     var about=new NativeMenuItem("About Mica");about.Click+=delegate {window.ShowAbout();};
+     var settings=new NativeMenuItem("Settings…") {Gesture=new Avalonia.Input.KeyGesture(Avalonia.Input.Key.OemComma,Avalonia.Input.KeyModifiers.Meta)};settings.Click+=delegate {window.ShowPersonalize();};
+     var menu=new NativeMenu();menu.Add(about);menu.Add(new NativeMenuItemSeparator());menu.Add(settings);
+     NativeMenu.SetMenu(this,menu);
+    }
+   }
    base.OnFrameworkInitializationCompleted();
   }
   internal void ApplyTheme(bool dark) {RequestedThemeVariant=dark?ThemeVariant.Dark:ThemeVariant.Light;}

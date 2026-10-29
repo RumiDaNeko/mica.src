@@ -20,12 +20,12 @@ namespace Mica {
   static string DialogGlyph(string title) {
    switch(title) {
     case "Keyboard shortcuts":return Glyphs.Keys;case "Clear browsing data":return Glyphs.Trash;case "Browser task manager":return Glyphs.Work;
-    case "Personalize":return Glyphs.Palette;case "Print this page":return Glyphs.Print;case "AI side panel":return Glyphs.Chat;case "Your own AI address":return Glyphs.Chat;
+    case "Personalize":return Glyphs.Palette;case "About Mica":return Glyphs.Info;case "Print this page":return Glyphs.Print;case "AI side panel":return Glyphs.Chat;case "Your own AI address":return Glyphs.Chat;
    }
    return Glyphs.Info;
   }
   static string DialogSubtitle(string title) {
-   if(title=="Keyboard shortcuts")return "Quick reference";if(title=="Print this page")return "Page tool";if(title=="Personalize")return "Look and feel";
+   if(title=="Keyboard shortcuts")return "Quick reference";if(title=="About Mica")return "Version";if(title=="Print this page")return "Page tool";if(title=="Personalize")return "Look and feel";
    return "Your data";
   }
   // Built and shown at once; close() takes it down. Escape closes it too. A page tool (Print) sits in the island's
@@ -55,6 +55,15 @@ namespace Mica {
    card.Transitions=new Avalonia.Animation.Transitions {new Avalonia.Animation.DoubleTransition {Property=OpacityProperty,Duration=TimeSpan.FromMilliseconds(160)},new Avalonia.Animation.TransformOperationsTransition {Property=RenderTransformProperty,Duration=TimeSpan.FromMilliseconds(200),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}};
    popup.Opened+=delegate {card.Opacity=1;card.RenderTransform=Avalonia.Media.Transformation.TransformOperations.Parse("translateY(0px)");};
    return popup;
+  }
+  // About Mica (the Mac app menu): the version, its engine and where it's from.
+  internal void ShowAbout() {
+   StackPanel body,actions;var popup=MicaDialog("About Mica",360,out body,out actions);
+   var name=DialogText("Mica "+typeof(BrowserWindow).Assembly.GetName().Version.ToString(3),15,"Ink");name.FontWeight=FontWeight.SemiBold;body.Children.Add(name);
+   var engine=DialogText("Chromium "+Xilium.CefGlue.CefRuntime.ChromeVersion,12,"Muted");engine.Margin=new Thickness(0,4,0,10);body.Children.Add(engine);
+   body.Children.Add(DialogText("A light, calm web browser.",13,"Ink"));
+   var done=DialogButton("Done",true);done.Click+=delegate {popup.IsOpen=false;};actions.Children.Add(done);
+   popup.IsOpen=true;
   }
   static Button DialogButton(string text,bool primary) {
    var b=new Button {Content=text,Padding=new Thickness(18,9)};b.Classes.Add("flat");if(primary)b.Classes.Add("on");return b;
