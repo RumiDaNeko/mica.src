@@ -5,9 +5,9 @@ name: Cross
 
 on:
   push:
-    paths: ['cross/**', 'src/Core.cs', 'src/ExtensionPackage.cs', 'src/AiExtensions.cs', 'src/DownloadModel.cs', 'src/Strings.vi.tsv', 'src/Reader.js', 'extensions/**', '.github/workflows/cross.yml']
+    paths: ['cross/**', 'src/Core.cs', 'src/BrowserUpdates.cs', 'src/ExtensionPackage.cs', 'src/AiExtensions.cs', 'src/DownloadModel.cs', 'src/Strings.vi.tsv', 'src/Reader.js', 'extensions/**', '.github/workflows/cross.yml']
   pull_request:
-    paths: ['cross/**', 'src/Core.cs', 'src/ExtensionPackage.cs', 'src/AiExtensions.cs', 'src/DownloadModel.cs', 'src/Strings.vi.tsv', 'src/Reader.js', 'extensions/**', '.github/workflows/cross.yml']
+    paths: ['cross/**', 'src/Core.cs', 'src/BrowserUpdates.cs', 'src/ExtensionPackage.cs', 'src/AiExtensions.cs', 'src/DownloadModel.cs', 'src/Strings.vi.tsv', 'src/Reader.js', 'extensions/**', '.github/workflows/cross.yml']
   workflow_dispatch:
   # The cloud release (release.yml) builds the Mac and Linux packages through this workflow.
   workflow_call:
