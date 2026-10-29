@@ -1,0 +1,96 @@
+# Releases Mica from the cloud: Windows installers, the Mac disk images and the Linux AppImage, all built from the
+# same commit, signed with Mica's release key and published to the public release repo, where installed copies
+# and the website find them. Run it by hand (Actions > Release > Run workflow) after bumping the version.
+#
+# Needs two repository secrets:
+#   MICA_RELEASE_KEY    the release signing key (the XML in D:\creds\mica-release-signing-key.xml)
+#   MICA_RELEASE_TOKEN  a token that can publish releases on RumiDaNeko/mica. (fine-grained: Contents read and write)
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: Release notes (plain text, no double quotes)
+        required: false
+        default: ''
+
+concurrency: release
+
+jobs:
+  # A version can only go out once: a published release is never changed underneath installed copies.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        env:
+          GH_TOKEN: ${{ secrets.MICA_RELEASE_TOKEN }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::error::Add the MICA_RELEASE_TOKEN secret first."; exit 1; }
+          version=$(sed -n 's/.*AppVersion="\([^"]*\)".*/\1/p' src/BrowserUpdates.cs)
+          [ -n "$version" ] || { echo "::error::AppVersion not found"; exit 1; }
+          if gh release view "v$version" --repo 'RumiDaNeko/mica.' --json isDraft --jq '.isDraft' 2>/dev/null | grep -q false; then
+            echo "::error::v$version is already published. Bump the version first."; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  cross:
+    needs: check
+    uses: ./.github/workflows/cross.yml
+
+  windows:
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - name: Keep line endings
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .deps/webview2-fixed-x64.cab
+          key: webview2-fixed-${{ hashFiles('package-portable.ps1') }}
+      - name: Release folder with the bundled engine
+        shell: powershell
+        run: .\package-portable.ps1 -OutputDirectory "release-v${{ needs.check.outputs.version }}"
+      - name: Installers
+        shell: powershell
+        run: .\build-installer.ps1 -OutputDirectory installer-output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: installer-output/Mica-*
+          compression-level: 0
+          retention-days: 7
+
+  publish:
+    needs: [check, cross, windows]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-installers
+          path: installer-output
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mica-*
+          path: cross-packages
+      - name: Sign and publish
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.MICA_RELEASE_TOKEN }}
+          RELEASE_KEY: ${{ secrets.MICA_RELEASE_KEY }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          if(!$env:RELEASE_KEY){throw 'Add the MICA_RELEASE_KEY secret first.'}
+          $key=Join-Path $env:RUNNER_TEMP 'release-key.xml'
+          [IO.File]::WriteAllText($key,$env:RELEASE_KEY)
+          $env:MICA_RELEASE_KEY=$key
+          try {
+           $notes=if($env:NOTES){$env:NOTES.Replace('"',"'")}else{''}
+           $v='${{ needs.check.outputs.version }}'
+           .\publish-release.ps1 -Repo 'RumiDaNeko/mica.' -Notes $notes -Installer "installer-output\Mica-$v-Setup.exe" -CrossDir cross-packages
+          } finally {Remove-Item -LiteralPath $key -Force -ErrorAction SilentlyContinue}
