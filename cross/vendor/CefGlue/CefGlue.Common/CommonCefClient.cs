@@ -80,6 +80,16 @@ namespace Xilium.CefGlue.Common
             return _owner.JSDialogHandler;
         }
 
+        protected override CefPermissionHandler GetPermissionHandler()
+        {
+            return _owner.PermissionHandler;
+        }
+
+        protected override CefCommandHandler GetCommandHandler()
+        {
+            return _owner.CommandHandler;
+        }
+
         protected override CefLifeSpanHandler GetLifeSpanHandler()
         {
             return _lifeSpanHandler;

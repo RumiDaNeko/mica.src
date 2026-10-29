@@ -56,6 +56,9 @@ namespace Mica {
     if(extensions.Count>0)flags.Add(new KeyValuePair<string,string>("load-extension",string.Join(",",extensions)));
     // As on Windows: an extension driving a page (Claude for Chrome) doesn't get Chrome's "is debugging" bar.
     flags.Add(new KeyValuePair<string,string>("silent-debugger-extension-api",""));
+    // Chromium's own UI stays away (ChromiumUi.cs): its profile settings are written before it starts.
+    ChromiumUi.SeedPreferences(Path.Combine(engine,"Default"));
+    foreach(var name in ChromiumUi.Switches)flags.Add(new KeyValuePair<string,string>(name,""));
     // Machines with no usable GPU (build machines): Chromium's GPU process would crash and restart over and over,
     // stalling pages, so it draws in software from the start.
     if(Environment.GetEnvironmentVariable("MICA_NO_GPU")=="1"){flags.Add(new KeyValuePair<string,string>("disable-gpu",""));flags.Add(new KeyValuePair<string,string>("disable-gpu-compositing",""));}

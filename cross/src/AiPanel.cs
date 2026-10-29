@@ -180,6 +180,7 @@ namespace Mica {
    aiEmpty.Text="Opening "+AiName()+"…";
    var view=new MicaView {Address=address};aiView=view;aiLoaded=address;
    view.LifeSpanHandler=new PopupsToTabs(this);
+   view.PermissionHandler=new SitePermissions(this,()=>aiView==view&&aiOpen);view.CommandHandler=ChromiumUi.CommandHandler;view.DownloadHandler=downloadHandler;
    view.LoadStart+=delegate {Dispatcher.UIThread.Post(delegate {if(aiView==view)aiEmpty.Text="";});};
    view.LoadEnd+=delegate(object s,Xilium.CefGlue.Common.Events.LoadEndEventArgs e) {if(e.Frame.IsMain)Dispatcher.UIThread.Post(delegate {BindClaudePanel(false);});};
    view.LoadError+=delegate(object s,Xilium.CefGlue.Common.Events.LoadErrorEventArgs e) {

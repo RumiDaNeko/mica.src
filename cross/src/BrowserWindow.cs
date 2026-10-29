@@ -422,6 +422,8 @@ namespace Mica {
    view.KeyboardHandler=new PageKeys(this);
    view.DisplayHandler=new PageDisplay(this,tab);
    view.DownloadHandler=downloadHandler;
+   // Chromium's own prompts, dialogs and bubbles never show (ChromiumUi.cs).
+   view.PermissionHandler=new SitePermissions(this,()=>tabs.ContainsKey(tab.Entry.Id)&&tab.View==view);view.JSDialogHandler=new PageDialogs(this,tab);view.CommandHandler=ChromiumUi.CommandHandler;
    view.LoadError+=delegate(object s,Xilium.CefGlue.Common.Events.LoadErrorEventArgs e) {Trace("error "+e.ErrorCode+" "+e.ErrorText+" "+e.FailedUrl);};
    view.AddressChanged+=delegate(object s,string a) {Trace("address "+a);};
    view.LoadEnd+=delegate(object s,Xilium.CefGlue.Common.Events.LoadEndEventArgs e) {Trace("end "+e.HttpStatusCode+" main="+e.Frame.IsMain);};

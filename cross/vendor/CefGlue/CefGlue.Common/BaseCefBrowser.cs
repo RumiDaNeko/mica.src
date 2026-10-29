@@ -203,6 +203,16 @@ namespace Xilium.CefGlue.Common
         public JSDialogHandler JSDialogHandler { get => _adapter.JSDialogHandler; set => _adapter.JSDialogHandler = value; }
 
         /// <summary>
+        /// Mica: permission prompts (camera, microphone, location, notifications). Without one, Chrome style shows its own prompt.
+        /// </summary>
+        public CefPermissionHandler PermissionHandler { get => _adapter.PermissionHandler; set => _adapter.PermissionHandler = value; }
+
+        /// <summary>
+        /// Mica: Chrome commands and which of Chrome's page icons and bubbles exist (Chrome style only).
+        /// </summary>
+        public CefCommandHandler CommandHandler { get => _adapter.CommandHandler; set => _adapter.CommandHandler = value; }
+
+        /// <summary>
         /// Gets or set the url.
         /// </summary>
         public string Address { get => _adapter.Address; set => _adapter.Address = value; }

@@ -87,6 +87,7 @@ namespace Mica {
    var done=downloads.FirstOrDefault(d=>d.Status=="Completed");
    Check("download rides in the island",islandDownloads.Children.Count>0,null);
    Check("download saved",done!=null&&File.Exists(done.FilePath)&&File.ReadAllText(done.FilePath)=="mica",done==null?"none":done.Status+" "+done.FilePath);
+   await ChromiumUiProbe(web);
 
    Show(first.Entry.Id);
    await Page("history page",first,delegate {Navigate("mica://history");},"mica://history","History");
@@ -161,5 +162,33 @@ await run('debugger.detach',async()=>{await chrome.debugger.detach({tabId});});
 await run('as mica tabs',async()=>(await chrome.windows.getAll({windowTypes:['normal','popup','app','devtools']})).length-before<=2);
 await run('tabs.remove',async()=>{await chrome.tabs.remove(second);await new Promise(r=>setTimeout(r,1500));try{await chrome.tabs.get(second);return 'still there';}catch(e){return 'closed';}});
 return JSON.stringify(out);})()";
+
+  // Mica never shows Chromium's own UI: no bubble, prompt or dialog window of Chromium's appears (on Windows they are
+  // top-level windows of Mica's process), and Mica's own card or dialog takes its place.
+  async Task ChromiumUiProbe(CrossTab web) {
+   Func<string> chromium=()=>{var seen=ChromiumWindows.Visible();return seen==null?null:string.Join(", ",seen);};
+   bool measured=chromium()!=null;if(!measured)Skip("no Chromium windows","only measurable on Windows");
+   await Task.Delay(1200);
+   if(measured)Check("a download shows no Chromium bubble",chromium()=="",chromium());
+   UserZoom(1);await Task.Delay(1200);
+   if(measured)Check("zooming shows no Chromium bubble",chromium()=="",chromium());
+   ZoomStep(0);HideIslandZoom();
+   // A page dialog is Mica's, and the page gets its answer.
+   web.View.ExecuteJavaScript("setTimeout(()=>{window.__said=confirm('Keep going?')},0)","",1);
+   for(int i=0;i<30&&openDialog==null;i++)await Task.Delay(100);
+   bool ours=openDialog!=null;string seenNow=measured?chromium():"";
+   if(openDialog!=null){foreach(var b in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(openDialog.Child))if(b is Button&&(string)((Button)b).Tag=="dialog-ok"){((Button)b).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));break;}}
+   await Task.Delay(300);string said=await Js(web,"String(window.__said)");
+   Check("a page's confirm() is Mica's dialog and gets its answer",ours&&said=="true"&&seenNow=="",ours+" said="+said+" chromium="+seenNow);
+   // Permissions ask through Mica's card.
+   foreach(var probe in new[]{new[]{"camera","navigator.mediaDevices.getUserMedia({video:true}).then(()=>'yes',e=>e.name)"},new[]{"location","new Promise(r=>navigator.geolocation.getCurrentPosition(()=>r('yes'),e=>r('code '+e.code)))"},new[]{"notifications","Notification.requestPermission()"}}) {
+    web.View.ExecuteJavaScript("window.__asked=null;Promise.resolve("+probe[1]+").then(v=>window.__asked=String(v))","",1);
+    for(int i=0;i<40&&sitePrompt==null;i++)await Task.Delay(100);
+    string card=sitePromptText;seenNow=measured?chromium():"";
+    await Task.Delay(750);AnswerSitePrompt(false);
+    string asked="null";for(int i=0;i<30&&asked=="null";i++){await Task.Delay(100);asked=await Js(web,"String(window.__asked)");}
+    Check("asking for "+probe[0]+" shows Mica's card, and Block blocks",card!=null&&card.StartsWith("example.com wants to")&&seenNow==""&&asked!="yes"&&asked!="granted"&&asked!="null"&&sitePrompt==null,"card="+card+" answer="+asked+" chromium="+seenNow);
+   }
+  }
  }
 }

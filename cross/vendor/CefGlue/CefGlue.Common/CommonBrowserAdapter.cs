@@ -137,6 +137,8 @@ namespace Xilium.CefGlue.Common
         public DisplayHandler DisplayHandler { get; set; }
         public RenderHandler RenderHandler { get; set; }
         public JSDialogHandler JSDialogHandler { get; set; }
+        public CefPermissionHandler PermissionHandler { get; set; }
+        public CefCommandHandler CommandHandler { get; set; }
 
         #endregion
 
