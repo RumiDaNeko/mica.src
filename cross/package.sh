@@ -11,10 +11,17 @@ version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Mica.Cross.csproj)"
 mkdir -p out
 case "${ARCH:-$(uname -m)}" in arm64|aarch64) platform=ARM64; arch=arm64 ;; *) platform=x64; arch=x64 ;; esac
 
+# "dotnet publish -o" would also send CefGlue's helper process (a project reference published for each OS) into that
+# folder, so Mica publishes to its own publish folder, with the helper under CefGlueBrowserProcess/, and is copied.
+publish() {
+  dotnet publish -c Release -r "$1" -p:Platform=$platform
+  rm -rf "$2"; mkdir -p "$2"; cp -a "bin/$platform/Release/net8.0/$1/publish/." "$2/"
+}
+
 case "$target" in
 linux)
   rid=linux-$arch; app="out/mica-$version-$rid"
-  rm -rf "$app"; dotnet publish -c Release -r "$rid" -p:Platform=$platform -o "$app"
+  publish "$rid" "$app"
   chmod +x "$app/Mica" "$app/CefGlueBrowserProcess/Xilium.CefGlue.BrowserProcess"
   # Chromium's setuid sandbox helper, when the CEF package ships one, must be owned by root with 4755.
   if [ -f "$app/CefGlueBrowserProcess/chrome-sandbox" ]; then
@@ -46,7 +53,7 @@ EOF
 macos)
   # Chromium 134 comes for both Intel (osx-x64) and Apple Silicon (osx-arm64).
   rid=osx-$arch; pub="out/publish-$rid"; bundle="out/Mica.app"
-  rm -rf "$pub" "$bundle"; dotnet publish -c Release -r "$rid" -p:Platform=$platform -o "$pub"
+  rm -rf "$bundle"; publish "$rid" "$pub"
   mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
   cp -a "$pub/." "$bundle/Contents/MacOS/"
   chmod +x "$bundle/Contents/MacOS/Mica" "$bundle/Contents/MacOS/CefGlueBrowserProcess/Xilium.CefGlue.BrowserProcess"
