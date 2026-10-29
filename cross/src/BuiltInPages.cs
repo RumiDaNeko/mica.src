@@ -125,13 +125,16 @@ namespace Mica {
   sealed class Handler : CefResourceHandler {
    readonly byte[] body;readonly bool found;readonly string redirect;int offset;
    internal string Mime="text/html",Csp=Policy;
-   public Handler(byte[] page,string redirectTo) {body=page??new byte[0];found=page!=null;redirect=redirectTo;}
+   // A missing page still gets a body: an empty 404 makes Chromium put its own error page in, in another process.
+   static readonly byte[] Missing=System.Text.Encoding.UTF8.GetBytes("<!doctype html><meta charset=utf-8><title>Not found</title><meta name=color-scheme content='light dark'><style>body{font:15px system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0;color:#7c728e}</style><p>There's nothing here.</p>");
+   public Handler(byte[] page,string redirectTo) {body=page??Missing;found=page!=null;redirect=redirectTo;}
    protected override bool Open(CefRequest request,out bool handleRequest,CefCallback callback) {handleRequest=true;return true;}
    protected override void GetResponseHeaders(CefResponse response,out long responseLength,out string redirectUrl) {
     redirectUrl=redirect;responseLength=body.Length;
     if(redirect!=null){response.Status=302;response.StatusText="Found";response.SetHeaderByName("Location",redirect,true);return;}
     response.Status=found?200:404;response.StatusText=found?"OK":"Not Found";
     response.MimeType=Mime;response.Charset="utf-8";
+    if(!found)response.SetHeaderByName("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'",true);
     if(found) {response.SetHeaderByName("Cache-Control","no-store",true);response.SetHeaderByName("Content-Security-Policy",Csp,true);response.SetHeaderByName("X-Content-Type-Options","nosniff",true);}
    }
    protected override bool Skip(long bytesToSkip,out long bytesSkipped,CefResourceSkipCallback callback) {
