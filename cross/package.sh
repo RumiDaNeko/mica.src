@@ -48,6 +48,8 @@ EOF
     if command -v convert >/dev/null; then convert "$app/mica.ico[0]" "$dir/mica.png"; else touch "$dir/mica.png"; fi
     printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/usr/lib/mica/Mica" "$@"\n' > "$dir/AppRun"; chmod +x "$dir/AppRun"
     appimage_arch=$([ $arch = arm64 ] && echo aarch64 || echo x86_64)
+    # Everyone who runs the AppImage must be able to read it (appimagetool checks).
+    chmod -R a+rX "$dir"; chmod a+rx "$dir/AppRun"
     ARCH=$appimage_arch appimagetool "$dir" "out/Mica-$version-$appimage_arch.AppImage"
   fi
   ;;
@@ -73,6 +75,10 @@ macos)
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <key>NSCameraUsageDescription</key><string>A website you visit wants to use your camera. Mica asks you first.</string>
+  <key>NSMicrophoneUsageDescription</key><string>A website you visit wants to use your microphone. Mica asks you first.</string>
+  <key>NSLocationUsageDescription</key><string>A website you visit wants to know your location. Mica asks you first.</string>
+  <key>NSLocationWhenInUseUsageDescription</key><string>A website you visit wants to know your location. Mica asks you first.</string>
   <key>CFBundleURLTypes</key><array><dict>
     <key>CFBundleURLName</key><string>Web site URL</string>
     <key>CFBundleURLSchemes</key><array><string>http</string><string>https</string></array>

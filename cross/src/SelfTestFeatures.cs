@@ -199,6 +199,8 @@ return JSON.stringify(out);})()";
     string card=sitePromptText;seenNow=measured?chromium():"";
     await Task.Delay(750);AnswerSitePrompt(false);
     string asked="null";for(int i=0;i<30&&asked=="null";i++){await Task.Delay(100);asked=await Js(web,"String(window.__asked)");}
+    // macOS itself refuses the camera to a test build that isn't an app bundle, before Mica is asked.
+    if(Mac&&probe[0]=="camera"&&card==null&&asked=="NotAllowedError"){Skip("asking for camera shows Mica's card","macOS refuses the camera to the unbundled test build");continue;}
     Check("asking for "+probe[0]+" shows Mica's card, and Block blocks",card!=null&&card.StartsWith("example.com wants to")&&seenNow==""&&asked!="yes"&&asked!="granted"&&asked!="null"&&sitePrompt==null,"card="+card+" answer="+asked+" chromium="+seenNow);
    }
   }
