@@ -69,34 +69,23 @@ namespace Mica {
    RollText(headline,"10:01");RollText(headline,"10:02");await Task.Delay(600);
    RegressionCheck("a roll interrupted by another lands on the latest value",delegate {Require(headline.Text=="10:02",headline.Text);});
    tickerInTests=false;UpdateHomeClock();
-   // Sites: page commands live in a submenu that opens on hover.
-   ShowMenu();await Task.Delay(260);
+   // The menu: one list grouped under headings, opening above its button.
+   log.Add(await MeasureFrames("menu open",ShowMenu,260));
    var topNames=PopupButtons(menuPopup).Select(b=>System.Windows.Automation.AutomationProperties.GetName(b)).ToList();
-   RegressionCheck("page commands are grouped under Sites",delegate {Require(topNames.Contains("Sites")&&!topNames.Contains("Find in page")&&!topNames.Contains("Site permissions")&&!topNames.Contains("Print"),string.Join(",",topNames));});
-   Func<UIElement,System.Windows.Input.MouseEventArgs> enter=delegate(UIElement target) {return new System.Windows.Input.MouseEventArgs(System.Windows.Input.Mouse.PrimaryDevice,0) {RoutedEvent=UIElement.MouseEnterEvent};};
-   log.Add(await MeasureFrames("sites submenu open",delegate {sitesRow.RaiseEvent(enter(sitesRow));},220));
-   var siteNames=PopupButtons(sitesPopup).Select(b=>System.Windows.Automation.AutomationProperties.GetName(b)).ToList();
-   RegressionCheck("hovering Sites opens its submenu with the page commands",delegate {
-    Require(sitesPopup.IsOpen&&menuPopup.IsOpen,"submenu "+sitesPopup.IsOpen+" menu "+menuPopup.IsOpen);Require(menuPopup.StaysOpen,"menu still light-dismisses under the submenu");
-    foreach(var n in new[]{"Find in page","Print","Cast media","YouTube ambient","Site permissions","Developer tools"})Require(siteNames.Contains(n),"missing "+n+": "+string.Join(",",siteNames));
+   var headings=((StackPanel)((ScrollViewer)((Border)menuPopup.Child).Child).Content).Children.OfType<TextBlock>().Select(x=>x.Text).ToList();
+   RegressionCheck("the menu lists every command under its heading, with no submenus",delegate {
+    foreach(var n in new[]{"Find in page","Reading mode","Print","Cast media","YouTube ambient","Site permissions","Developer tools","Extensions","Clear browsing data","Ad blocking","Task manager","Keyboard shortcuts","Updates","Language"})Require(topNames.Contains(n),"missing "+n+": "+string.Join(",",topNames));
+    Require(headings.SequenceEqual(new[]{"SITES","PRIVACY","TOOLS"}),"headings "+string.Join(",",headings));
+    Require(topNames.IndexOf("Find in page")>topNames.IndexOf("Profiles")&&topNames.IndexOf("Task manager")>topNames.IndexOf("Extensions"),"order "+string.Join(",",topNames));
    });
-   CaptureElement((FrameworkElement)menuPopup.Child,"sites-menu.png");CaptureElement((FrameworkElement)sitesPopup.Child,"sites-submenu.png");
-   var otherRow=PopupButtons(menuPopup).First(b=>System.Windows.Automation.AutomationProperties.GetName(b)=="Updates");otherRow.RaiseEvent(enter(otherRow));await Task.Delay(80);
-   RegressionCheck("pointing at another row folds the submenu",delegate {Require(!sitesPopup.IsOpen&&menuPopup.IsOpen&&!menuPopup.StaysOpen,"submenu "+sitesPopup.IsOpen+" stays "+menuPopup.StaysOpen);});
-   sitesRow.RaiseEvent(new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice,PresentationSource.FromVisual(sitesRow),0,System.Windows.Input.Key.Right) {RoutedEvent=UIElement.PreviewKeyDownEvent});await Task.Delay(120);
-   RegressionCheck("Right arrow on Sites opens the submenu",delegate {Require(sitesPopup.IsOpen,"closed");});
-   RegressionCheck("settings-like commands are grouped under Privacy and Tools",delegate {Require(topNames.Contains("Privacy")&&topNames.Contains("Tools")&&!topNames.Contains("Task manager")&&!topNames.Contains("Extensions")&&!topNames.Contains("Keyboard shortcuts")&&topNames.Count<=15,string.Join(",",topNames));});
-   var toolsRow=PopupButtons(menuPopup).First(b=>(b.Tag as string)=="menu-tools");toolsRow.RaiseEvent(enter(toolsRow));await Task.Delay(120);
-   var toolNames=PopupButtons(sitesPopup).Select(b=>System.Windows.Automation.AutomationProperties.GetName(b)).ToList();
-   RegressionCheck("hovering Tools swaps the submenu to its own rows",delegate {Require(sitesPopup.IsOpen&&sitesPopup.PlacementTarget==toolsRow&&toolNames.Contains("Task manager")&&toolNames.Contains("Keyboard shortcuts")&&!toolNames.Contains("Print"),string.Join(",",toolNames));});
-   CaptureElement((FrameworkElement)menuPopup.Child,"grouped-menu.png");CaptureElement((FrameworkElement)sitesPopup.Child,"tools-submenu.png");
-   var privacyRow=PopupButtons(menuPopup).First(b=>(b.Tag as string)=="menu-privacy");privacyRow.RaiseEvent(enter(privacyRow));await Task.Delay(120);
-   var privacyNames=PopupButtons(sitesPopup).Select(b=>System.Windows.Automation.AutomationProperties.GetName(b)).ToList();
-   RegressionCheck("Privacy holds ad blocking, extensions and clearing data",delegate {Require(privacyNames.Contains("Ad blocking")&&privacyNames.Contains("Extensions")&&privacyNames.Contains("Clear browsing data"),string.Join(",",privacyNames));});
-   RegressionCheck("the menu is no taller than the sidebar",delegate {var card=(FrameworkElement)menuPopup.Child;var sidebar=Find<FrameworkElement>("Sidebar");Require(sidebar==null||card.ActualHeight<=sidebar.ActualHeight,card.ActualHeight+" > "+(sidebar==null?0:sidebar.ActualHeight));});
+   RegressionCheck("the menu opens above its button",delegate {
+    // The test window sits off-screen, where WPF pulls popups back onto the screen, so the placement is checked rather than the position.
+    Require(menuPopup.IsOpen&&menuPopup.Placement==System.Windows.Controls.Primitives.PlacementMode.Top&&menuPopup.PlacementTarget==Find<Button>("MenuButton")&&menuPopup.VerticalOffset==MenuShadowRoom.Bottom-8,menuPopup.Placement+" offset "+menuPopup.VerticalOffset);
+   });
+   RegressionCheck("the menu is no taller than the window",delegate {var card=(FrameworkElement)menuPopup.Child;Require(card.ActualHeight<=window.ActualHeight-40+1,card.ActualHeight+" > "+(window.ActualHeight-40));});
+   CaptureElement((FrameworkElement)menuPopup.Child,"grouped-menu.png");
    CloseMenus();await Task.Delay(100);
-   RegressionCheck("closing the menu closes the submenu",delegate {Require(!sitesPopup.IsOpen&&!menuPopup.IsOpen&&!menuPopup.StaysOpen,"left open");});
-   await Task.Delay(200);
+   RegressionCheck("the menu closes",delegate {Require(!menuPopup.IsOpen,"left open");});   await Task.Delay(200);
    // The close animation, drawn at moments along its timeline as one strip.
    {
     window.UpdateLayout();var still=new System.Windows.Media.Imaging.RenderTargetBitmap((int)window.ActualWidth,(int)window.ActualHeight,96,96,PixelFormats.Pbgra32);still.Render(window);still.Freeze();
