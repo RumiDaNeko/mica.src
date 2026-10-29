@@ -36,7 +36,7 @@ namespace Mica {
    var dot=Res(new Border {Width=6,Height=6,CornerRadius=new CornerRadius(3),Margin=new Thickness(0,0,7,0),VerticalAlignment=VerticalAlignment.Center},Border.BackgroundProperty,"Accent");
    var row=new StackPanel {Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right};
    row.Children.Add(islandMessage);row.Children.Add(islandDivider);row.Children.Add(dot);row.Children.Add(islandMemory);
-   var stack=new StackPanel {HorizontalAlignment=HorizontalAlignment.Right};stack.Children.Add(islandMedia);stack.Children.Add(islandDownloads);stack.Children.Add(row);
+   var stack=new StackPanel {HorizontalAlignment=HorizontalAlignment.Right};stack.Children.Add(islandMedia);stack.Children.Add(islandZoom);stack.Children.Add(islandDownloads);stack.Children.Add(row);
    islandScale=new LayoutTransformControl {Child=stack};
    // As on Windows: radius 13, 8 px from the page's right edge and 14 px from its bottom, a soft shadow.
    islandCard=Res(Res(new Border {CornerRadius=new CornerRadius(13),BorderThickness=new Thickness(1),Padding=new Thickness(11,5,12,5),Margin=new Thickness(8,8,8,14),Child=islandScale,BoxShadow=BoxShadows.Parse("0 3 16 0 #24252032"),RenderTransform=islandSlide},Border.BackgroundProperty,"Panel"),Border.BorderBrushProperty,"Line");
@@ -114,9 +114,9 @@ namespace Mica {
   }
 
   // Out of the way while the pointer is within 36 px: it fades and drops 10 px in 120 ms and lets clicks through,
-  // then comes back in 220 ms once the pointer has gone. Downloads and media stay put so they can be clicked.
+  // then comes back in 220 ms once the pointer has gone. Downloads, media and zoom stay put so they can be clicked.
   void StepAside(bool away) {
-   if(away&&(islandDownloads.Children.Count>0||islandMedia.Children.Count>0))return;
+   if(away&&(islandDownloads.Children.Count>0||islandMedia.Children.Count>0||IslandHasZoom))return;
    if(away==islandAway)return;islandAway=away;
    islandCard.Transitions=new Transitions {Ease(Visual.OpacityProperty,away?120:220)};
    islandSlide.Transitions=new Transitions {new DoubleTransition {Property=TranslateTransform.YProperty,Duration=TimeSpan.FromMilliseconds(away?120:220),Easing=away?(Easing)new LinearEasing():new CubicEaseOut()}};

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Input;
 
 namespace Mica {
@@ -42,6 +43,24 @@ namespace Mica {
    Check("zoom in, remembered for the site",Math.Abs(web.Zoom-1.1)<0.001&&state.SiteZoom.ContainsKey("example.com")&&zoomBadge.IsVisible&&ratio==Math.Round(110*baseRatio).ToString(),"zoom="+web.Zoom+" ratio="+ratio);
    ZoomStep(0);await Task.Delay(300);
    Check("zoom reset",Math.Abs(web.Zoom-1)<0.001&&!state.SiteZoom.ContainsKey("example.com")&&!zoomBadge.IsVisible,null);
+
+   // Zoom in the island (BrowserIslandZoom.cs): only for the user's own changes, gone after a few seconds.
+   state.SiteZoom["example.com"]=1.1;ApplySiteZoom(web);await Task.Delay(200);
+   bool restored=!IslandHasZoom;
+   UserZoom(1);await Task.Delay(200);
+   Func<string,Control> zoomPart=tag=>islandZoom.Children.OfType<Grid>().SelectMany(g=>g.Children).FirstOrDefault(c=>(c.Tag as string)==tag);
+   Check("zoom shows in the island, not when Mica restores it",restored&&IslandHasZoom&&islandZoomLevel.Text=="125%"&&Math.Abs(web.Zoom-1.25)<0.001&&zoomPart("island-zoom-in")!=null,"restored="+restored+" level="+(islandZoomLevel==null?"-":islandZoomLevel.Text));
+   var zoomOut=zoomPart("island-zoom-out") as Button;if(zoomOut!=null)zoomOut.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));await Task.Delay(200);
+   string afterOut=islandZoomLevel.Text;
+   var zoomReset=zoomPart("island-zoom-reset") as Button;if(zoomReset!=null)zoomReset.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));await Task.Delay(200);
+   Check("the island's − and reset step the zoom; 100% isn't kept",afterOut=="110%"&&islandZoomLevel.Text=="100%"&&Math.Abs(web.Zoom-1)<0.001&&!state.SiteZoom.ContainsKey("example.com")&&!islandAway,afterOut+" then "+islandZoomLevel.Text);
+   await Task.Delay(4000);
+   bool lingered=!IslandHasZoom;
+   ZoomStep(1);await Task.Delay(200);bool menuQuiet=!IslandHasZoom;ZoomStep(0);await Task.Delay(200);
+   Check("the island's zoom leaves after a moment; the menu's zoom doesn't bring it up",lingered&&menuQuiet,"lingered="+lingered+" menu="+menuQuiet);
+   await Js(web,"(dispatchEvent(new WheelEvent('wheel',{deltaY:-100,ctrlKey:true,cancelable:true})),'1')");await Task.Delay(400);
+   Check("Ctrl+wheel zooms through Mica and shows in the island",Math.Abs(web.Zoom-1.1)<0.001&&IslandHasZoom&&islandZoomLevel.Text=="110%","zoom="+web.Zoom);
+   ZoomStep(0);HideIslandZoom();await Task.Delay(200);
 
    var names=CrossExtensions.Folders(profile).Select(f=>{string n,v;ManifestName(f,out n,out v);return n;}).ToList();
    Check("extensions card names what loaded",names.Count>=2&&names.All(n=>!n.StartsWith("__MSG")),string.Join(", ",names));

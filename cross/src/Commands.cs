@@ -61,7 +61,7 @@ namespace Mica {
    foreach(var t in tabs.Values)if(t.View!=null)t.View.IsVisible=false;
    aiHost.IsVisible=false;
    var tab=Active;spotlightInput.Text=address&&tab!=null&&tab.Entry.Url!="mica://home"?Navigation.AddressLabel(tab.Entry.Url):"";
-   RefreshSearch();TakeKeyboard();spotlightInput.Focus();spotlightInput.SelectAll();
+   RefreshSearch();TakeKeyboard();spotlightInput.Focus();spotlightInput.SelectAll();FollowIslandZoom();
   }
   void CloseSpotlight() {
    if(!SpotlightOpen)return;
@@ -146,9 +146,9 @@ namespace Mica {
     add("Reload",Mod+"R","refresh",Reload);
     add(state.Bookmarks.Any(b=>b.Url==tab.Entry.Url)?"Remove bookmark":"Bookmark this page",Mod+"D","favorite star",Bookmark);
     add("Copy page address","","url link clipboard",delegate {CopyAddress(tab);});
-    add("Zoom in",Mod+"Plus","bigger larger",delegate {ZoomStep(1);});
-    add("Zoom out",Mod+"Minus","smaller",delegate {ZoomStep(-1);});
-    if(Math.Abs(tab.Zoom-1)>0.001)add("Reset zoom",Mod+"0",Math.Round(tab.Zoom*100)+"%",delegate {ZoomStep(0);});
+    add("Zoom in",Mod+"Plus","bigger larger",delegate {UserZoom(1);});
+    add("Zoom out",Mod+"Minus","smaller",delegate {UserZoom(-1);});
+    if(Math.Abs(tab.Zoom-1)>0.001)add("Reset zoom",Mod+"0",Math.Round(tab.Zoom*100)+"%",delegate {UserZoom(0);});
     add("Find in page",Mod+"F","search",ShowFind);
     add("Reading mode","F9","reader article",ToggleReader);
     add("Site settings","","permissions cookies memory "+SiteOf(tab.Entry.Url),ShowSiteCard);
@@ -237,9 +237,9 @@ namespace Mica {
    if(ctrl&&key==Key.F){ShowFind();return true;}
    if(ctrl&&key==Key.G){FindNext(!shift);return true;}
    if(ctrl&&key==Key.P){Print();return true;}
-   if(ctrl&&(key==Key.OemPlus||key==Key.Add)){ZoomStep(1);return true;}
-   if(ctrl&&(key==Key.OemMinus||key==Key.Subtract)){ZoomStep(-1);return true;}
-   if(ctrl&&(key==Key.D0||key==Key.NumPad0)){ZoomStep(0);return true;}
+   if(ctrl&&(key==Key.OemPlus||key==Key.Add)){UserZoom(1);return true;}
+   if(ctrl&&(key==Key.OemMinus||key==Key.Subtract)){UserZoom(-1);return true;}
+   if(ctrl&&(key==Key.D0||key==Key.NumPad0)){UserZoom(0);return true;}
    if(key==Key.F5||(ctrl&&key==Key.R)){Reload();return true;}
    if(alt&&key==Key.Left||Mac&&ctrl&&key==Key.OemOpenBrackets){GoBack();return true;}
    if(alt&&key==Key.Right||Mac&&ctrl&&key==Key.OemCloseBrackets){GoForward();return true;}

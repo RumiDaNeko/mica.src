@@ -98,6 +98,7 @@ namespace Mica {
   void UpdateZoomBadge() {
    var tab=Active;bool show=tab!=null&&Navigation.IsWeb(tab.Entry.Url)&&Math.Abs(tab.Zoom-1)>0.001;
    zoomBadge.IsVisible=show;if(show){zoomText.Text=Math.Round(tab.Zoom*100)+"%";ToolTip.SetTip(zoomBadge,"Zoom for this site ("+Mod+"0 resets)");}
+   FollowIslandZoom();
   }
 
   // ── Bookmarks, mute, duplicate, copy, reopen.
@@ -224,6 +225,7 @@ namespace Mica {
    }
    protected override bool OnConsoleMessage(CefBrowser browser,CefLogSeverity level,string message,string source,int line) {
     if(message.StartsWith("__mica_ai:",StringComparison.Ordinal)){string json=message.Substring(10);Dispatcher.UIThread.Post(delegate {window.AiSelection(tab,json);});return true;}
+    if(message=="__mica_zoom:+"||message=="__mica_zoom:-"){int direction=message.EndsWith("+")?1:-1;Dispatcher.UIThread.Post(delegate {window.WheelZoom(tab,direction);});return true;}
     if(message=="__mica_media:1"||message=="__mica_media:0"){bool on=message.EndsWith("1");Dispatcher.UIThread.Post(delegate {window.MediaChanged(tab,on);});return true;}
     return false;
    }

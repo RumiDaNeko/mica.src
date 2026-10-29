@@ -26,6 +26,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      # Runners also carry a newer SDK, which `dotnet` would pick; with it, publishing on macOS loses CEF's
+      # libEGL.dylib. Pin the build to SDK 8, as on the release machine.
+      - name: Use .NET SDK 8
+        run: echo '{"sdk":{"version":"8.0.100","rollForward":"latestFeature"}}' > global.json
       - name: Chromium's libraries and a virtual display
         if: matrix.target == 'linux'
         run: |
