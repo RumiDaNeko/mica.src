@@ -94,6 +94,9 @@ EOF
   <key>com.apple.security.cs.allow-jit</key><true/>
   <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
   <key>com.apple.security.cs.disable-library-validation</key><true/>
+  <key>com.apple.security.device.camera</key><true/>
+  <key>com.apple.security.device.audio-input</key><true/>
+  <key>com.apple.security.personal-information.location</key><true/>
 </dict></plist>
 EOF
     codesign --force --deep --options runtime --timestamp --entitlements out/entitlements.plist --sign "$SIGN_ID" "$bundle"
