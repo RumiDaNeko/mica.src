@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invaders</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2;--space:#eceff6}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#26262b;--accent:#7a9cff;--space:#101320}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:150px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+#powers{font-size:13px;line-height:1.7}#powers b{font-weight:600}
+.board{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.08)}
+canvas{display:block;border-radius:8px}
+.overlay{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:8px;background:color-mix(in srgb,var(--panel) 88%,transparent);text-align:center;padding:20px}
+.overlay[hidden]{display:none}
+.overlay h2{font:400 28px Georgia,serif;margin:0}
+.overlay p{margin:0;color:var(--muted)}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+kbd{font:11px "Segoe UI",sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel);color:var(--ink)}
+@media (max-width:640px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.keys{display:none}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>Invaders</h1></div>
+  <div class="card"><div class="label">Score</div><div class="big" id="score">0</div></div>
+  <div class="card"><div class="label">Lives · Wave</div><div class="big"><span id="lives">3</span> · <span id="wave">1</span></div></div>
+  <div class="card"><div class="label">Best</div><div class="big" id="best">0</div></div>
+  <div class="card" id="pcard" hidden><div class="label">Power-ups</div><div id="powers"></div></div>
+  <div class="keys"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or mouse move<br><kbd>Space</kbd> or click fire · <kbd>P</kbd> pause<br>Shot-down aliens may drop power-ups</div>
+ </div>
+ <div class="board">
+  <canvas id="field"></canvas>
+  <div class="overlay" id="overlay"><h2 id="otitle">Invaders</h2><p id="otext">Stop them before they land.</p><button id="start">Play</button></div>
+ </div>
+</main>
+<script>
+"use strict";
+// The field is 480 × 560 units, scaled to fit. Aliens march side to side and drop a row at each edge;
+// fewer of them means faster marching.
+const FW=480,FH=560,COLS=9,ROWS=5,AW=30,AH=20,GAPX=16,GAPY=14,SY=FH-44;
+const ROW_COLORS=["#e5534b","#f08a33","#f2c230","#4cbf6a","#35b9d6"];
+const POWERS={rapid:{label:"Rapid fire",letter:"R",color:"#f08a33",frames:600},triple:{label:"Triple shot",letter:"T",color:"#a06cf2",frames:540},shield:{label:"Shield",letter:"S",color:"#35b9d6"}};
+const $=id=>document.getElementById(id),field=$("field"),ctx=field.getContext("2d");
+let scale=1,ship,aliens,march,shots,bombs,drops,timers,shield,stars,score,lives,wave,best=0,state="idle",keys={},last=0,frame=0,ticks=0,cool=0,hurt=0;
+try{best=+localStorage.getItem("mica-invaders-best")||0}catch(e){}
+$("best").textContent=best;
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function fit(){scale=Math.max(.5,Math.min(1.3,(innerHeight-60)/FH,(innerWidth-230)/FW));const r=devicePixelRatio||1;field.width=FW*scale*r;field.height=FH*scale*r;field.style.width=FW*scale+"px";field.style.height=FH*scale+"px";ctx.setTransform(scale*r,0,0,scale*r,0,0);draw();}
+function formation(){aliens=[];const w=COLS*AW+(COLS-1)*GAPX,x0=(FW-w)/2;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)aliens.push({x:x0+c*(AW+GAPX),y:60+r*(AH+GAPY)+Math.min(80,(wave-1)*12),row:r,alive:true});march={dir:1,wait:0};}
+function reset(){score=0;lives=3;wave=1;ship={x:FW/2};shots=[];bombs=[];drops=[];timers={rapid:0,triple:0};shield=false;stars=[];for(let i=0;i<50;i++)stars.push({x:Math.random()*FW,y:Math.random()*FH,s:Math.random()*1.5+.5});formation();stats();powers();}
+function stats(){$("score").textContent=score;$("lives").textContent=lives;$("wave").textContent=wave;if(score>best){best=score;$("best").textContent=best;try{localStorage.setItem("mica-invaders-best",best)}catch(e){}}}
+function powers(){const on=Object.keys(timers).filter(k=>timers[k]>0);$("pcard").hidden=!on.length&&!shield;$("powers").innerHTML=on.map(k=>"<b style='color:"+POWERS[k].color+"'>"+POWERS[k].label+"</b> "+Math.ceil(timers[k]/60)+"s").concat(shield?["<b style='color:"+POWERS.shield.color+"'>Shield</b> up"]:[]).join("<br>");}
+function show(t,p,b){$("otitle").textContent=t;$("otext").textContent=p;$("start").textContent=b;$("overlay").hidden=false;$("start").focus();}
+function start(){if(state!=="paused")reset();state="play";$("overlay").hidden=true;last=performance.now();loop();}
+function pause(){if(state==="play"){state="paused";show("Paused","Take a breath.","Resume");}else if(state==="paused"){state="play";$("overlay").hidden=true;last=performance.now();loop();}}
+function loop(){cancelAnimationFrame(frame);frame=requestAnimationFrame(tick);}
+function tick(now){
+ if(state!=="play"){draw();return;}
+ const steps=Math.min(4,Math.max(1,Math.round((now-last)/(1000/60))));last=now;
+ for(let i=0;i<steps&&state==="play";i++)step();
+ draw();if(state==="play")frame=requestAnimationFrame(tick);
+}
+function fire(){
+ if(state!=="play"||cool>0)return;const rapid=timers.rapid>0,max=rapid?6:2;if(shots.length>=max)return;
+ cool=rapid?8:18;
+ if(timers.triple>0)for(const vx of [-2.2,0,2.2])shots.push({x:ship.x,y:SY-12,vx});else shots.push({x:ship.x,y:SY-12,vx:0});
+}
+function lose(){
+ if(shield){shield=false;hurt=40;powers();return;}
+ lives--;hurt=90;bombs=[];stats();timers={rapid:0,triple:0};powers();
+ if(lives<=0){state="over";show("Game over",score+" points","Play again");}
+}
+function step(){
+ ticks++;if(cool>0)cool--;if(hurt>0)hurt--;
+ if(keys.ArrowLeft||keys.KeyA)ship.x-=5;if(keys.ArrowRight||keys.KeyD)ship.x+=5;ship.x=Math.max(18,Math.min(FW-18,ship.x));
+ if(keys.Space)fire();
+ for(const k in timers)if(timers[k]>0){timers[k]--;if(timers[k]%60===0)powers();}
+ for(const s of stars){s.y+=s.s*.3;if(s.y>FH)s.y=0;}
+ // March: a step every few frames, quicker as the formation thins out and with each wave.
+ const alive=aliens.filter(a=>a.alive);
+ if(!alive.length){wave++;score+=100;stats();formation();shots=[];bombs=[];return;}
+ const every=Math.max(2,Math.round(4+alive.length*0.75-wave*2));
+ if(++march.wait>=every){
+  march.wait=0;const left=Math.min(...alive.map(a=>a.x)),right=Math.max(...alive.map(a=>a.x+AW));
+  if(right+6*march.dir>FW-8||left+6*march.dir<8){march.dir=-march.dir;for(const a of alive)a.y+=14;}else for(const a of alive)a.x+=6*march.dir;
+ }
+ if(alive.some(a=>a.y+AH>=SY-10)){lives=1;lose();return;}
+ // The lowest alien in a column drops a bomb now and then.
+ if(Math.random()<.018+wave*.004){const cols={};for(const a of alive){const c=Math.round(a.x);if(!cols[c]||cols[c].y<a.y)cols[c]=a;}const pick=Object.values(cols);const a=pick[Math.floor(Math.random()*pick.length)];bombs.push({x:a.x+AW/2,y:a.y+AH});}
+ shots=shots.filter(s=>{
+  s.y-=8;s.x+=s.vx;if(s.y<0||s.x<0||s.x>FW)return false;
+  for(const a of alive)if(a.alive&&s.x>=a.x&&s.x<=a.x+AW&&s.y>=a.y&&s.y<=a.y+AH){
+   a.alive=false;score+=(ROWS-a.row)*10;stats();
+   if(Math.random()<.1){const r=Math.random(),kind=r<.35?"rapid":r<.7?"triple":"shield";drops.push({x:a.x+AW/2,y:a.y+AH/2,kind});}
+   return false;
+  }
+  return true;
+ });
+ bombs=bombs.filter(b=>{b.y+=3.4+wave*.2;if(b.y>FH)return false;if(hurt<=0&&b.y>=SY-8&&b.y<=SY+12&&Math.abs(b.x-ship.x)<16){lose();return false;}return true;});
+ drops=drops.filter(d=>{d.y+=2.2;if(d.y>=SY-12&&d.y<=SY+14&&Math.abs(d.x-ship.x)<24){grant(d.kind);return false;}return d.y<FH+10;});
+}
+function grant(kind){score+=25;if(kind==="shield")shield=true;else timers[kind]=POWERS[kind].frames;stats();powers();}
+function alien(a){
+ const c=ROW_COLORS[a.row],x=a.x,y=a.y,up=Math.floor(ticks/24)%2;ctx.fillStyle=c;
+ ctx.beginPath();ctx.roundRect(x+4,y,AW-8,AH-6,6);ctx.fill();
+ ctx.fillRect(x,y+6,AW,6);for(const lx of up?[x+2,x+AW-6]:[x+6,x+AW-10])ctx.fillRect(lx,y+AH-6,4,6);
+ ctx.fillStyle=css("--space");ctx.fillRect(x+9,y+5,4,4);ctx.fillRect(x+AW-13,y+5,4,4);
+}
+function capsule(x,y,kind){const p=POWERS[kind];ctx.fillStyle=p.color;ctx.beginPath();ctx.roundRect(x-13,y-7,26,14,7);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 10px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.letter,x,y+.5);}
+function draw(){
+ if(!aliens)reset();
+ ctx.fillStyle=css("--space");ctx.fillRect(0,0,FW,FH);
+ ctx.fillStyle=css("--muted");for(const s of stars){ctx.globalAlpha=.35;ctx.fillRect(s.x,s.y,s.s,s.s);}ctx.globalAlpha=1;
+ for(const a of aliens)if(a.alive)alien(a);
+ ctx.fillStyle=timers.triple>0?POWERS.triple.color:timers.rapid>0?POWERS.rapid.color:css("--accent");for(const s of shots)ctx.fillRect(s.x-1.5,s.y-8,3,10);
+ ctx.fillStyle=css("--ink");for(const b of bombs){ctx.beginPath();ctx.moveTo(b.x-3,b.y-8);ctx.lineTo(b.x+3,b.y-4);ctx.lineTo(b.x-3,b.y);ctx.lineTo(b.x+3,b.y+4);ctx.strokeStyle=css("--ink");ctx.lineWidth=2;ctx.stroke();}
+ for(const d of drops)capsule(d.x,d.y,d.kind);
+ // The ship blinks while it recovers from a hit.
+ if(!(hurt>0&&Math.floor(hurt/6)%2)){
+  ctx.fillStyle=css("--accent");ctx.beginPath();ctx.moveTo(ship.x,SY-14);ctx.lineTo(ship.x+18,SY+8);ctx.lineTo(ship.x-18,SY+8);ctx.closePath();ctx.fill();
+  ctx.fillRect(ship.x-2,SY-18,4,6);
+ }
+ if(shield){ctx.strokeStyle=POWERS.shield.color;ctx.lineWidth=2;ctx.globalAlpha=.7;ctx.beginPath();ctx.arc(ship.x,SY-2,26,Math.PI,0);ctx.stroke();ctx.globalAlpha=1;}
+}
+addEventListener("keydown",e=>{
+ const k=e.code;if(["ArrowLeft","ArrowRight","Space"].includes(k))e.preventDefault();
+ if(k==="KeyP"||k==="Escape"){pause();return;}
+ if(state!=="play"){if((k==="Enter"||k==="Space")&&document.activeElement!==$("start"))start();return;}
+ keys[k]=true;if(k==="Space")fire();
+});
+addEventListener("keyup",e=>{keys[e.code]=false;});
+field.addEventListener("pointermove",e=>{if(state!=="play")return;const r=field.getBoundingClientRect();ship.x=Math.max(18,Math.min(FW-18,(e.clientX-r.left)/scale));});
+field.addEventListener("pointerdown",()=>fire());
+addEventListener("blur",()=>{keys={};if(state==="play")pause();});
+$("start").addEventListener("click",start);
+addEventListener("resize",fit);
+addEventListener("micatheme",function(){try{draw();}catch(e){}});
+reset();fit();
+</script>
+</body>
+</html>

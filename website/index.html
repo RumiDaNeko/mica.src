@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mica Browser: less noise, more internet</title>
+<meta name="description" content="Mica is a calm, Arc-inspired browser for Windows with Spaces, Spotlight search, ad blocking and a built-in password vault.">
+<link rel="canonical" href="https://lessnoise.online/">
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mica">
+<meta property="og:url" content="https://lessnoise.online/">
+<meta property="og:title" content="Mica: less noise, more internet">
+<meta property="og:description" content="A calm, Arc-inspired browser for Windows with Spaces, Spotlight search and a built-in password vault.">
+<meta property="og:image" content="https://lessnoise.online/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Mica browser: Less noise. More internet.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mica: less noise, more internet">
+<meta name="twitter:description" content="A calm, Arc-inspired browser for Windows with Spaces and Spotlight search.">
+<meta name="twitter:image" content="https://lessnoise.online/assets/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Mica",
+  "operatingSystem": "Windows 10, Windows 11",
+  "applicationCategory": "BrowserApplication",
+  "description": "A calm, Arc-inspired browser for Windows with Spaces, Spotlight search, ad blocking and a built-in password vault.",
+  "url": "https://lessnoise.online/",
+  "image": "https://lessnoise.online/assets/og-image.png",
+  "downloadUrl": "https://github.com/RumiDaNeko/mica./releases/latest",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
+<link rel="icon" href="assets/Mica.ico">
+<link rel="apple-touch-icon" href="assets/Mica.png">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="Mica home"><img src="assets/Mica.png" alt="" width="22" height="22"><span>Mica.</span></a>
+    <nav aria-label="Sections">
+      <a href="#spotlight">Spotlight</a>
+      <a href="#features">Features</a>
+      <a href="#releases">What's new</a>
+    </nav>
+    <a class="pill pill-small" href="#download">Download</a>
+  </div>
+</header>
+
+<main id="top">
+  <!-- Hero: the product on a laptop, Apple-style. -->
+  <section class="hero">
+    <p class="eyebrow reveal">Mica for Windows</p>
+    <h1 class="reveal">Less noise.<br><span class="tint">More internet.</span></h1>
+    <p class="lede reveal">A calm browser that keeps work and life apart, and finds any tab in a keystroke.</p>
+    <div class="cta reveal">
+      <a class="pill" href="https://github.com/RumiDaNeko/mica./releases/latest" data-primary>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>
+        <span data-primary-label>Download for Windows</span>
+      </a>
+      <a class="link" href="#download">Other download options ›</a>
+    </div>
+    <p class="meta reveal" data-meta>Free · Windows 10 and 11</p>
+
+    <div class="stage reveal-scale">
+      <div class="laptop">
+        <div class="lid">
+          <span class="camera" aria-hidden="true"></span>
+          <div class="display">
+            <picture>
+              <source srcset="assets/mica-dark.png" media="(prefers-color-scheme: dark)">
+              <img src="assets/mica-home.png" alt="Mica's home page with the sidebar, a clock and a search box" width="1280" height="840">
+            </picture>
+          </div>
+        </div>
+        <div class="base" aria-hidden="true"><span class="notch"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cinematic close-up: a beam of light, the new tab zoomed into its clock, then a pull back to the whole
+       window as you scroll (driven by app.js; without JS or with reduced motion it is a still picture). -->
+  <section class="closeup" aria-label="Mica's new tab, up close">
+    <div class="closeup-sticky">
+      <div class="beam" aria-hidden="true"><span class="beam-line"></span><span class="beam-cone"></span><span class="beam-spot"></span></div>
+      <div class="closeup-head">
+        <p class="eyebrow">Your new tab</p>
+        <h2>Room to think.</h2>
+      </div>
+      <div class="closeup-device laptop" data-focus-x="0.592" data-focus-y="0.383">
+        <div class="lid">
+          <span class="camera" aria-hidden="true"></span>
+          <div class="display"><img src="assets/mica-personal-home.png" alt="Mica's new tab: a large clock, a search box and favourite sites" width="1280" height="840"></div>
+        </div>
+        <div class="base" aria-hidden="true"><span class="notch"></span></div>
+      </div>
+      <p class="closeup-caption">A clock, your favourite sites and one search box.<br>Nothing else asks for your attention.</p>
+    </div>
+  </section>
+
+  <!-- Words light up one by one as the paragraph scrolls through the screen. -->
+  <section class="statement" aria-label="What Mica does">
+    <p class="statement-text" data-words>Mica blocks ads before they load. It keeps your passwords encrypted on this PC. And it puts every tab, in every Space, one keystroke away.</p>
+  </section>
+
+  <!-- Spotlight: Ctrl and K press down, Spotlight opens on the monitor, then the camera moves in. -->
+  <section id="spotlight" class="keys" aria-label="Spotlight">
+    <div class="keys-sticky">
+      <div class="keys-head">
+        <p class="eyebrow">Spotlight</p>
+        <h2>A shortcut to anywhere.</h2>
+      </div>
+      <div class="keycaps" aria-hidden="true"><kbd>Ctrl</kbd><span class="plus">+</span><kbd>K</kbd></div>
+      <div class="monitor keys-monitor">
+        <div class="panel">
+          <div class="layers">
+            <img src="assets/mica-home.png" alt="" class="layer-before" loading="lazy" width="1280" height="840">
+            <img src="assets/mica-spotlight.png" alt="Spotlight search open over a Mica window" class="layer-after" loading="lazy" width="1280" height="840">
+          </div>
+        </div>
+        <div class="neck" aria-hidden="true"></div>
+        <div class="foot" aria-hidden="true"></div>
+      </div>
+      <p class="keys-caption">Search open tabs in every Space, your bookmarks and history, or jump straight to the web.</p>
+    </div>
+  </section>
+
+  <!-- Feature tiles. -->
+  <section id="features" class="features">
+    <h2 class="reveal">Everything you need.<br><span class="muted">Nothing you don't.</span></h2>
+    <div class="bento">
+      <article class="tile tile-wide reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Privacy</p>
+          <h3>Ads and trackers, gone.</h3>
+          <p>Built-in blocking with uBlock Origin Lite's lists. Allow a site in one click when you want to support it.</p>
+        </div>
+        <img src="assets/ad-blocking.png" alt="Ad blocking settings with filter lists" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile tile-tall reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Spaces</p>
+          <h3>Work here. Life there.</h3>
+          <p>Pin what matters and fold tabs into colored groups.</p>
+        </div>
+        <img src="assets/tabs-grouped.png" alt="Sidebar with pinned tabs and a tab group" loading="lazy" class="shot-sidebar">
+      </article>
+      <article class="tile reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Passwords &amp; sync</p>
+          <h3>Locked to you.</h3>
+          <p>Encrypted on your device, unlocked with Windows Hello.</p>
+        </div>
+        <img src="assets/mica-vault.png" alt="Passwords and sync vault" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile tile-dark reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Extensions</p>
+          <h3>Your favorite tools.</h3>
+          <p>Choose Add to Mica on the Chrome Web Store.</p>
+        </div>
+        <img src="assets/mica-extensions-v0111-dark.png" alt="Extensions manager" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Task manager</p>
+          <h3>Rest heavy tabs.</h3>
+          <p>See memory and CPU per process. Shift+Esc.</p>
+        </div>
+        <img src="assets/mica-task-manager.png" alt="Browser task manager" loading="lazy" class="shot-float">
+      </article>
+      <article class="tile tile-wide reveal">
+        <div class="tile-copy">
+          <p class="eyebrow">Private windows</p>
+          <h3>Leaves nothing behind.</h3>
+          <p>Cookies and history stay isolated and vanish when you close the window.</p>
+        </div>
+        <img src="assets/mica-private.png" alt="A private Mica window" loading="lazy" class="shot-float">
+      </article>
+    </div>
+  </section>
+
+  <!-- Light to dark: a bright edge sweeps across the laptop and the page darkens with it. -->
+  <section class="themes" aria-label="Light and dark themes">
+    <div class="themes-sticky">
+      <div class="themes-head">
+        <p class="eyebrow">Themes</p>
+        <h2>Light by day.<br>Dark by night.</h2>
+      </div>
+      <div class="laptop themes-laptop">
+        <div class="lid">
+          <span class="camera" aria-hidden="true"></span>
+          <div class="display layers">
+            <img src="assets/mica-home.png" alt="Mica in its light theme" class="layer-before" loading="lazy" width="1280" height="840">
+            <img src="assets/mica-dark.png" alt="Mica in its dark theme" class="layer-after" loading="lazy" width="1280" height="840">
+            <span class="sweep" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="base" aria-hidden="true"><span class="notch"></span></div>
+      </div>
+      <p class="themes-caption">Mica follows Windows, or the theme you pick. Private windows match it too.</p>
+    </div>
+  </section>
+
+  <!-- Download options. -->
+  <section id="download" class="download">
+    <p class="eyebrow reveal">Download</p>
+    <h2 class="reveal">Get Mica.</h2>
+    <p class="lede reveal" data-version-line>Free for Windows 10 and 11 (64-bit).</p>
+    <div class="options">
+      <article class="option reveal" data-option="lite">
+        <span class="badge" hidden>Recommended for you</span>
+        <h3>Mica <span class="muted">Lite</span></h3>
+        <p class="size" data-size>Small download</p>
+        <p>Uses the web engine already built into Windows. Best for Windows 11 and up-to-date Windows 10.</p>
+        <a class="pill" href="https://github.com/RumiDaNeko/mica./releases/latest" data-link>Download Lite</a>
+      </article>
+      <article class="option reveal" data-option="full">
+        <span class="badge" hidden>Recommended for you</span>
+        <h3>Mica</h3>
+        <p class="size" data-size>Full installer</p>
+        <p>Brings its own web engine, so it works on any Windows 10 or 11 PC, even without WebView2.</p>
+        <a class="pill pill-quiet" href="https://github.com/RumiDaNeko/mica./releases/latest" data-link>Download</a>
+      </article>
+    </div>
+    <p class="fine reveal">Already using Mica? It updates itself. The installers aren't code-signed yet, so Windows may show <em>Unknown publisher</em>. <a class="link" href="https://github.com/RumiDaNeko/mica./releases/latest" data-release-link>Checksums and release files ›</a></p>
+  </section>
+
+  <section id="releases" class="releases">
+    <h2 class="reveal">What's new.</h2>
+    <ol class="release-list" data-releases><li class="muted">Loading release notes from GitHub…</li></ol>
+    <p><a class="link" href="https://github.com/RumiDaNeko/mica./releases">All releases on GitHub ›</a></p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span class="wordmark">Mica.</span>
+    <span>Less noise. More internet.</span>
+    <span class="foot-links"><a class="link" href="privacy/">Privacy</a><a class="link" href="terms/">Terms</a><a class="link" href="delete-account/">Delete account</a><a class="link" href="https://github.com/RumiDaNeko/mica.">GitHub</a></span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mica_canvas">#17151B</color>
+    <color name="mica_panel">#211D27</color>
+    <color name="mica_glass">#E6262130</color>
+    <color name="mica_soft">#2A2433</color>
+    <color name="mica_card">#2E2838</color>
+    <color name="mica_ink">#F7F4FA</color>
+    <color name="mica_muted">#A69AAA</color>
+    <color name="mica_faint">#7A7084</color>
+    <color name="mica_line">#3A3344</color>
+    <color name="mica_accent">#C8B4E0</color>
+    <color name="mica_accent_soft">#5A4D6E</color>
+    <color name="mica_scrim">#80000000</color>
+    <color name="mica_good">#7FD49A</color>
+</resources>

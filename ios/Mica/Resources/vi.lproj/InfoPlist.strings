@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "Một trang web bạn đang mở muốn dùng camera. Mica hỏi bạn trước, riêng từng trang.";
+"NSMicrophoneUsageDescription" = "Một trang web bạn đang mở muốn dùng micro. Mica hỏi bạn trước, riêng từng trang.";
+"NSLocationWhenInUseUsageDescription" = "Một trang web bạn đang mở muốn biết vị trí của bạn.";
+"NSPhotoLibraryAddUsageDescription" = "Để lưu ảnh từ các trang web vào thư viện ảnh.";

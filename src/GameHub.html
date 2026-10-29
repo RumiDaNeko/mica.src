@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Games</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#26262b;--accent:#7a9cff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif}
+main{max-width:880px;margin:0 auto;padding:48px 20px}
+h1{font:400 40px Georgia,serif;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 28px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+a.game{display:flex;flex-direction:column;gap:10px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none;transition:transform 120ms ease-out,box-shadow 120ms ease-out}
+a.game:hover,a.game:focus-visible{transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.09);outline:none}
+a.game:focus-visible{border-color:var(--accent)}
+.art{height:110px;border-radius:10px;background:var(--cell);display:flex;align-items:center;justify-content:center}
+.name{font:400 22px Georgia,serif}
+.what{color:var(--muted);font-size:12px}
+.best{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+svg{width:78px;height:78px}
+</style>
+</head>
+<body>
+<main>
+ <h1>Games</h1>
+ <p class="sub" id="net">Built into Mica, so they work offline, too.</p>
+ <div class="list">
+  <a class="game" href="https://tetris.mica.invalid/"><div class="art"><svg viewBox="0 0 40 40"><rect x="4" y="22" width="8" height="8" rx="2" fill="#3d6df2"/><rect x="4" y="30" width="8" height="8" rx="2" fill="#3d6df2"/><rect x="12" y="30" width="8" height="8" rx="2" fill="#3d6df2"/><rect x="20" y="30" width="8" height="8" rx="2" fill="#3d6df2"/><rect x="16" y="6" width="8" height="8" rx="2" fill="#a05bd6"/><rect x="8" y="14" width="8" height="8" rx="2" fill="#a05bd6"/><rect x="16" y="14" width="8" height="8" rx="2" fill="#a05bd6"/><rect x="24" y="14" width="8" height="8" rx="2" fill="#a05bd6"/><rect x="28" y="30" width="8" height="8" rx="2" fill="#f2c230"/><rect x="28" y="22" width="8" height="8" rx="2" fill="#f2c230"/></svg></div><div class="name">Tetris</div><div class="what">Stack the blocks, clear the lines.</div></a>
+  <a class="game" href="https://games.mica.invalid/snake"><div class="art"><svg viewBox="0 0 40 40"><path d="M8 30h16a6 6 0 0 0 0-12H16a6 6 0 0 1 0-12h12" fill="none" stroke="#4cbf6a" stroke-width="7" stroke-linecap="round"/><circle cx="33" cy="30" r="3.5" fill="#e5534b"/></svg></div><div class="name">Snake</div><div class="what">Eat, grow, don't bite yourself.</div><div class="best" id="b-snake"></div></a>
+  <a class="game" href="https://games.mica.invalid/2048"><div class="art"><svg viewBox="0 0 40 40"><rect x="4" y="4" width="15" height="15" rx="3" fill="#eee4da"/><rect x="21" y="4" width="15" height="15" rx="3" fill="#f2b179"/><rect x="4" y="21" width="15" height="15" rx="3" fill="#f65e3b"/><rect x="21" y="21" width="15" height="15" rx="3" fill="#3d6df2"/></svg></div><div class="name">2048</div><div class="what">Slide and merge to reach 2048.</div><div class="best" id="b-2048"></div></a>
+  <a class="game" href="https://games.mica.invalid/minesweeper"><div class="art"><svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="9" fill="currentColor"/><path d="M20 6v6M20 30v6M6 21h6M28 21h6M10 11l4 4M26 27l4 4M30 11l-4 4M14 27l-4 4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="17" cy="18" r="2.4" fill="#fff"/></svg></div><div class="name">Minesweeper</div><div class="what">Find every safe square.</div><div class="best" id="b-mines"></div></a>
+  <a class="game" href="https://games.mica.invalid/breakout"><div class="art"><svg viewBox="0 0 40 40"><rect x="4" y="6" width="10" height="5" rx="1.5" fill="#e5534b"/><rect x="15" y="6" width="10" height="5" rx="1.5" fill="#f08a33"/><rect x="26" y="6" width="10" height="5" rx="1.5" fill="#f2c230"/><rect x="9" y="12" width="10" height="5" rx="1.5" fill="#4cbf6a"/><rect x="20" y="12" width="10" height="5" rx="1.5" fill="#35b9d6"/><circle cx="23" cy="25" r="2.6" fill="#3d6df2"/><rect x="12" y="32" width="16" height="3.5" rx="1.7" fill="currentColor"/></svg></div><div class="name">Breakout</div><div class="what">Bounce the ball, clear every brick.</div><div class="best" id="b-breakout"></div></a>
+  <a class="game" href="https://games.mica.invalid/sudoku"><div class="art"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor"><rect x="5" y="5" width="30" height="30" rx="3" stroke-width="2.2"/><path d="M15 5v30M25 5v30M5 15h30M5 25h30" stroke-width="1.2" opacity=".55"/><text x="10" y="13.5" font-size="7" fill="currentColor" stroke="none" text-anchor="middle" font-family="Georgia">5</text><text x="20" y="23.5" font-size="7" fill="#3d6df2" stroke="none" text-anchor="middle" font-family="Georgia">3</text><text x="30" y="33.5" font-size="7" fill="currentColor" stroke="none" text-anchor="middle" font-family="Georgia">9</text></svg></div><div class="name">Sudoku</div><div class="what">A fresh puzzle every time, one answer each.</div><div class="best" id="b-sudoku"></div></a>
+  <a class="game" href="https://games.mica.invalid/memory"><div class="art"><svg viewBox="0 0 40 40"><rect x="5" y="8" width="13" height="18" rx="3" fill="#3d6df2"/><rect x="22" y="14" width="13" height="18" rx="3" fill="currentColor" opacity=".15"/><circle cx="28.5" cy="23" r="4" fill="#e5534b"/></svg></div><div class="name">Memory</div><div class="what">Find the eight matching pairs.</div><div class="best" id="b-memory"></div></a>
+  <a class="game" href="https://games.mica.invalid/flappy"><div class="art"><svg viewBox="0 0 40 40"><rect x="27" y="0" width="8" height="13" rx="1.5" fill="#4cbf6a"/><rect x="27" y="27" width="8" height="13" rx="1.5" fill="#4cbf6a"/><ellipse cx="15" cy="20" rx="7" ry="6" fill="#f2c230"/><circle cx="18" cy="18" r="1.6" fill="#1f1d1a"/><path d="M21 20l5 1.2-5 1.8z" fill="#f08a33"/></svg></div><div class="name">Flappy</div><div class="what">Flap through the gaps.</div><div class="best" id="b-flappy"></div></a>
+  <a class="game" href="https://games.mica.invalid/pong"><div class="art"><svg viewBox="0 0 40 40"><rect x="5" y="9" width="4" height="13" rx="2" fill="#3d6df2"/><rect x="31" y="18" width="4" height="13" rx="2" fill="#e5534b"/><circle cx="21" cy="17" r="3" fill="currentColor"/><path d="M20 4v32" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity=".3"/></svg></div><div class="name">Pong</div><div class="what">Beat Mica to seven.</div><div class="best" id="b-pong"></div></a>
+  <a class="game" href="https://games.mica.invalid/invaders"><div class="art"><svg viewBox="0 0 40 40"><rect x="8" y="7" width="10" height="7" rx="2" fill="#e5534b"/><rect x="22" y="7" width="10" height="7" rx="2" fill="#f2c230"/><rect x="15" y="16" width="10" height="7" rx="2" fill="#4cbf6a"/><path d="M20 27l6 9H14z" fill="#3d6df2"/><rect x="19" y="24" width="2" height="3" fill="#3d6df2"/></svg></div><div class="name">Invaders</div><div class="what">Hold the line, grab power-ups.</div><div class="best" id="b-invaders"></div></a>
+  <a class="game" href="https://games.mica.invalid/connect4"><div class="art"><svg viewBox="0 0 40 40"><rect x="3" y="8" width="34" height="27" rx="5" fill="#3d6df2"/><circle cx="11" cy="16" r="3.5" fill="#f6f4ef"/><circle cx="20" cy="16" r="3.5" fill="#f2c230"/><circle cx="29" cy="16" r="3.5" fill="#f6f4ef"/><circle cx="11" cy="27" r="3.5" fill="#e5534b"/><circle cx="20" cy="27" r="3.5" fill="#e5534b"/><circle cx="29" cy="27" r="3.5" fill="#f2c230"/></svg></div><div class="name">Connect Four</div><div class="what">Four in a row against Mica.</div><div class="best" id="b-connect4"></div></a>
+ </div>
+</main>
+<script>
+"use strict";
+function get(k){try{return +localStorage.getItem(k)||0}catch(e){return 0}}
+const s=get("mica-snake-best"),t=get("mica-2048-best"),m=get("mica-mines-best-easy");
+if(s)document.getElementById("b-snake").textContent="Best "+s;
+if(t)document.getElementById("b-2048").textContent="Best "+t;
+if(m)document.getElementById("b-mines").textContent="Best easy "+m+" s";
+const br=get("mica-breakout-best"),su=get("mica-sudoku-best-easy"),me=get("mica-memory-best");
+if(br)document.getElementById("b-breakout").textContent="Best "+br;
+if(su)document.getElementById("b-sudoku").textContent="Best easy "+Math.floor(su/60)+":"+String(su%60).padStart(2,"0");
+if(me)document.getElementById("b-memory").textContent="Best "+me+" moves";
+const fl=get("mica-flappy-best"),pw=get("mica-pong-wins"),iv=get("mica-invaders-best");let c4=null;try{c4=JSON.parse(localStorage.getItem("mica-connect4")||"null")}catch(e){}
+if(fl)document.getElementById("b-flappy").textContent="Best "+fl;
+if(pw)document.getElementById("b-pong").textContent=pw+(pw===1?" win":" wins");
+if(iv)document.getElementById("b-invaders").textContent="Best "+iv;
+if(c4&&(c4.you||c4.cpu))document.getElementById("b-connect4").textContent="You "+(c4.you||0)+" · Mica "+(c4.cpu||0);
+function net(){document.getElementById("net").textContent=navigator.onLine?"Built into Mica, so they work offline, too.":"You're offline. Play while it comes back.";}
+addEventListener("online",net);addEventListener("offline",net);net();
+</script>
+</body>
+</html>

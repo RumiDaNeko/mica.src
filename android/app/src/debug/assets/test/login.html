@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mica test sign-in</title>
+<style>body{font:16px system-ui;margin:24px;max-width:420px}input,button{display:block;width:100%;font:inherit;padding:10px;margin:8px 0;box-sizing:border-box}</style></head>
+<body>
+<h1>Test sign-in</h1>
+<p>A debug-only page served by Mica itself, for trying password saving and filling.</p>
+<form id="f" action="/done" method="get">
+<input id="user" name="username" autocomplete="username" placeholder="Username">
+<input id="pass" name="password" type="password" autocomplete="current-password" placeholder="Password">
+<button type="submit">Sign in</button>
+</form>
+<h2>2FA</h2>
+<p>Setup key: <code>JBSW Y3DP EHPK 3PXP</code> (authenticator app setup)</p>
+<input id="otp" name="otp" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="6-digit code">
+</body></html>

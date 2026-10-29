@@ -1,0 +1,27 @@
+# Include inside nginx's http context. Obtain a valid TLS certificate first.
+limit_req_zone $binary_remote_addr zone=mica_clients:10m rate=10r/s;
+server {
+    listen 80;
+    server_name the-api.lessnoise.online;
+    return 301 https://the-api.lessnoise.online$request_uri;
+}
+server {
+    listen 443 ssl;
+    server_name the-api.lessnoise.online;
+    ssl_certificate /etc/letsencrypt/live/the-api.lessnoise.online/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/the-api.lessnoise.online/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    client_max_body_size 2m;
+    # OAuth callback URLs contain short-lived codes: do not put them in logs.
+    access_log off;
+    location / {
+        limit_req zone=mica_clients burst=30 nodelay;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host the-api.lessnoise.online;
+        proxy_set_header Connection "";
+        proxy_set_header X-Forwarded-For "";
+        proxy_read_timeout 35s;
+    }
+}

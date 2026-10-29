@@ -1,0 +1,8 @@
+<Project>
+  <!-- CefGlue's build keys its Chromium and helper-process files off Platform, so the shell builds for the machine's
+       own architecture unless told otherwise (-p:Platform=x64 or ARM64). vendor/CefGlue has the same default. -->
+  <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">
+    <Platform Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">ARM64</Platform>
+    <Platform Condition="'$(Platform)' != 'ARM64'">x64</Platform>
+  </PropertyGroup>
+</Project>

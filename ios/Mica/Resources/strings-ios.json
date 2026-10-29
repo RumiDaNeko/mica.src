@@ -1,0 +1,42 @@
+{
+  "no_downloads": [
+    "Nothing downloaded yet. Files you download show here and in the Files app, under Mica.",
+    "Chưa tải gì. Tệp bạn tải về sẽ hiện ở đây và trong ứng dụng Tệp, mục Mica."
+  ],
+  "perm_camera_microphone": [
+    "your camera and microphone",
+    "camera và micro của bạn"
+  ],
+  "ads_allowed_here": [
+    "Ads are allowed on this site.",
+    "Trang này được phép hiện quảng cáo."
+  ],
+  "ads_blocked_here": [
+    "Ads and trackers are blocked on this site.",
+    "Quảng cáo và trình theo dõi bị chặn trên trang này."
+  ],
+  "site_issued_by": [
+    "Certificate issued by %1$@",
+    "Chứng chỉ do %1$@ cấp"
+  ],
+  "imported_logins": [
+    "Imported %1$d logins",
+    "Đã nhập %1$d tài khoản"
+  ],
+  "site_permission_count": [
+    "%d answers kept",
+    "Đã lưu %d câu trả lời"
+  ],
+  "app_name": [
+    "Mica",
+    "Mica"
+  ],
+  "english": [
+    "English",
+    "Tiếng Anh"
+  ],
+  "vietnamese": [
+    "Tiếng Việt",
+    "Tiếng Việt"
+  ]
+}

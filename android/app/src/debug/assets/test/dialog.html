@@ -1,0 +1,17 @@
+<!doctype html>
+<meta name=viewport content="width=device-width">
+<title>Mica dialog test</title>
+<body style="font:18px sans-serif;padding:24px">
+<p><button id=a style="font-size:20px;padding:12px">Alert</button>
+<button id=c style="font-size:20px;padding:12px">Confirm</button>
+<button id=p style="font-size:20px;padding:12px">Prompt</button>
+<button id=w style="font-size:20px;padding:12px">Pop-up later</button></p>
+<p id=out>—</p>
+<script>
+const out = document.getElementById('out');
+document.getElementById('a').onclick = () => { alert('Hello from the page'); out.textContent = 'alert closed'; };
+document.getElementById('c').onclick = () => { out.textContent = 'confirm: ' + confirm('Do you agree?'); };
+document.getElementById('p').onclick = () => { out.textContent = 'prompt: ' + prompt('Your name?', 'Mica'); };
+// Not from a tap: Mica blocks it and says so.
+document.getElementById('w').onclick = () => setTimeout(() => window.open('https://example.com/'), 6500);
+</script>

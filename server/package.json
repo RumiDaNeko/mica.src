@@ -1,0 +1,8 @@
+{
+  "name": "mica-sync-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24 <25"},
+  "scripts": {"start": "node --env-file-if-exists=.env index.mjs", "test": "node --test test/*.test.mjs"}
+}

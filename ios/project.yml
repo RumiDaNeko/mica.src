@@ -1,0 +1,68 @@
+# Mica for iOS. The Xcode project is generated from this file (brew install xcodegen; xcodegen generate),
+# after `node tools/prepare.js` has copied the shared pages, scripts, blocker list and strings into Mica/Resources.
+name: Mica
+options:
+  bundleIdPrefix: online.lessnoise
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+targets:
+  Mica:
+    type: application
+    platform: iOS
+    sources:
+      - path: Mica/Sources
+      - path: Mica/Resources/Assets.xcassets
+      - path: Mica/Resources/en.lproj
+      - path: Mica/Resources/vi.lproj
+      # Folder references: the app reads them by subdirectory (Shared/games, Shared/scripts, Blocker).
+      - path: Mica/Resources/Shared
+        type: folder
+        buildPhase: resources
+      - path: Mica/Resources/Blocker
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: online.lessnoise.mica
+        PRODUCT_NAME: Mica
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Mica/Info.plist
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        SWIFT_STRICT_CONCURRENCY: minimal
+    info:
+      path: Mica/Info.plist
+      properties:
+        CFBundleDisplayName: Mica
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, vi]
+        CFBundleAllowMixedLocalizations: true
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: ""
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        # Audio and video keep playing in the background, as in any browser.
+        UIBackgroundModes: [audio]
+        # Downloads show in the Files app under Mica.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        NSCameraUsageDescription: A website you're on wants to use the camera. Mica asks you first, every site separately.
+        NSMicrophoneUsageDescription: A website you're on wants to use the microphone. Mica asks you first, every site separately.
+        NSLocationWhenInUseUsageDescription: A website you're on wants to know your location.
+        NSPhotoLibraryAddUsageDescription: To save images from websites to your photos.
+        CFBundleURLTypes:
+          - CFBundleURLName: online.lessnoise.mica.open
+            CFBundleURLSchemes: [mica-open]

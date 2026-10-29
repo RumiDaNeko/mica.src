@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2048</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#26262b;--accent:#7a9cff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:150px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+.board{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.08);touch-action:none}
+.grid{position:relative;width:var(--w);height:var(--w)}
+.slot,.tile{position:absolute;width:var(--c);height:var(--c);border-radius:10px}
+.slot{background:var(--cell)}
+.tile{display:flex;align-items:center;justify-content:center;font:600 var(--f) "Segoe UI",sans-serif;transition:transform 110ms ease-out;will-change:transform}
+.tile.new{animation:pop 160ms ease-out}
+.tile.merged{animation:bump 160ms ease-out}
+@keyframes pop{from{scale:.4;opacity:0}}
+@keyframes bump{50%{scale:1.12}}
+.overlay{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:8px;background:color-mix(in srgb,var(--panel) 88%,transparent);text-align:center;padding:20px;z-index:5}
+.overlay[hidden]{display:none}
+.overlay h2{font:400 28px Georgia,serif;margin:0}
+.overlay p{margin:0;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+button.quiet{background:var(--cell);color:var(--ink)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+kbd{font:11px "Segoe UI",sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel);color:var(--ink)}
+@media (max-width:640px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.keys{display:none}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>2048</h1></div>
+  <div class="card"><div class="label">Score</div><div class="big" id="score">0</div></div>
+  <div class="card"><div class="label">Best</div><div class="big" id="best">0</div></div>
+  <div class="row"><button class="quiet" id="undo">Undo</button><button class="quiet" id="again">New game</button></div>
+  <div class="keys"><kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&rarr;</kbd> <kbd>&darr;</kbd> or <kbd>WASD</kbd> slide<br><kbd>U</kbd> undo · <kbd>N</kbd> new game</div>
+ </div>
+ <div class="board" id="board">
+  <div class="grid" id="grid"></div>
+  <div class="overlay" id="overlay" hidden><h2 id="otitle"></h2><p id="otext"></p><div class="row" id="obuttons"></div></div>
+ </div>
+</main>
+<script>
+"use strict";
+const S=4,GAP=10,$=id=>document.getElementById(id),grid=$("grid");
+// Tile colours: warm to deep, readable in both themes.
+const TONES={2:["#eee4da","#3b342c"],4:["#ede0c8","#3b342c"],8:["#f2b179","#fff"],16:["#f59563","#fff"],32:["#f67c5f","#fff"],64:["#f65e3b","#fff"],128:["#edcf72","#3b342c"],256:["#edcc61","#3b342c"],512:["#edc850","#3b342c"],1024:["#5fb4e8","#fff"],2048:["#3d6df2","#fff"]};
+let cell=90,tiles,score,best=0,won,keepGoing,history=[],nextId=1,busy=false;
+try{best=+localStorage.getItem("mica-2048-best")||0}catch(e){}
+$("best").textContent=best;
+function fit(){cell=Math.max(56,Math.min(110,Math.floor((Math.min(innerHeight-60,innerWidth-230)-GAP*(S-1)-20)/S)));const w=cell*S+GAP*(S-1);grid.style.setProperty("--w",w+"px");grid.style.setProperty("--c",cell+"px");grid.style.setProperty("--f",Math.round(cell*.38)+"px");build();render(false);}
+function build(){grid.innerHTML="";for(let y=0;y<S;y++)for(let x=0;x<S;x++){const d=document.createElement("div");d.className="slot";d.style.transform=at(x,y);grid.appendChild(d);}}
+function at(x,y){return "translate("+(x*(cell+GAP))+"px,"+(y*(cell+GAP))+"px)";}
+function empty(){const free=[];for(let y=0;y<S;y++)for(let x=0;x<S;x++)if(!tiles.some(t=>t.x===x&&t.y===y))free.push({x,y});return free;}
+function add(){const free=empty();if(!free.length)return;const p=free[Math.floor(Math.random()*free.length)];tiles.push({id:nextId++,x:p.x,y:p.y,v:Math.random()<.9?2:4,fresh:true});}
+function reset(){tiles=[];score=0;won=false;keepGoing=false;history=[];add();add();$("overlay").hidden=true;stats();render(true);}
+function stats(){$("score").textContent=score;$("undo").disabled=!history.length;if(score>best){best=score;$("best").textContent=best;try{localStorage.setItem("mica-2048-best",best)}catch(e){}}}
+const els={};
+function render(animate){
+ if(!tiles)return;
+ const seen=new Set();
+ for(const t of tiles){
+  let e=els[t.id];
+  if(!e){e=document.createElement("div");e.className="tile";els[t.id]=e;e.style.transition="none";e.style.transform=at(t.x,t.y);grid.appendChild(e);void e.offsetWidth;e.style.transition="";}
+  const tone=TONES[t.v]||["#2b2b30","#fff"];e.style.background=tone[0];e.style.color=tone[1];e.textContent=t.v;e.style.fontSize=t.v>=1024?Math.round(cell*.3)+"px":t.v>=128?Math.round(cell*.34)+"px":"";
+  e.style.transform=at(t.x,t.y);e.classList.toggle("new",!!t.fresh&&animate);e.classList.toggle("merged",!!t.merged&&animate);
+  seen.add(String(t.id));
+ }
+ for(const id of Object.keys(els))if(!seen.has(id)){els[id].remove();delete els[id];}
+}
+function slide(dx,dy){
+ if(busy||!$("overlay").hidden)return;
+ const before={tiles:tiles.map(t=>({id:t.id,x:t.x,y:t.y,v:t.v})),score};
+ tiles.forEach(t=>{t.fresh=false;t.merged=false;});
+ const xs=[...Array(S).keys()],order=dx>0||dy>0?xs.slice().reverse():xs;let moved=false;const gone=[];
+ const get=(x,y)=>tiles.find(t=>t.x===x&&t.y===y&&!t.dead);
+ for(const a of xs)for(const b of order){
+  const x=dx?b:a,y=dy?b:a,t=get(x,y);if(!t)continue;
+  let nx=x,ny=y;
+  while(true){const tx=nx+dx,ty=ny+dy;if(tx<0||ty<0||tx>=S||ty>=S)break;const o=get(tx,ty);if(!o){nx=tx;ny=ty;continue;}if(o.v===t.v&&!o.merged){nx=tx;ny=ty;o.dead=true;gone.push(o);t.v*=2;t.merged=true;score+=t.v;if(t.v===2048&&!keepGoing)won=true;}break;}
+  if(nx!==x||ny!==y){t.x=nx;t.y=ny;moved=true;}
+ }
+ if(!moved)return;
+ history.push(before);if(history.length>20)history.shift();
+ // The merged-away tiles slide under the winner, then vanish.
+ gone.forEach(o=>{const e=els[o.id];const w=tiles.find(t=>t.merged&&t.x===o.x&&t.y===o.y);if(e&&w)e.style.transform=at(w.x,w.y);});
+ tiles=tiles.filter(t=>!t.dead);busy=true;render(false);
+ setTimeout(()=>{busy=false;add();render(true);stats();if(won&&!keepGoing){won=false;keepGoing=true;show("2048!","You made it. Keep going for a bigger tile?",[["Keep going",()=>{$("overlay").hidden=true;}],["New game",reset]]);}else if(stuck())show("No moves left",score+" points",[["Try again",reset]]);},110);
+ stats();
+}
+function stuck(){if(empty().length)return false;for(const t of tiles)for(const [dx,dy] of [[1,0],[0,1]]){const o=tiles.find(u=>u.x===t.x+dx&&u.y===t.y+dy);if(o&&o.v===t.v)return false;}return true;}
+function undo(){if(!history.length||busy)return;const h=history.pop();tiles=h.tiles.map(t=>Object.assign({},t));score=h.score;$("overlay").hidden=true;render(false);$("score").textContent=score;$("undo").disabled=!history.length;}
+function show(t,p,buttons){$("otitle").textContent=t;$("otext").textContent=p;const row=$("obuttons");row.innerHTML="";buttons.forEach(([label,act],i)=>{const b=document.createElement("button");b.textContent=label;if(i)b.className="quiet";b.onclick=act;row.appendChild(b);});$("overlay").hidden=false;row.firstChild.focus();}
+addEventListener("keydown",e=>{
+ const k=e.code,map={ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0],ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1]};
+ if(map[k]){e.preventDefault();slide(...map[k]);}else if(k==="KeyU"||(k==="KeyZ"&&e.ctrlKey))undo();else if(k==="KeyN")reset();
+});
+let touch=null;const board=$("board");
+board.addEventListener("pointerdown",e=>{touch={x:e.clientX,y:e.clientY};});
+board.addEventListener("pointerup",e=>{if(!touch)return;const dx=e.clientX-touch.x,dy=e.clientY-touch.y;touch=null;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;if(Math.abs(dx)>Math.abs(dy))slide(Math.sign(dx),0);else slide(0,Math.sign(dy));});
+$("undo").addEventListener("click",undo);$("again").addEventListener("click",reset);
+addEventListener("resize",()=>{fit();});
+fit();reset();
+</script>
+</body>
+</html>

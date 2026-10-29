@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mica Privacy Policy</title>
+<meta name="description" content="What data Mica, the browser by lessnoise, collects, why, and how to delete it. No ads, no analytics, browsing data stays on your device.">
+<link rel="canonical" href="https://lessnoise.online/privacy">
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../assets/Mica.ico">
+<link rel="apple-touch-icon" href="../assets/Mica.png">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../" aria-label="Mica home"><img src="../assets/Mica.png" alt="" width="22" height="22"><span>Mica.</span></a>
+    <nav aria-label="Sections">
+      <a href="#account">Account data</a>
+      <a href="#delete">Deletion</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="pill pill-small" href="../#download">Download</a>
+  </div>
+</header>
+
+<main>
+  <section class="doc">
+    <p class="eyebrow">Privacy</p>
+    <h1>Privacy Policy.</h1>
+    <p class="lede">Mica is a web browser for Windows and Android, made by lessnoise. It has no ads and no analytics, and your browsing stays on your device.</p>
+    <p class="updated">Effective 26 October 2026</p>
+
+    <p>This policy covers the Mica apps for Windows and Android and the optional Mica account service at the-api.lessnoise.online. In it, "we" means lessnoise, the developer of Mica.</p>
+
+    <h2>The short version</h2>
+    <ul>
+      <li>No ads, no analytics, no tracking SDKs, and no advertising ID.</li>
+      <li>Your history, bookmarks, tabs, cookies and downloads are stored on your device and are not sent to us.</li>
+      <li>Data leaves your device for us only if you sign in to the optional account, which powers Passwords &amp; sync and Send to device.</li>
+      <li>We don't sell or share your data, and you can delete your account at any time at <a class="link" href="../delete-account/">lessnoise.online/delete-account</a>.</li>
+    </ul>
+
+    <h2>Data that stays on your device</h2>
+    <p>Mica stores your browsing history, bookmarks, open tabs, cookies and site data, downloads, settings, and passwords you save on the device you use. We don't receive any of it. Passwords and sign-in tokens saved on the device are kept encrypted: with an Android Keystore key on Android and with Windows data protection (DPAPI) on Windows.</p>
+    <p>You can remove this data at any time with <strong>Settings → Clear browsing data</strong>, from a site's info card, or by uninstalling Mica. Private tabs and windows keep their cookies and history separate and discard them when closed.</p>
+    <p>The ad and tracker blocker uses rule lists that ship inside the app. Mica checks each request against them on your device and doesn't download lists or report what it blocks.</p>
+    <p>When a site asks for your camera, microphone or location, Mica asks you first and remembers your answer per site. What you allow goes to that site, not to us.</p>
+
+    <h2 id="account">The optional Mica account</h2>
+    <p>You can use Mica without an account. If you sign in, it's with Discord (OAuth, the "identify" permission only), and our server stores the following to run Passwords &amp; sync and Send to device:</p>
+    <table>
+      <thead><tr><th>Data</th><th>What it is and why</th></tr></thead>
+      <tbody>
+        <tr><td>Discord profile</td><td>Your Discord user ID, username, avatar, banner and accent color, so Mica can show who is signed in. We don't get your email address, password, friends, servers or messages.</td></tr>
+        <tr><td>Encrypted password vault</td><td>Your saved logins and 2FA keys and, on Windows, a browser snapshot (tabs, bookmarks and history) if you choose to save one. The vault is encrypted on your device (PBKDF2-SHA256 with 600,000 rounds, AES-256 and an HMAC) before it is uploaded. We never receive your master password and can't read the vault.</td></tr>
+        <tr><td>Synced settings</td><td>A few on/off preferences, such as dark theme.</td></tr>
+        <tr><td>Devices</td><td>A random ID and the name of each Mica install you use with Send to device, and when it was last seen.</td></tr>
+        <tr><td>Sent tabs</td><td>The address and title of a tab you choose to send to another device. It is deleted once that device receives it.</td></tr>
+        <tr><td>Sign-in sessions</td><td>A hashed form of each device's sign-in token. Sessions expire after 30 days.</td></tr>
+      </tbody>
+    </table>
+    <p>We use this data only to provide those features. We don't use it for advertising or profiling, and we don't sell it or share it with third parties.</p>
+    <p>Short-lived records also exist to keep the service working and safe: sign-in requests expire after 10 minutes, and rate-limit counters use a one-way hash of your IP address and expire within a minute. Mail sent to our deletion address gets an automatic reply, and a counter based on a hash of the sender's address expires after a day.</p>
+
+    <h2>Other connections Mica makes</h2>
+    <ul>
+      <li><strong>Websites and search.</strong> Pages you open, and searches you send to your search engine (Google by default), go to those sites under their own privacy policies.</li>
+      <li><strong>Updates (Windows).</strong> Mica for Windows checks GitHub for new releases and downloads updates from there. Mica for Android is updated through Google Play.</li>
+      <li><strong>Password leak check (Windows).</strong> When you run it, Mica sends the first 5 characters of each password's SHA-1 hash to Have I Been Pwned's range API. Your passwords themselves never leave the device.</li>
+      <li><strong>Extensions (Windows).</strong> When you add an extension, Mica downloads it from the Chrome Web Store.</li>
+    </ul>
+
+    <h2>Service providers</h2>
+    <p>The account service runs on Cloudflare (Workers and the D1 database), which processes this data for us. Discord handles the sign-in. Neither gets your vault contents. Cloudflare's database keeps a rolling 30-day recovery history, so deleted data drops out of backups within 30 days.</p>
+
+    <h2 id="delete">Keeping and deleting your data</h2>
+    <p>We keep account data while your account exists. You can delete the account and everything listed above at any time at <a class="link" href="../delete-account/">lessnoise.online/delete-account</a>: sign in with Discord and confirm, and it's deleted straight away. If you can't sign in, email us and we delete it within 30 days. Signing out on a device ends that device's session but doesn't delete the account.</p>
+    <p>You can also ask us what we hold about you or to correct it, using the contact below.</p>
+
+    <h2>Security</h2>
+    <p>Connections to the account service use HTTPS. Vault contents are encrypted end to end, sign-in tokens are stored only as hashes, and the service doesn't log request contents. No system is perfectly secure, but we limit what we hold so there is little to expose.</p>
+
+    <h2>Children</h2>
+    <p>Mica is meant for people aged 13 and over and isn't directed at children under 13. If you believe a child under 13 has created an account, contact us and we'll delete it.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes, we'll update this page and its effective date. For significant changes, we'll also say so in the release notes.</p>
+
+    <h2 id="contact">Contact</h2>
+    <p>lessnoise, developer of Mica<br>Email: <a class="link" href="mailto:accounts@lessnoise.online">accounts@lessnoise.online</a></p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span class="wordmark">Mica.</span>
+    <span>Less noise. More internet.</span>
+    <span class="foot-links"><a class="link" href="../privacy/">Privacy</a><a class="link" href="../terms/">Terms</a><a class="link" href="../delete-account/">Delete account</a><a class="link" href="https://github.com/RumiDaNeko/mica.">GitHub</a></span>
+  </div>
+</footer>
+</body>
+</html>

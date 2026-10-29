@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Breakout</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#26262b;--accent:#7a9cff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:150px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+.board{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.08)}
+canvas{display:block;cursor:none}
+.overlay{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:8px;background:color-mix(in srgb,var(--panel) 88%,transparent);text-align:center;padding:20px}
+.overlay[hidden]{display:none}
+.overlay h2{font:400 28px Georgia,serif;margin:0}
+.overlay p{margin:0;color:var(--muted)}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#powers{font-size:13px;line-height:1.7}#powers b{font-weight:600}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+kbd{font:11px "Segoe UI",sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel);color:var(--ink)}
+@media (max-width:640px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.keys{display:none}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>Breakout</h1></div>
+  <div class="card"><div class="label">Score</div><div class="big" id="score">0</div></div>
+  <div class="card"><div class="label">Lives · Level</div><div class="big"><span id="lives">3</span> · <span id="level">1</span></div></div>
+  <div class="card"><div class="label">Best</div><div class="big" id="best">0</div></div>
+  <div class="card" id="pcard" hidden><div class="label">Power-ups</div><div id="powers"></div></div>
+  <div class="keys">Mouse or <kbd>&larr;</kbd> <kbd>&rarr;</kbd> move<br><kbd>Space</kbd> launch · <kbd>P</kbd> pause<br>Catch falling capsules for power-ups</div>
+ </div>
+ <div class="board">
+  <canvas id="field"></canvas>
+  <div class="overlay" id="overlay"><h2 id="otitle">Breakout</h2><p id="otext">Clear every brick.</p><button id="start">Play</button></div>
+ </div>
+</main>
+<script>
+"use strict";
+// The field is 480 × 560 units, scaled to fit; the bricks are 10 across, 6 rows.
+const FW=480,FH=560,COLS=10,ROWS=6,BW=FW/COLS,BH=20,TOP=60,PW=80,PH=10,R=7,PY=FH-40;
+const ROW_COLORS=["#e5534b","#f08a33","#f2c230","#4cbf6a","#35b9d6","#3d6df2"];
+// Power-ups fall from broken bricks; catch them with the paddle. Timed ones count down in frames (60 a second).
+const POWERS={wide:{label:"Wide",letter:"W",color:"#4cbf6a",frames:720},multi:{label:"Multi-ball",letter:"M",color:"#3d6df2"},slow:{label:"Slow",letter:"S",color:"#35b9d6",frames:600},laser:{label:"Laser",letter:"L",color:"#e5534b",frames:480},life:{label:"Extra life",letter:"+",color:"#d063c8"}};
+const $=id=>document.getElementById(id),field=$("field"),ctx=field.getContext("2d");
+let scale=1,bricks,paddle,ball,extra,drops,shots,timers,stuck,score,lives,level,best=0,state="idle",keys={},last=0,frame=0,ticks=0;
+try{best=+localStorage.getItem("mica-breakout-best")||0}catch(e){}
+$("best").textContent=best;
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function fit(){scale=Math.max(.5,Math.min(1.3,(innerHeight-60)/FH,(innerWidth-230)/FW));const r=devicePixelRatio||1;field.width=FW*scale*r;field.height=FH*scale*r;field.style.width=FW*scale+"px";field.style.height=FH*scale+"px";ctx.setTransform(scale*r,0,0,scale*r,0,0);draw();}
+function layout(){bricks=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)bricks.push({x:x*BW,y:TOP+y*BH,row:y,hits:level>2&&y<2?2:1});}
+function width(){return timers.wide>0?PW*1.6:PW;}
+function clearPowers(){extra=[];drops=[];shots=[];timers={wide:0,slow:0,laser:0};}
+function serve(){stuck=true;ball={x:paddle.x+width()/2,y:PY-R,vx:0,vy:0};}
+function reset(){score=0;lives=3;level=1;paddle={x:(FW-PW)/2};clearPowers();layout();serve();stats();}
+function stats(){$("score").textContent=score;$("lives").textContent=lives;$("level").textContent=level;if(score>best){best=score;$("best").textContent=best;try{localStorage.setItem("mica-breakout-best",best)}catch(e){}}}
+function powers(){
+ const on=Object.keys(timers).filter(k=>timers[k]>0);$("pcard").hidden=!on.length&&!extra.length;
+ $("powers").innerHTML=on.map(k=>"<b style='color:"+POWERS[k].color+"'>"+POWERS[k].label+"</b> "+Math.ceil(timers[k]/60)+"s").concat(extra.length?["<b style='color:"+POWERS.multi.color+"'>Balls</b> "+(extra.length+1)]:[]).join("<br>");
+}
+function launch(){if(state!=="play"||!stuck)return;stuck=false;const sp=5+level*.6,a=(Math.random()*.6-.3)-Math.PI/2;ball.vx=Math.cos(a)*sp;ball.vy=Math.sin(a)*sp;}
+function show(t,p,b){$("otitle").textContent=t;$("otext").textContent=p;$("start").textContent=b;$("overlay").hidden=false;$("start").focus();}
+function start(){if(state!=="paused")reset();state="play";$("overlay").hidden=true;last=performance.now();loop();}
+function pause(){if(state==="play"){state="paused";show("Paused","Take a breath.","Resume");}else if(state==="paused"){state="play";$("overlay").hidden=true;last=performance.now();loop();}}
+// Frames run only while playing; a paused or finished game draws once and stops.
+function loop(){cancelAnimationFrame(frame);frame=requestAnimationFrame(tick);}
+function tick(now){
+ if(state!=="play"){draw();return;}
+ const steps=Math.min(4,Math.max(1,Math.round((now-last)/(1000/60))));last=now;
+ for(let i=0;i<steps&&state==="play";i++)step();
+ draw();if(state==="play")frame=requestAnimationFrame(tick);
+}
+function grant(kind){
+ const p=POWERS[kind];score+=25;
+ if(kind==="multi"){const from=stuck?null:ball;for(const turn of [-.5,.5]){const b=from||{x:paddle.x+width()/2,y:PY-R,vx:0,vy:-6};const sp=Math.max(5,Math.hypot(b.vx,b.vy)),a=Math.atan2(b.vy||-1,b.vx)+turn;extra.push({x:b.x,y:b.y,vx:Math.cos(a)*sp,vy:-Math.abs(Math.sin(a)*sp)});}}
+ else if(kind==="life")lives++;
+ else {const before=width();timers[kind]=p.frames;if(kind==="wide")paddle.x=Math.max(0,Math.min(FW-width(),paddle.x-(width()-before)/2));}
+ stats();powers();
+}
+// Moves one ball; false once it falls past the paddle.
+function move(b){
+ const pace=timers.slow>0?.6:1;b.x+=b.vx*pace;b.y+=b.vy*pace;
+ if(b.x<R){b.x=R;b.vx=Math.abs(b.vx);}if(b.x>FW-R){b.x=FW-R;b.vx=-Math.abs(b.vx);}if(b.y<R){b.y=R;b.vy=Math.abs(b.vy);}
+ const w=width();
+ if(b.vy>0&&b.y+R>=PY&&b.y+R<=PY+PH+8&&b.x>=paddle.x-R&&b.x<=paddle.x+w+R){
+  // Where it lands on the paddle sets the angle: the edges send it wide.
+  const hit=(b.x-(paddle.x+w/2))/(w/2),sp=Math.hypot(b.vx,b.vy),a=hit*1.05-Math.PI/2;b.vx=Math.cos(a)*sp;b.vy=Math.sin(a)*sp;b.y=PY-R;
+ }
+ if(b.y>FH+R)return false;
+ for(const k of bricks){
+  if(k.hits<=0||b.x+R<k.x||b.x-R>k.x+BW||b.y+R<k.y||b.y-R>k.y+BH)continue;
+  const ox=Math.min(b.x+R-k.x,k.x+BW-(b.x-R)),oy=Math.min(b.y+R-k.y,k.y+BH-(b.y-R));
+  if(ox<oy)b.vx=-b.vx;else b.vy=-b.vy;
+  hitBrick(k);break;
+ }
+ return true;
+}
+function hitBrick(k){
+ k.hits--;if(k.hits>0)return;
+ score+=(ROWS-k.row)*10;stats();
+ // About one brick in six drops something; an extra life is the rare one.
+ if(Math.random()<.17){const r=Math.random(),kind=r<.06?"life":r<.3?"multi":r<.55?"wide":r<.78?"slow":"laser";drops.push({x:k.x+BW/2,y:k.y+BH/2,kind});}
+ if(bricks.every(b=>b.hits<=0)){level++;stats();clearPowers();layout();serve();powers();}
+}
+function step(){
+ ticks++;
+ if(keys.ArrowLeft)paddle.x-=8;if(keys.ArrowRight)paddle.x+=8;paddle.x=Math.max(0,Math.min(FW-width(),paddle.x));
+ for(const k in timers)if(timers[k]>0){timers[k]--;if(timers[k]===0||timers[k]%60===0)powers();}
+ for(const d of drops)d.y+=2.6;
+ drops=drops.filter(d=>{if(d.y>=PY-6&&d.y<=PY+PH+6&&d.x>=paddle.x-10&&d.x<=paddle.x+width()+10){grant(d.kind);return false;}return d.y<FH+12;});
+ // The laser fires on its own, two beams from the paddle's ends.
+ if(timers.laser>0&&ticks%18===0)for(const x of [paddle.x+6,paddle.x+width()-6])shots.push({x,y:PY});
+ shots=shots.filter(s=>{s.y-=9;for(const k of bricks){if(k.hits>0&&s.x>=k.x&&s.x<=k.x+BW&&s.y>=k.y&&s.y<=k.y+BH){hitBrick(k);return false;}}return s.y>0;});
+ if(stuck){ball.x=paddle.x+width()/2;extra=extra.filter(move);return;}
+ extra=extra.filter(move);
+ if(!move(ball)){
+  if(extra.length){ball=extra.shift();powers();return;}
+  lives--;stats();timers={wide:0,slow:0,laser:0};drops=[];shots=[];powers();
+  if(lives<=0){state="over";show("Game over",score+" points","Play again");}else serve();
+ }
+}
+function capsule(x,y,kind){const p=POWERS[kind];ctx.fillStyle=p.color;ctx.beginPath();ctx.roundRect(x-15,y-7,30,14,7);ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 10px Segoe UI";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.letter,x,y+.5);}
+function draw(){
+ if(!bricks)reset();
+ ctx.clearRect(0,0,FW,FH);
+ for(const b of bricks){if(b.hits<=0)continue;ctx.globalAlpha=b.hits>1?1:.92;ctx.fillStyle=ROW_COLORS[b.row];ctx.beginPath();ctx.roundRect(b.x+2,b.y+2,BW-4,BH-4,4);ctx.fill();if(b.hits>1){ctx.globalAlpha=.35;ctx.fillStyle="#fff";ctx.fillRect(b.x+6,b.y+6,BW-12,3);}ctx.globalAlpha=1;}
+ for(const d of drops)capsule(d.x,d.y,d.kind);
+ ctx.fillStyle=POWERS.laser.color;for(const s of shots)ctx.fillRect(s.x-1.5,s.y-8,3,10);
+ const w=width();ctx.fillStyle=timers.wide>0?POWERS.wide.color:css("--ink");ctx.beginPath();ctx.roundRect(paddle.x,PY,w,PH,5);ctx.fill();
+ if(timers.laser>0){ctx.fillStyle=POWERS.laser.color;ctx.fillRect(paddle.x+4,PY-4,4,4);ctx.fillRect(paddle.x+w-8,PY-4,4,4);}
+ ctx.fillStyle=timers.slow>0?POWERS.slow.color:css("--accent");for(const b of [ball].concat(extra)){ctx.beginPath();ctx.arc(b.x,b.y,R,0,7);ctx.fill();}
+ if(stuck&&state==="play"){ctx.fillStyle=css("--muted");ctx.font="13px Segoe UI";ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.fillText("Space or click to launch",FW/2,FH/2);}
+}
+addEventListener("keydown",e=>{
+ const k=e.code;if(["ArrowLeft","ArrowRight","Space"].includes(k))e.preventDefault();
+ if(k==="KeyP"||k==="Escape"){pause();return;}
+ if(state!=="play"){if((k==="Enter"||k==="Space")&&document.activeElement!==$("start"))start();return;}
+ keys[k]=true;if(k==="Space")launch();
+});
+addEventListener("keyup",e=>{keys[e.code]=false;});
+field.addEventListener("pointermove",e=>{if(state!=="play")return;const r=field.getBoundingClientRect();paddle.x=Math.max(0,Math.min(FW-width(),(e.clientX-r.left)/scale-width()/2));if(stuck)draw();});
+field.addEventListener("pointerdown",()=>launch());
+addEventListener("blur",()=>{keys={};if(state==="play")pause();});
+$("start").addEventListener("click",start);
+addEventListener("resize",fit);
+addEventListener("micatheme",function(){try{draw();}catch(e){}});
+reset();fit();
+</script>
+</body>
+</html>

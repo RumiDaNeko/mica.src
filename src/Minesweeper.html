@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minesweeper</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--open:#fffdf8;--accent:#3d6df2;--mine:#e5534b}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#2e2e34;--open:#1b1b1f;--accent:#7a9cff;--mine:#ff6b61}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:160px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+.board{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.08)}
+.grid{display:grid;gap:2px}
+.c{width:var(--s);height:var(--s);border-radius:5px;background:var(--cell);display:flex;align-items:center;justify-content:center;font:700 calc(var(--s)*.55) "Segoe UI",sans-serif;cursor:pointer}
+.c:hover{filter:brightness(1.06)}
+.c.o{background:var(--open);cursor:default;filter:none}
+.c.boom{background:var(--mine);color:#fff}
+.c.f::after{content:"";width:0;height:0;border-left:calc(var(--s)*.32) solid var(--mine);border-top:calc(var(--s)*.2) solid transparent;border-bottom:calc(var(--s)*.2) solid transparent;margin-left:calc(var(--s)*.1)}
+.c.m::after{content:"";width:calc(var(--s)*.42);height:calc(var(--s)*.42);border-radius:50%;background:currentColor}
+.overlay{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:8px;background:color-mix(in srgb,var(--panel) 80%,transparent);text-align:center;padding:20px}
+.overlay[hidden]{display:none}
+.overlay h2{font:400 28px Georgia,serif;margin:0}
+.overlay p{margin:0;color:var(--muted)}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+.levels{display:flex;flex-direction:column;gap:6px}
+.levels button{background:var(--cell);color:var(--ink);padding:7px 14px;text-align:left}
+.levels button.on{background:var(--accent);color:#fff}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+@media (max-width:640px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.levels{flex-direction:row}.keys{display:none}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>Minesweeper</h1></div>
+  <div class="card"><div class="label">Mines left</div><div class="big" id="left">10</div></div>
+  <div class="card"><div class="label">Time · Best</div><div class="big"><span id="time">0</span> · <span id="best">–</span></div></div>
+  <div class="levels" id="levels"></div>
+  <div class="keys">Click to open · right-click to flag<br>Click a number to open around it</div>
+ </div>
+ <div class="board">
+  <div class="grid" id="grid"></div>
+  <div class="overlay" id="overlay" hidden><h2 id="otitle"></h2><p id="otext"></p><button id="again">Play again</button></div>
+ </div>
+</main>
+<script>
+"use strict";
+const LEVELS={easy:{name:"Easy",w:9,h:9,m:10},medium:{name:"Medium",w:16,h:16,m:40},hard:{name:"Hard",w:30,h:16,m:99}};
+const NUM=["","#3d6df2","#3e9b5f","#e5534b","#7a4fc9","#b5452f","#2b9aa6","#333","#888"];
+const $=id=>document.getElementById(id),grid=$("grid");
+let level="easy",W,H,M,mines,open,flags,cells,started,over,timer=0,t0=0,opened;
+try{level=localStorage.getItem("mica-mines-level")||"easy";if(!LEVELS[level])level="easy";}catch(e){}
+function best(){try{return +localStorage.getItem("mica-mines-best-"+level)||0}catch(e){return 0}}
+function levels(){const box=$("levels");box.innerHTML="";for(const k in LEVELS){const b=document.createElement("button");b.textContent=LEVELS[k].name+" · "+LEVELS[k].w+"×"+LEVELS[k].h;b.className=k===level?"on":"";b.onclick=()=>{level=k;try{localStorage.setItem("mica-mines-level",k)}catch(e){}levels();reset();};box.appendChild(b);}}
+function fit(){const s=Math.max(18,Math.min(34,Math.floor((innerHeight-60)/H)-2,Math.floor((innerWidth-260)/W)-2));grid.style.setProperty("--s",s+"px");}
+function reset(){
+ ({w:W,h:H,m:M}=LEVELS[level]);mines=new Uint8Array(W*H);open=new Uint8Array(W*H);flags=new Uint8Array(W*H);started=false;over=false;opened=0;clearInterval(timer);
+ grid.style.gridTemplateColumns="repeat("+W+",var(--s))";grid.innerHTML="";cells=[];
+ for(let i=0;i<W*H;i++){const d=document.createElement("div");d.className="c";d.dataset.i=i;grid.appendChild(d);cells.push(d);}
+ $("overlay").hidden=true;$("time").textContent=0;const b=best();$("best").textContent=b?b:"–";left();fit();
+}
+function near(i){const x=i%W,y=(i/W)|0,r=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)r.push(ny*W+nx);}return r;}
+function count(i){return near(i).reduce((n,j)=>n+mines[j],0);}
+// The first click is never a mine, and opens a patch: no mines around it either.
+function lay(first){const safe=new Set([first,...near(first)]);let placed=0;while(placed<M){const i=Math.floor(Math.random()*W*H);if(mines[i]||safe.has(i)&&W*H-safe.size>=M)continue;mines[i]=1;placed++;}}
+function left(){$("left").textContent=M-flags.reduce((a,b)=>a+b,0);}
+function reveal(i){
+ if(over||open[i]||flags[i])return;
+ if(!started){started=true;lay(i);t0=performance.now();timer=setInterval(()=>{$("time").textContent=Math.floor((performance.now()-t0)/1000);},1000);}
+ if(mines[i]){lose(i);return;}
+ const stack=[i];
+ while(stack.length){const j=stack.pop();if(open[j]||flags[j])continue;open[j]=1;opened++;const n=count(j),c=cells[j];c.className="c o";if(n){c.textContent=n;c.style.color=NUM[n];}else stack.push(...near(j).filter(k=>!open[k]));}
+ if(opened===W*H-M)win();
+}
+function chord(i){if(!open[i])return;const n=count(i),around=near(i);if(around.filter(j=>flags[j]).length!==n)return;around.forEach(reveal);}
+function flag(i){if(over||open[i])return;flags[i]^=1;cells[i].classList.toggle("f",!!flags[i]);left();}
+function stop(){over=true;clearInterval(timer);}
+function lose(i){stop();for(let j=0;j<W*H;j++){if(mines[j]&&!flags[j])cells[j].classList.add("m");if(!mines[j]&&flags[j])cells[j].style.opacity=".45";}cells[i].classList.add("boom");setTimeout(()=>show("Boom.","That one was a mine."),500);}
+function win(){stop();const t=Math.max(1,Math.round((performance.now()-t0)/1000)),b=best();let note=t+" seconds";if(!b||t<b){try{localStorage.setItem("mica-mines-best-"+level,t)}catch(e){}$("best").textContent=t;note+=" · a new best!";}for(let j=0;j<W*H;j++)if(mines[j])cells[j].classList.add("f");$("left").textContent=0;show("Cleared!",note);}
+function show(t,p){$("otitle").textContent=t;$("otext").textContent=p;$("overlay").hidden=false;$("again").focus();}
+grid.addEventListener("click",e=>{const c=e.target.closest(".c");if(!c)return;const i=+c.dataset.i;if(open[i])chord(i);else reveal(i);});
+grid.addEventListener("contextmenu",e=>{e.preventDefault();const c=e.target.closest(".c");if(c)flag(+c.dataset.i);});
+grid.addEventListener("auxclick",e=>{if(e.button!==1)return;const c=e.target.closest(".c");if(c)chord(+c.dataset.i);});
+// Touch: a long press flags.
+let press=0;grid.addEventListener("touchstart",e=>{const c=e.target.closest(".c");if(!c)return;press=setTimeout(()=>{flag(+c.dataset.i);press=-1;},380);},{passive:true});
+grid.addEventListener("touchend",e=>{if(press===-1)e.preventDefault();clearTimeout(press);press=0;});
+$("again").addEventListener("click",reset);
+addEventListener("keydown",e=>{if(e.code==="KeyN")reset();});
+addEventListener("resize",fit);
+levels();reset();
+</script>
+</body>
+</html>

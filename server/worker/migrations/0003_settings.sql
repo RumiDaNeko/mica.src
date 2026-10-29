@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS settings(user_id TEXT PRIMARY KEY REFERENCES users(id), updated_at INTEGER NOT NULL, data TEXT NOT NULL);

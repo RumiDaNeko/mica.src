@@ -1,0 +1,11 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mica permission test</title>
+<body style="font:16px sans-serif;margin:24px">
+<h1>Permissions</h1><p>A debug-only page for trying site permission prompts.</p>
+<button id="cam" style="font-size:18px;padding:12px">Camera + mic</button>
+<button id="loc" style="font-size:18px;padding:12px">Location</button>
+<pre id="out"></pre>
+<script>
+const out=t=>document.getElementById('out').textContent+=t+'\n';
+cam.onclick=()=>navigator.mediaDevices.getUserMedia({video:true,audio:true}).then(s=>{out('camera: granted');s.getTracks().forEach(t=>t.stop())},e=>out('camera: '+e.name));
+loc.onclick=()=>navigator.geolocation.getCurrentPosition(p=>out('location: granted'),e=>out('location: error '+e.code));
+</script>

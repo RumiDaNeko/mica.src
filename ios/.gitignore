@@ -1,0 +1,7 @@
+Mica.xcodeproj/
+build/
+shots/
+build.log
+*.xcuserstate
+xcuserdata/
+.DS_Store

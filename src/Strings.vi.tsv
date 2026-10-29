@@ -1,0 +1,1327 @@
+# Mica in Vietnamese. Each line: the English text as written in the code (C# escapes kept), a TAB, then the translation.
+# "re:" lines are patterns for text built at runtime: $1 is a matched part as is, $t1 that part translated.
+ /  YOUR LIBRARY	 /  THƯ VIỆN CỦA BẠN
+(no username)	(không có tên người dùng)
+＋   New tab	＋   Tab mới
+↑ ↓  to navigate       ↵  to open	↑ ↓  để di chuyển       ↵  để mở
+0 installed	Đã cài 0
+A background tab (	Một tab chạy nền (
+A download is waiting.	Có một tệp đang chờ tải xuống.
+A fresh page.	Trang trắng tinh.
+A fresh start	Khởi đầu mới
+A private window already keeps nothing after it closes.	Cửa sổ riêng tư vốn không lưu lại gì sau khi đóng.
+A private window doesn't keep anything, including saved articles.	Cửa sổ riêng tư không lưu lại gì, kể cả bài viết đã lưu.
+A profile is a separate you: its own sign-ins, cookies, extensions, tabs and history. Nothing is shared with your other profiles.	Mỗi hồ sơ là một "bạn" riêng: đăng nhập, cookie, tiện ích, tab và lịch sử riêng. Không có gì được chia sẻ với các hồ sơ khác.
+A shortcut is one word, and its address needs %s where your words go.	Lối tắt là một từ, và địa chỉ của nó cần có %s ở chỗ từ khoá của bạn.
+A shortcut to anywhere.	Lối tắt đến bất cứ đâu.
+A small detour.	Có chút trục trặc.
+Access cookies on permitted websites (cookies)	Truy cập cookie trên các trang web được phép (cookies)
+Access the active tab when you invoke the extension (activeTab)	Truy cập tab hiện tại khi bạn dùng tiện ích (activeTab)
+Account	Tài khoản
+Account & sync	Tài khoản và đồng bộ
+Account verification failed. Sign out and sign in again.	Không xác minh được tài khoản. Hãy đăng xuất rồi đăng nhập lại.
+Active	Đang tải
+Ad blocking	Chặn quảng cáo
+Ad blocking is off everywhere	Đã tắt chặn quảng cáo ở mọi nơi
+Add a shortcut	Thêm lối tắt
+Add a tab to the split	Thêm tab vào chia màn hình
+Add commands to website menus (contextMenus)	Thêm lệnh vào menu trang web (contextMenus)
+Add directly on the store page. You can also paste a link here to review permissions.	Thêm trực tiếp trên trang cửa hàng. Bạn cũng có thể dán liên kết vào đây để xem lại quyền.
+Add extension	Thêm tiện ích
+Add extension?	Thêm tiện ích?
+Add from Chrome Web Store	Thêm từ Chrome Web Store
+Add profile	Thêm hồ sơ
+Add to group	Thêm vào nhóm
+Add to new group	Thêm vào nhóm mới
+Add to split view	Thêm vào chia màn hình
+Added to Mica	Đã thêm vào Mica
+Address copied.	Đã sao chép địa chỉ.
+Ads and trackers	Quảng cáo và trình theo dõi
+Ads and trackers load on every site while this is off.	Khi tắt, quảng cáo và trình theo dõi sẽ tải trên mọi trang web.
+Ads are allowed on 	Đã cho phép quảng cáo trên
+Ads are blocked on 	Đã chặn quảng cáo trên
+Ads on this site	Quảng cáo trên trang này
+Ads on this site: 	Quảng cáo trên trang này:
+All	Tất cả
+All files (*.*)|*.*	Tất cả tệp (*.*)|*.*
+All site permissions	Tất cả quyền của trang web
+All time	Mọi lúc
+All yours. Take your time.	Tất cả là của bạn. Cứ thong thả.
+Allow	Cho phép
+Allow ads	Cho phép quảng cáo
+Allowed	Đã cho phép
+Ambient extensions are disabled in private windows.	Tiện ích Ambient bị tắt trong cửa sổ riêng tư.
+Ambient Light for YouTube disabled.	Đã tắt Ambient Light for YouTube.
+Ambient Light for YouTube enabled. Its controls appear on YouTube.	Đã bật Ambient Light for YouTube. Các nút điều khiển xuất hiện trên YouTube.
+App link cancelled.	Đã huỷ liên kết ứng dụng.
+APPS SITES MAY OPEN	ỨNG DỤNG MÀ TRANG WEB CÓ THỂ MỞ
+Ask	Hỏi
+Autofill form data	Dữ liệu tự động điền biểu mẫu
+Automatic downloads	Tự động tải xuống
+Awake	Luôn thức
+Back (Alt+Left)	Quay lại (Alt+Left)
+Back / forward	Quay lại / tiến tới
+Back to this profile's own cookies.	Đã quay về cookie riêng của hồ sơ này.
+Balanced	Cân bằng
+Balanced tracker blocking: known trackers blocked, sites keep working.	Chặn theo dõi cân bằng: chặn các trình theo dõi đã biết, trang web vẫn hoạt động bình thường.
+Banking	Ngân hàng
+Basic	Cơ bản
+Basic tracker blocking: only harmful trackers (fingerprinting, crypto mining) are blocked.	Chặn theo dõi cơ bản: chỉ chặn trình theo dõi có hại (lấy dấu vân tay, đào tiền mã hoá).
+BEFORE YOU ADD	TRƯỚC KHI THÊM
+Block	Chặn
+Block ads and trackers	Chặn quảng cáo và trình theo dõi
+Block again	Chặn lại
+Blocked	Đã chặn
+Blocked an app link.	Đã chặn một liên kết ứng dụng.
+Blossom	Hoa xuân
+Blue	Xanh dương
+Blurs the background behind the clock, search and your sites so they stay easy to read.	Làm mờ nền phía sau đồng hồ, ô tìm kiếm và các trang web của bạn để dễ đọc hơn.
+Bookmark a page with Ctrl+D.	Thêm dấu trang bằng Ctrl+D.
+Bookmark page	Thêm dấu trang
+Bookmark removed.	Đã xoá dấu trang.
+Bookmark saved	Đã lưu dấu trang
+Bookmark this page	Thêm dấu trang cho trang này
+Bookmark this page (Ctrl+D)	Thêm dấu trang cho trang này (Ctrl+D)
+Bookmarked. Find it in Spotlight.	Đã thêm dấu trang. Tìm lại trong Spotlight.
+Bookmarks	Dấu trang
+Bookmarks, history, tabs and preferences captured inside the encrypted vault.	Dấu trang, lịch sử, tab và tuỳ chọn được lưu trong kho mã hoá.
+Bring a tab to the front.	Đưa một tab lên trước.
+Browse store ↗	Xem cửa hàng ↗
+Browse the store and choose Add to Mica.	Duyệt cửa hàng và chọn Add to Mica.
+Browse without keeping history on this device	Duyệt web mà không lưu lịch sử trên thiết bị này
+Browser menu	Menu trình duyệt
+Browser snapshot	Bản lưu trình duyệt
+Browser snapshot restored.	Đã khôi phục bản lưu trình duyệt.
+Browser task manager	Trình quản lý tác vụ của trình duyệt
+Browser tools	Công cụ trình duyệt
+Browsing data cleared.	Đã xoá dữ liệu duyệt web.
+Browsing history	Lịch sử duyệt web
+Cached images and files	Hình ảnh và tệp đã lưu vào bộ nhớ đệm
+Camera	Máy ảnh
+Cancel	Huỷ
+Cancel the download before removing it from the list.	Hãy huỷ tải xuống trước khi xoá khỏi danh sách.
+Cancelled	Đã huỷ
+Cancelled by you.	Bạn đã huỷ.
+Capture	Lưu
+Capture browser snapshot	Tạo bản lưu trình duyệt
+Caret browsing	Duyệt bằng con trỏ
+Caret browsing off.	Đã tắt duyệt bằng con trỏ.
+Caret browsing on. F7 turns it off.	Đã bật duyệt bằng con trỏ. Nhấn F7 để tắt.
+Cast	Truyền
+Cast 	Truyền
+Cast media	Truyền nội dung
+Casting stopped.	Đã dừng truyền.
+Casting the 	Đang truyền
+Change background…	Đổi hình nền…
+Changes you made may not be saved.	Các thay đổi của bạn có thể chưa được lưu.
+Check again	Kiểm tra lại
+Check for leaks	Kiểm tra rò rỉ
+Check my passwords	Kiểm tra mật khẩu
+Check now	Kiểm tra ngay
+Checking casting support…	Đang kiểm tra hỗ trợ truyền…
+Checking GitHub for a newer Mica…	Đang kiểm tra bản Mica mới trên GitHub…
+Checking Microsoft for a newer engine… a download can take a few minutes.	Đang kiểm tra engine mới từ Microsoft… quá trình tải xuống có thể mất vài phút.
+Checking Windows Hello…	Đang kiểm tra Windows Hello…
+Checking…	Đang kiểm tra…
+Choose 1–99 copies.	Chọn từ 1–99 bản.
+Choose a device first.	Hãy chọn thiết bị trước.
+Choose a device.	Chọn một thiết bị.
+Choose a home background	Chọn hình nền trang chủ
+Choose a master password (12+ characters). You'll use it to view your saved passwords.	Chọn mật khẩu chính (12 ký tự trở lên). Bạn sẽ dùng nó để xem các mật khẩu đã lưu.
+Choose a master password with at least 12 characters. Keep it safe — it cannot be recovered.	Chọn mật khẩu chính có ít nhất 12 ký tự. Hãy giữ cẩn thận — không thể khôi phục mật khẩu này.
+Choose a printer or save a PDF. Uses the page's print layout.	Chọn máy in hoặc lưu thành PDF. Dùng bố cục in của trang.
+Choose a space	Chọn không gian
+Choose what to remove from this device. Passwords in your vault and your bookmarks are kept.	Chọn nội dung cần xoá khỏi thiết bị này. Mật khẩu trong kho và dấu trang sẽ được giữ lại.
+Choose your master password	Chọn mật khẩu chính
+Chrome Web Store extension link	Liên kết tiện ích trên Chrome Web Store
+Classic	Cổ điển
+Clear	Xoá
+Clear all browsing history?	Xoá toàn bộ lịch sử duyệt web?
+Clear browsing data	Xoá dữ liệu duyệt web
+Clear data	Xoá dữ liệu
+Clear finished	Xoá mục đã xong
+Clear history	Xoá lịch sử
+Clear search	Xoá tìm kiếm
+Clear this site's data	Xoá dữ liệu của trang này
+Cleared cookies and data from 	Đã xoá cookie và dữ liệu của
+Clipboard	Bảng nhớ tạm
+Close	Đóng
+Close 	Đóng
+Close (Esc)	Đóng (Esc)
+Close a tab.	Đóng một tab.
+Close DevTools (F12)	Đóng DevTools (F12)
+Close find (Esc)	Đóng tìm kiếm (Esc)
+Close group	Đóng nhóm
+Close Spotlight	Đóng Spotlight
+Close tab	Đóng tab
+Close unpinned tab	Đóng tab chưa ghim
+Close window	Đóng cửa sổ
+Colour	Màu
+Colour 	Màu
+Complete Discord sign-in in your system browser…	Hoàn tất đăng nhập Discord trong trình duyệt mặc định…
+Completed	Đã xong
+Connecting…	Đang kết nối…
+Connection is secure	Kết nối an toàn
+Continue without HTTPS	Tiếp tục không có HTTPS
+control and reprogram MIDI devices	điều khiển và lập trình lại thiết bị MIDI
+Cookie jar	Hộp cookie
+Cookie jar: 	Hộp cookie:
+Cookie jars	Hộp cookie
+Cookie jars…	Hộp cookie…
+Cookies and site data	Cookie và dữ liệu trang web
+Cookies, bookmarks and downloaded files will stay.	Cookie, dấu trang và tệp đã tải xuống sẽ được giữ lại.
+Copy	Sao chép
+Copy page address	Sao chép địa chỉ trang
+Copy password	Sao chép mật khẩu
+Copy selected password	Sao chép mật khẩu đã chọn
+Could not change that permission.	Không thay đổi được quyền đó.
+Could not contact the sync service. Check deployment and connectivity.	Không liên lạc được với dịch vụ đồng bộ. Hãy kiểm tra cấu hình và kết nối mạng.
+Could not remove Windows Hello enrollment.	Không gỡ được đăng ký Windows Hello.
+Could not stop casting. Use your device's controls.	Không dừng truyền được. Hãy dùng nút điều khiển trên thiết bị của bạn.
+Couldn't apply: 	Không áp dụng được:
+Couldn't cancel download: 	Không huỷ được tải xuống:
+Couldn't cast to 	Không truyền được tới
+Couldn't change ad blocking: 	Không thay đổi được chặn quảng cáo:
+Couldn't change it: 	Không thay đổi được:
+Couldn't clear site data: 	Không xoá được dữ liệu trang web:
+Couldn't clear the site's data: 	Không xoá được dữ liệu của trang web:
+Couldn't copy it: 	Không sao chép được:
+Couldn't copy the address.	Không sao chép được địa chỉ.
+Couldn't create 	Không tạo được
+Couldn't create the profile: 	Không tạo được hồ sơ:
+Couldn't download this extension from Chrome Web Store. Check your connection and whether it is still available.	Không tải được tiện ích này từ Chrome Web Store. Hãy kiểm tra kết nối và xem tiện ích còn được cung cấp không.
+Couldn't find the engine list on Microsoft's site.	Không tìm thấy danh sách engine trên trang của Microsoft.
+Couldn't finish download setup: 	Không hoàn tất được thiết lập tải xuống:
+Couldn't forget 	Không quên được
+Couldn't highlight that.	Không đánh dấu được nội dung đó.
+Couldn't list extensions: 	Không liệt kê được tiện ích:
+Couldn't mirror to 	Không phản chiếu được tới
+Couldn't open 	Không mở được
+Couldn't open file: 	Không mở được tệp:
+Couldn't open the extension page: 	Không mở được trang tiện ích:
+Couldn't open the extension popup: 	Không mở được cửa sổ bật lên của tiện ích:
+Couldn't pause download: 	Không tạm dừng được tải xuống:
+Couldn't preview the link: 	Không xem trước được liên kết:
+Couldn't reach Have I Been Pwned.	Không kết nối được Have I Been Pwned.
+Couldn't reach your devices: 	Không kết nối được thiết bị của bạn:
+Couldn't read download history: 	Không đọc được lịch sử tải xuống:
+Couldn't resume download: 	Không tiếp tục tải xuống được:
+Couldn't run in restricted mode (error 	Không chạy được ở chế độ hạn chế (lỗi
+Couldn't save download history: 	Không lưu được lịch sử tải xuống:
+Couldn't save highlights: 	Không lưu được đánh dấu:
+Couldn't save it: 	Không lưu được:
+Couldn't save profiles: 	Không lưu được hồ sơ:
+Couldn't save the article: 	Không lưu được bài viết:
+Couldn't save the password: 	Không lưu được mật khẩu:
+Couldn't save the session: 	Không lưu được phiên:
+Couldn't save this session: 	Không lưu được phiên này:
+Couldn't send it: 	Không gửi được:
+Couldn't show file: 	Không hiển thị được tệp:
+Couldn't start download: 	Không bắt đầu tải xuống được:
+Couldn't start the update: 	Không bắt đầu cập nhật được:
+Couldn't start Windows Sandbox: 	Không khởi động được Windows Sandbox:
+Couldn't switch the engine: 	Không chuyển được engine:
+Couldn't take the screenshot.	Không chụp được ảnh màn hình.
+Couldn't take the screenshot: 	Không chụp được ảnh màn hình:
+Couldn't unlock the vault: 	Không mở khoá được kho mật khẩu:
+Couldn't unpack the engine (expand 	Không giải nén được engine (expand
+Couldn't update Mica: 	Không cập nhật được Mica:
+Couldn't update the engine: 	Không cập nhật được engine:
+Couldn't use that picture: 	Không dùng được ảnh đó:
+CPU · LAST 2 MINUTES	CPU · 2 PHÚT QUA
+Create and open	Tạo và mở
+Create vault	Tạo kho
+Create your vault	Tạo kho mật khẩu
+Credential deleted.	Đã xoá thông tin đăng nhập.
+Credential saved encrypted on this device.	Đã lưu thông tin đăng nhập (đã mã hoá) trên thiết bị này.
+Cyan	Xanh lơ
+Dark theme	Giao diện tối
+Default	Mặc định
+Delete	Xoá
+Delete everything?	Xoá tất cả?
+Delete selected credential	Xoá thông tin đăng nhập đã chọn
+Delete the saved session	Xoá phiên đã lưu
+Deleting signs you out of every site in that jar. Click Delete again to go ahead.	Xoá sẽ đăng xuất bạn khỏi mọi trang web trong hộp đó. Nhấn Xoá lần nữa để tiếp tục.
+Destination	Đích
+Developer tools	Công cụ cho nhà phát triển
+Device discovery failed.	Không tìm được thiết bị.
+DevTools couldn't connect: 	DevTools không kết nối được:
+DevTools docked. Press F12 to close.	Đã gắn DevTools. Nhấn F12 để đóng.
+DevTools docks inside Mica.	DevTools được gắn bên trong Mica.
+DevTools now docks inside Mica. Press F12. A local debugging port is open while this is on.	DevTools giờ được gắn bên trong Mica. Nhấn F12. Một cổng gỡ lỗi cục bộ sẽ mở khi bật tính năng này.
+DevTools opened in its own window. Press F12 to close.	DevTools đã mở trong cửa sổ riêng. Nhấn F12 để đóng.
+Disable 	Tắt
+Disabled	Đã tắt
+Discord only proves who you are. Your master password encrypts everything on this device and can't be recovered — not even by Mica.	Discord chỉ dùng để xác minh danh tính của bạn. Mật khẩu chính mã hoá mọi thứ trên thiết bị này và không thể khôi phục — kể cả Mica cũng không.
+Dismiss	Bỏ qua
+Dock DevTools	Gắn DevTools
+Dock to Mica	Gắn vào Mica
+DOM could not be read.	Không đọc được DOM.
+Done	Xong
+Download	Tải xuống
+Download cancelled.	Đã huỷ tải xuống.
+Download interrupted: 	Tải xuống bị gián đoạn:
+Download list	Danh sách tải xuống
+download multiple files	tải xuống nhiều tệp
+Download prompted: 	Đang hỏi tải xuống:
+Download started: 	Đã bắt đầu tải xuống:
+Downloaded. Click to open it.	Đã tải xuống. Nhấn để mở.
+Downloading	Đang tải xuống
+Downloading 	Đang tải xuống
+Downloading and checking extension…	Đang tải xuống và kiểm tra tiện ích…
+Downloading extension from Chrome Web Store…	Đang tải tiện ích từ Chrome Web Store…
+Downloads	Tệp tải xuống
+Drag a tab here, or right-click it, to keep it	Kéo tab vào đây, hoặc nhấp chuột phải vào tab, để giữ lại
+Drag over the part you want. Esc cancels.	Kéo chọn vùng bạn muốn. Esc để huỷ.
+Drag to resize DevTools	Kéo để đổi kích thước DevTools
+Duplicate tab	Nhân bản tab
+Dusk	Hoàng hôn
+Each jar keeps its own cookies and sign-ins. Right-click a tab to move it into one.	Mỗi hộp giữ cookie và đăng nhập riêng. Nhấp chuột phải vào tab để chuyển tab vào một hộp.
+Each profile keeps its own logins, cookies, extensions, tabs and history.	Mỗi hồ sơ có đăng nhập, cookie, tiện ích, tab và lịch sử riêng.
+easy to guess	dễ đoán
+Edit	Sửa
+Edit address	Sửa địa chỉ
+Edit address (Ctrl+L)	Sửa địa chỉ (Ctrl+L)
+edit files on your device	chỉnh sửa tệp trên thiết bị của bạn
+Edit login	Sửa thông tin đăng nhập
+Ember	Than hồng
+Enable 	Bật
+Enable Windows Hello on this device	Bật Windows Hello trên thiết bị này
+enabled	đã bật
+Enabled	Đã bật
+Encrypted on this device · unlock only when you need a password	Được mã hoá trên thiết bị này · chỉ mở khoá khi bạn cần mật khẩu
+Encrypted sync	Đồng bộ mã hoá
+Encrypted vault uploaded.	Đã tải lên kho mật khẩu đã mã hoá.
+End split view	Thoát chia màn hình
+Enter a password to save.	Nhập mật khẩu để lưu.
+Enter an HTTPS Chrome Web Store detail link or a 32-character extension ID.	Nhập liên kết HTTPS tới trang tiện ích trên Chrome Web Store hoặc ID tiện ích gồm 32 ký tự.
+Enter an HTTPS website address without user information.	Nhập địa chỉ trang web HTTPS không kèm thông tin người dùng.
+Enter your master password to access saved logins.	Nhập mật khẩu chính để xem thông tin đăng nhập đã lưu.
+Enter your vault master password.	Nhập mật khẩu chính của kho mật khẩu.
+Evaluation failed or timed out.	Không chạy được hoặc đã hết thời gian chờ.
+Everything you brought back from the web.	Mọi thứ bạn mang về từ web.
+Extension 	Tiện ích
+Extension added from Chrome Web Store. Reload open pages to apply it.	Đã thêm tiện ích từ Chrome Web Store. Tải lại các trang đang mở để áp dụng.
+Extension added. Reload open pages to apply it.	Đã thêm tiện ích. Tải lại các trang đang mở để áp dụng.
+Extension identity did not match the signed package.	Danh tính tiện ích không khớp với gói đã ký.
+Extension identity did not match the store package.	Danh tính tiện ích không khớp với gói trên cửa hàng.
+Extension not added.	Chưa thêm tiện ích.
+Extension removed. Reload pages to clear its changes.	Đã gỡ tiện ích. Tải lại trang để xoá các thay đổi của nó.
+Extension storage cannot pass through a directory link.	Bộ nhớ tiện ích không thể đi qua liên kết thư mục.
+Extensions	Tiện ích mở rộng
+Extensions — Mica	Tiện ích mở rộng — Mica
+Extensions are disabled in private windows.	Tiện ích bị tắt trong cửa sổ riêng tư.
+Extensions are unavailable in private windows.	Không dùng được tiện ích trong cửa sổ riêng tư.
+Extensions don't run in private windows.	Tiện ích không chạy trong cửa sổ riêng tư.
+Extract Mica into a folder you own so its bundled engine can be prepared, then reopen it.	Hãy giải nén Mica vào một thư mục bạn có quyền để engine đi kèm được chuẩn bị, rồi mở lại.
+F12 opens DevTools in its own window.	F12 mở DevTools trong cửa sổ riêng.
+F7 won't do anything in Mica.	F7 không có tác dụng trong Mica.
+File editing	Chỉnh sửa tệp
+File moved or deleted	Tệp đã bị di chuyển hoặc xoá
+Fill on this site	Điền trên trang web này
+Fill selected credential on current website	Điền thông tin đăng nhập đã chọn trên trang web hiện tại
+Fill your older saved passwords	Điền các mật khẩu đã lưu trước đây
+Filled your saved password for 	Đã điền mật khẩu đã lưu cho
+FIND & NAVIGATE	TÌM KIẾM & ĐIỀU HƯỚNG
+Find an extension	Tìm tiện ích
+Find an extension by name	Tìm tiện ích theo tên
+Find in page	Tìm trong trang
+Find requires a supported engine and a text page.	Tính năng tìm cần engine được hỗ trợ và trang có văn bản.
+Find text	Tìm văn bản
+Finding your devices…	Đang tìm thiết bị…
+Finding your way…	Đang tìm đường…
+Finished download records cleared. Your files were kept.	Đã xoá danh sách tải xuống đã xong. Tệp của bạn vẫn được giữ.
+Focus mode	Chế độ tập trung
+Fold all groups	Thu gọn mọi nhóm
+Fold group	Thu gọn nhóm
+Fonts	Phông chữ
+Forget	Quên
+Forget 	Quên
+Forget Windows Hello on this device	Quên Windows Hello trên thiết bị này
+Forgot 	Đã quên
+Forward (Alt+Right)	Tiến tới (Alt+Right)
+FRAME COLOUR	MÀU KHUNG
+from 	từ
+From this page	Từ trang này
+From your other device	Từ thiết bị khác của bạn
+Frosted glass	Kính mờ
+Full engine tools	Công cụ engine đầy đủ
+Go to “	Đi tới “
+Go to tab 1–9 / 10th	Chuyển đến tab 1–9 / thứ 10
+Go to the tab	Chuyển đến tab
+Good afternoon	Chào buổi chiều
+Good afternoon.	Chào buổi chiều.
+Good evening	Chào buổi tối
+Good evening.	Chào buổi tối.
+Good morning	Chào buổi sáng
+Good morning.	Chào buổi sáng.
+Good night	Chúc ngủ ngon
+Green	Xanh lá
+Grey	Xám
+Group 	Nhóm
+Group name	Tên nhóm
+Group: 	Nhóm:
+Hello, you.	Xin chào bạn.
+Hide sidebar	Ẩn thanh bên
+Hide sidebar (Ctrl+Shift+B)	Ẩn thanh bên (Ctrl+Shift+B)
+Highlight	Đánh dấu
+Highlighted (a private window forgets it when it closes).	Đã đánh dấu (cửa sổ riêng tư sẽ quên khi đóng).
+Highlighted. It'll be here when you come back.	Đã đánh dấu. Nó vẫn sẽ ở đây khi bạn quay lại.
+Highlighter	Bút đánh dấu
+Highlights and notes	Đánh dấu và ghi chú
+History	Lịch sử
+History cleared. Open any website once to clear cookies and cache too.	Đã xoá lịch sử. Mở một trang web bất kỳ một lần để xoá cả cookie và bộ nhớ đệm.
+Home	Trang chủ
+HOME BACKGROUND	HÌNH NỀN TRANG CHỦ
+http(s) address or search words	địa chỉ http(s) hoặc từ khoá tìm kiếm
+In Spotlight: ↑ ↓ to select · Enter to open · Esc to close	Trong Spotlight: ↑ ↓ để chọn · Enter để mở · Esc để đóng
+In the 	Trong
+Inactive tabs rest after 2 minutes and reload when reopened. Audio-playing tabs stay awake. Unsaved forms may be lost when a tab rests.	Tab không hoạt động sẽ nghỉ sau 2 phút và tải lại khi mở lại. Tab đang phát âm thanh vẫn thức. Biểu mẫu chưa lưu có thể bị mất khi tab nghỉ.
+Include backgrounds	In cả hình nền
+Interrupted	Bị gián đoạn
+Invalid browser snapshot.	Bản lưu trình duyệt không hợp lệ.
+Invalid content script.	Content script không hợp lệ.
+Invalid content scripts.	Các content script không hợp lệ.
+Invalid credential.	Thông tin đăng nhập không hợp lệ.
+Invalid CRX header size.	Kích thước tiêu đề CRX không hợp lệ.
+Invalid default locale.	Ngôn ngữ mặc định không hợp lệ.
+Invalid DER length.	Độ dài DER không hợp lệ.
+Invalid device key.	Khoá thiết bị không hợp lệ.
+Invalid expanded file size.	Kích thước tệp giải nén không hợp lệ.
+Invalid extension version.	Phiên bản tiện ích không hợp lệ.
+Invalid inbox item.	Mục hộp thư đến không hợp lệ.
+Invalid key bit string.	Chuỗi bit khoá không hợp lệ.
+Invalid manifest 	Manifest không hợp lệ:
+Invalid permission.	Quyền không hợp lệ.
+Invalid protobuf integer.	Số nguyên protobuf không hợp lệ.
+Invalid protobuf tag.	Thẻ protobuf không hợp lệ.
+Invalid public key.	Khoá công khai không hợp lệ.
+Invalid remote vault.	Kho mật khẩu từ xa không hợp lệ.
+Invalid RSA algorithm.	Thuật toán RSA không hợp lệ.
+Invalid RSA integer.	Số nguyên RSA không hợp lệ.
+Invalid RSA key.	Khoá RSA không hợp lệ.
+Invalid sign-in response.	Phản hồi đăng nhập không hợp lệ.
+Invalid store URL path.	Đường dẫn URL cửa hàng không hợp lệ.
+Invalid vault key.	Khoá kho mật khẩu không hợp lệ.
+Invalid vault payload.	Dữ liệu kho mật khẩu không hợp lệ.
+Invalid vault size.	Kích thước kho mật khẩu không hợp lệ.
+Invalid Windows Hello enrollment. Use your master password.	Đăng ký Windows Hello không hợp lệ. Hãy dùng mật khẩu chính.
+It asks for no extra permissions.	Tiện ích không yêu cầu thêm quyền nào.
+It can: 	Tiện ích có thể:
+Jar 	Hộp
+JavaScript expression · runs in this page	Biểu thức JavaScript · chạy trong trang này
+Keep	Giữ
+Keep 	Giữ
+Keep blocking	Tiếp tục chặn
+Keep history	Giữ lịch sử
+Keep tabs, bookmarks, history and preferences inside your encrypted vault.	Giữ tab, dấu trang, lịch sử và tuỳ chọn trong kho mật khẩu đã mã hoá của bạn.
+Keyboard shortcuts	Phím tắt
+Keyboard shortcuts  ↗	Phím tắt  ↗
+know your location	biết vị trí của bạn
+Lagoon	Đầm phá
+Landscape	Khổ ngang
+Larger text	Chữ lớn hơn
+Last 24 hours	24 giờ qua
+Last 7 days	7 ngày qua
+Last checked	Lần kiểm tra gần nhất
+Last hour	1 giờ qua
+Latest release	Bản phát hành mới nhất
+Leave	Rời đi
+Leave reading mode	Thoát chế độ đọc
+Leave reading mode (Esc)	Thoát chế độ đọc (Esc)
+Leave this page?	Rời khỏi trang này?
+Less noise. More internet.	Bớt ồn ào. Thêm internet.
+Light theme	Giao diện sáng
+Load unpacked…	Tải tiện ích chưa đóng gói…
+Loading stopped. Available page content is kept.	Đã dừng tải. Phần nội dung đã tải vẫn được giữ.
+Loading your extensions…	Đang tải tiện ích…
+Loading…	Đang tải…
+Local folder	Thư mục cục bộ
+Local vault belongs to another account. Sign in to that account.	Kho mật khẩu trên máy thuộc về tài khoản khác. Hãy đăng nhập tài khoản đó.
+Location	Vị trí
+Lock vault	Khoá kho mật khẩu
+Lock your passwords	Khoá mật khẩu
+Locked · Unlock	Đã khoá · Mở khoá
+Look and feel	Giao diện
+Looking for devices on your network…	Đang tìm thiết bị trong mạng của bạn…
+Looks fine	Ổn
+Main	Chính
+MALWARE AND SCAMS	PHẦN MỀM ĐỘC HẠI VÀ LỪA ĐẢO
+Manage downloads (downloads)	Quản lý tệp tải xuống (downloads)
+Manage extensions	Quản lý tiện ích
+Manage jars…	Quản lý hộp cookie…
+Manage passwords…	Quản lý mật khẩu…
+Manage profiles	Quản lý hồ sơ
+manage windows on all your displays	quản lý cửa sổ trên mọi màn hình của bạn
+Managed by Windows Hello, not stored in this vault.	Do Windows Hello quản lý, không lưu trong kho này.
+Master password	Mật khẩu chính
+Match case	Phân biệt hoa/thường
+Maximize	Phóng to
+Meadow	Đồng cỏ
+MEMORY · LAST 2 MINUTES	BỘ NHỚ · 2 PHÚT QUA
+Memory saver	Tiết kiệm bộ nhớ
+Memory used by Mica and its web engine. Shared pages may be counted more than once.	Bộ nhớ mà Mica và engine web đang dùng. Trang dùng chung có thể bị tính nhiều lần.
+Memory: 	Bộ nhớ:
+MICA ACCOUNT	TÀI KHOẢN MICA
+Mica and its web engine	Mica và engine web
+Mica browser	Trình duyệt Mica
+Mica can't reach the internet. Check your Wi-Fi or cable, then try again. Meanwhile, there are games.	Mica không kết nối được internet. Hãy kiểm tra Wi-Fi hoặc cáp mạng rồi thử lại. Trong lúc chờ, chơi một trò nhé.
+Mica closed before the download finished. Start it again from its website.	Mica đã đóng trước khi tải xong. Hãy tải lại từ trang web gốc.
+Mica couldn't save your session. Free some disk space or check folder permissions, then retry setup.	Mica không lưu được phiên của bạn. Hãy giải phóng dung lượng đĩa hoặc kiểm tra quyền thư mục, rồi chạy lại cài đặt.
+Mica couldn't write to the selected location.	Mica không ghi được vào vị trí đã chọn.
+Mica didn't answer in time.	Mica không phản hồi kịp.
+Mica forgets 	Mica sẽ quên
+Mica is busy.	Mica đang bận.
+Mica is up to date (	Mica đã là bản mới nhất (
+Mica isn't running (or is a version without assistant control). Open Mica and try again.	Mica chưa chạy (hoặc là phiên bản không hỗ trợ điều khiển bằng trợ lý). Hãy mở Mica rồi thử lại.
+Mica opens downloads in Windows Sandbox when it's on.	Khi bật, Mica mở tệp tải xuống trong Windows Sandbox.
+Mica restarted. Start this download again from its website.	Mica đã khởi động lại. Hãy tải lại tệp này từ trang web gốc.
+Mica stopped 	Mica đã chặn
+Mica supports the permissions its Chromium engine exposes. USB, serial, payment, VR/AR and similar device APIs stay blocked.	Mica hỗ trợ các quyền mà engine Chromium cung cấp. USB, cổng serial, thanh toán, VR/AR và các API thiết bị tương tự vẫn bị chặn.
+Mica tried the secure version of 	Mica đã thử phiên bản bảo mật của
+Mica UI	Giao diện Mica
+Mica uses 	Mica đang dùng
+Mica won't offer to save passwords for 	Mica sẽ không đề nghị lưu mật khẩu cho
+Mica's bundled engine is missing. Extract the complete Mica ZIP, including the Runtime folder, and open it from a local folder.	Thiếu engine đi kèm Mica. Hãy giải nén toàn bộ tệp ZIP của Mica, kể cả thư mục Runtime, rồi mở từ một thư mục trên máy.
+Mica's release page isn't set up yet.	Trang phát hành của Mica chưa được thiết lập.
+Mica's Runtime folder is incomplete. Extract the full portable package again.	Thư mục Runtime của Mica chưa đầy đủ. Hãy giải nén lại toàn bộ gói portable.
+Microphone	Micrô
+MIDI device control	Điều khiển thiết bị MIDI
+Minimize	Thu nhỏ
+Mirror tab	Phản chiếu tab
+Mirror this tab	Phản chiếu tab này
+Mirroring this tab to 	Đang phản chiếu tab này tới
+Missing localized extension name.	Thiếu tên tiện ích đã bản địa hoá.
+Missing manifest 	Manifest thiếu
+Missing or duplicate CRX field.	Trường CRX bị thiếu hoặc trùng lặp.
+Missing store redirect.	Thiếu chuyển hướng từ cửa hàng.
+Mist	Sương mù
+MORE ADS	QUẢNG CÁO KHÁC
+Most visited	Truy cập nhiều nhất
+Motion and light sensors	Cảm biến chuyển động và ánh sáng
+Move tab out of its jar	Đưa tab ra khỏi hộp cookie
+Move tab to the 	Chuyển tab sang
+Move this tab into a cookie jar	Chuyển tab này vào hộp cookie
+Move to space	Chuyển sang không gian
+Mute	Tắt tiếng
+Mute 	Tắt tiếng
+Mute tab	Tắt tiếng tab
+Never	Không bao giờ
+New	Mới
+New credential	Thông tin đăng nhập mới
+New jar	Hộp cookie mới
+New login	Đăng nhập mới
+New private window	Cửa sổ riêng tư mới
+New tab	Tab mới
+New tab (Ctrl+T)	Tab mới (Ctrl+T)
+New tab in group	Tab mới trong nhóm
+New tab in the 	Tab mới trong
+New tab in this jar	Tab mới trong hộp này
+New window	Cửa sổ mới
+Next	Tiếp
+Next tab	Tab tiếp theo
+Next version	Phiên bản tiếp theo
+No 	Không có
+No action matches. Try one word, like split or mute.	Không có lệnh phù hợp. Hãy thử một từ, như split hoặc mute.
+No additional permissions declared.	Không khai báo thêm quyền nào.
+No closed tabs to bring back.	Không có tab đã đóng nào để mở lại.
+No devices found. Check that your TV or speaker is on the same network.	Không tìm thấy thiết bị. Hãy kiểm tra TV hoặc loa có cùng mạng không.
+No extensions yet. Add one from the Chrome Web Store or a folder.	Chưa có tiện ích nào. Hãy thêm từ Chrome Web Store hoặc từ một thư mục.
+No matching extensions.	Không có tiện ích phù hợp.
+No Mica release has been published yet.	Chưa có bản phát hành Mica nào.
+No normal Mica window is open.	Không có cửa sổ Mica thường nào đang mở.
+No other device yet. Sign in to Passwords & sync in Mica on your other PC, and it shows up here.	Chưa có thiết bị nào khác. Hãy đăng nhập Mật khẩu & đồng bộ trong Mica trên PC kia, thiết bị đó sẽ hiện ở đây.
+No other site has changed permissions yet.	Chưa có trang web nào khác thay đổi quyền.
+No saved passwords to check.	Không có mật khẩu đã lưu để kiểm tra.
+No supported RSA developer proof matches the extension ID. ECDSA-only packages are not supported.	Không có chứng thực nhà phát triển RSA được hỗ trợ nào khớp với ID tiện ích. Không hỗ trợ gói chỉ dùng ECDSA.
+No tab or recent page matches. Try fewer words.	Không có tab hay trang gần đây nào phù hợp. Hãy thử ít từ hơn.
+No video or music found on	Không tìm thấy video hay nhạc trên
+None	Không có
+None waiting	Không có bản nào đang chờ
+Not added.	Chưa thêm.
+Not an RSA public key.	Không phải khoá công khai RSA.
+Not checked yet	Chưa kiểm tra
+Not enough disk space to download engine 	Không đủ dung lượng đĩa để tải engine
+Not here	Không bật ở đây
+Not secure: what you send here can be read on the way	Không an toàn: dữ liệu bạn gửi ở đây có thể bị đọc trên đường truyền
+Not set up	Chưa thiết lập
+Not signed in	Chưa đăng nhập
+Not yet	Chưa
+Nothing blocked on this page	Không có gì bị chặn trên trang này
+Nothing downloaded yet.	Chưa tải xuống gì.
+Nothing is playing.	Không có gì đang phát.
+Nothing marked on this page. Select text, right-click and choose Highlight.	Chưa đánh dấu gì trên trang này. Hãy chọn văn bản, nhấp chuột phải rồi chọn Đánh dấu.
+Nothing matches yet.	Chưa có kết quả phù hợp.
+Nothing saved yet. In reading mode (F9), the bookmark button keeps an article here to read offline.	Chưa lưu gì. Trong chế độ đọc (F9), nút dấu trang sẽ lưu bài viết vào đây để đọc ngoại tuyến.
+Nothing saved yet.\nUnlock your vault, then add a login with New.	Chưa lưu gì.\nHãy mở khoá kho mật khẩu, rồi thêm thông tin đăng nhập bằng nút Mới.
+Notifications	Thông báo
+Off	Tắt
+Oh no, no internet.	Ôi, không có internet.
+On	Bật
+Only a vault key is kept for Windows Hello.	Chỉ khoá kho mật khẩu được lưu cho Windows Hello.
+Only a vault key is kept on this device.	Chỉ khoá kho mật khẩu được lưu trên thiết bị này.
+Only http:// and https:// addresses are supported.	Chỉ hỗ trợ địa chỉ http:// và https://.
+Only open it if you trust 	Chỉ mở nếu bạn tin tưởng
+Only signed CRX3 store packages are supported.	Chỉ hỗ trợ gói CRX3 đã ký từ cửa hàng.
+Only web addresses can open in a new tab.	Chỉ địa chỉ web mới mở được trong tab mới.
+Only website tabs can go side by side.	Chỉ tab trang web mới chia màn hình được.
+Open	Mở
+Open 	Mở
+Open \"Turn Windows features on or off\" and tick Windows Sandbox.	Mở \"Turn Windows features on or off\" và đánh dấu chọn Windows Sandbox.
+Open a new Mica window	Mở cửa sổ Mica mới
+Open a page with a video first.	Hãy mở một trang có video trước.
+Open a page with a video or music to cast.	Mở một trang có video hoặc nhạc để truyền.
+Open a web page to inspect it.	Mở một trang web để kiểm tra.
+Open a website first, then split it with another tab.	Hãy mở một trang web trước, rồi chia màn hình với tab khác.
+Open a website to choose whether its ads are blocked.	Mở một trang web để chọn có chặn quảng cáo hay không.
+Open a website to see its settings.	Mở một trang web để xem cài đặt của trang.
+Open a website to send it.	Mở một trang web để gửi đi.
+Open a website to take a screenshot of it.	Mở một trang web để chụp màn hình.
+Open a website to translate it.	Mở một trang web để dịch.
+Open a website to use this tool.	Mở một trang web để dùng công cụ này.
+Open a website to zoom it.	Mở một trang web để thu phóng.
+Open an article to read it here.	Mở một bài viết để đọc tại đây.
+Open an article to save it.	Mở một bài viết để lưu lại.
+Open another website tab to split with.	Mở thêm một tab trang web để chia màn hình.
+Open any website first, then come back here to manage permissions.	Hãy mở một trang web bất kỳ trước, rồi quay lại đây để quản lý quyền.
+Open as tab	Mở thành tab
+Open DevTools in its own window	Mở DevTools trong cửa sổ riêng
+Open file	Mở tệp
+Open in a new tab	Mở trong tab mới
+Open profile: 	Mở hồ sơ:
+Open reading mode, then press Read aloud.	Mở chế độ đọc, rồi nhấn Đọc to.
+Open runs it in Windows Sandbox, away from your files.	Nút Mở sẽ chạy tệp trong Windows Sandbox, tách biệt khỏi các tệp của bạn.
+Open settings	Mở cài đặt
+Open the original page	Mở trang gốc
+Open Windows Cast · Win + K	Mở Windows Cast · Win + K
+Open Windows passkey settings	Mở cài đặt passkey của Windows
+Opened 	Đã mở
+Opened a page from an extension inside Mica.	Đã mở một trang từ tiện ích bên trong Mica.
+Opening 	Đang mở
+Orange	Cam
+OTHER PAGES	TRANG KHÁC
+OTHER SITES	TRANG WEB KHÁC
+Page couldn't load	Không tải được trang
+Page couldn't load: 	Không tải được trang:
+Page headers and footers	Đầu trang và chân trang
+PAGE TOOLS	CÔNG CỤ TRANG
+Pages · blank for all, e.g. 1-3, 5	Trang · để trống để in tất cả, ví dụ 1-3, 5
+Pages you visited, recently closed tabs	Trang bạn đã truy cập, tab đã đóng gần đây
+Passkeys	Passkey
+Password	Mật khẩu
+Password check	Kiểm tra mật khẩu
+Password copied. It clears from the clipboard in 30 seconds and stays out of clipboard history.	Đã sao chép mật khẩu. Mật khẩu sẽ bị xoá khỏi bảng nhớ tạm sau 30 giây và không lưu vào lịch sử bảng nhớ tạm.
+Password filling is on for this device.	Đã bật tự điền mật khẩu trên thiết bị này.
+Password saved for 	Đã lưu mật khẩu cho
+Password saved to your vault for 	Đã lưu mật khẩu vào kho cho
+PASSWORD VAULT & ENCRYPTED SYNC	KHO MẬT KHẨU & ĐỒNG BỘ MÃ HOÁ
+Password vault and sync are disabled in private browsing.	Kho mật khẩu và đồng bộ bị tắt khi duyệt web riêng tư.
+Passwords	Mật khẩu
+Passwords & sync	Mật khẩu & đồng bộ
+Past 7 days	7 ngày qua
+Pause	Tạm dừng
+Paused	Đã tạm dừng
+Paused. Resume whenever you're ready.	Đã tạm dừng. Tiếp tục bất cứ khi nào bạn sẵn sàng.
+PDF could not be saved.	Không lưu được PDF.
+PDF document|*.pdf	Tài liệu PDF|*.pdf
+PDF saved.	Đã lưu PDF.
+Peek	Xem nhanh
+Pen	Bút
+Permissions are not available right now.	Hiện không dùng được quyền.
+Permissions aren't available right now.	Hiện không dùng được quyền.
+Personal	Cá nhân
+Personalize	Tuỳ chỉnh
+Personalize  ↗	Tuỳ chỉnh  ↗
+Personalize…	Tuỳ chỉnh…
+Pick a login	Chọn thông tin đăng nhập
+Pick up a thought where you left it.	Tiếp tục dòng suy nghĩ từ chỗ bạn dừng lại.
+PICK UP WHERE YOU LEFT OFF	TIẾP TỤC TỪ CHỖ BẠN DỪNG LẠI
+Picture-in-picture closed.	Đã đóng hình trong hình.
+Picture-in-picture didn't start: 	Không bật được hình trong hình:
+Pin tab	Ghim tab
+PIN, fingerprint or face. Optional device-only unlock, protected by Windows.	Mã PIN, vân tay hoặc khuôn mặt. Mở khoá tuỳ chọn chỉ trên thiết bị này, được Windows bảo vệ.
+Pink	Hồng
+PINNED	ĐÃ GHIM
+Play	Phát
+Play a game while you wait	Chơi một trò trong lúc chờ
+Pop-up blocked	Đã chặn cửa sổ bật lên
+Preparing your document…	Đang chuẩn bị tài liệu…
+Press Enter	Nhấn Enter
+Press Enter to open	Nhấn Enter để mở
+Press F11 to leave fullscreen.	Nhấn F11 để thoát toàn màn hình.
+Press Win + K to open Windows Cast.	Nhấn Win + K để mở Windows Cast.
+Previous	Trước
+Print	In
+Print / save	In / lưu
+Print / save PDF	In / lưu PDF
+Print this page	In trang này
+Printer returned: 	Máy in báo:
+Printing failed. Check the page, page range and printer.	In không thành công. Hãy kiểm tra trang, phạm vi trang và máy in.
+Privacy	Quyền riêng tư
+PRIVATE	RIÊNG TƯ
+Private browsing · history is not saved	Duyệt web riêng tư · lịch sử không được lưu
+Private tabs can't be sent.	Không thể gửi tab riêng tư.
+Private window	Cửa sổ riêng tư
+Private windows always use Strict.	Cửa sổ riêng tư luôn dùng chế độ Nghiêm ngặt.
+Private windows don't keep sessions.	Cửa sổ riêng tư không lưu phiên.
+Private windows don't use cookie jars.	Cửa sổ riêng tư không dùng hộp cookie.
+Profile name	Tên hồ sơ
+Profile removed.	Đã xoá hồ sơ.
+Profiles	Hồ sơ
+Pull	Kéo về
+Pull remote vault (merge into local)	Kéo kho từ máy chủ (gộp vào bản trên máy)
+Purple	Tím
+Push	Đẩy lên
+Push local vault	Đẩy kho cục bộ lên
+Push result could not be verified. Pull before retrying.	Không xác minh được kết quả đẩy lên. Hãy kéo về trước khi thử lại.
+Quick reference	Tra cứu nhanh
+Read aloud	Đọc to
+Read and change browsing history (history)	Đọc và thay đổi lịch sử duyệt web (history)
+Read information about your tabs (tabs)	Đọc thông tin về các tab của bạn (tabs)
+Read later	Đọc sau
+Reading aloud. Press the button again to stop.	Đang đọc to. Nhấn nút lần nữa để dừng.
+Reading mode	Chế độ đọc
+Reading mode (F9)	Chế độ đọc (F9)
+Reading mode. Press Esc or F9 to go back to the page.	Chế độ đọc. Nhấn Esc hoặc F9 để quay lại trang.
+Ready	Sẵn sàng
+Ready when you are.	Sẵn sàng khi bạn cần.
+RECENT HISTORY	LỊCH SỬ GẦN ĐÂY
+Recently closed	Đã đóng gần đây
+Reconnect DevTools	Kết nối lại DevTools
+Red	Đỏ
+Refresh	Làm mới
+Refusing to delete a linked extension path.	Không xoá đường dẫn tiện ích được liên kết.
+Reload	Tải lại
+Reload (Ctrl+R)	Tải lại (Ctrl+R)
+Reload page	Tải lại trang
+Reload tab	Tải lại tab
+Reload to see the change	Tải lại để xem thay đổi
+Remember for this site	Ghi nhớ cho trang web này
+Remote vault changed. Pull and review it before pushing again.	Kho trên máy chủ đã thay đổi. Hãy kéo về và xem lại trước khi đẩy lên lần nữa.
+Remove	Xoá
+Remove 	Xoá
+Remove background	Xoá hình nền
+Remove bookmark	Xoá dấu trang
+Remove from group	Xoá khỏi nhóm
+Remove from history	Xoá khỏi lịch sử
+Remove from Read later	Xoá khỏi Đọc sau
+Remove the highlight	Xoá đánh dấu
+Remove the jar and delete its cookies	Xoá hộp và cookie trong đó
+Removing a profile deletes its sign-ins, cookies, extensions, tabs, history and saved passwords on this PC.	Xoá hồ sơ sẽ xoá thông tin đăng nhập, cookie, tiện ích, tab, lịch sử và mật khẩu đã lưu của hồ sơ đó trên máy tính này.
+Removing…	Đang xoá…
+Rename group	Đổi tên nhóm
+Reopen closed tab	Mở lại tab đã đóng
+Replace installed version	Thay thế phiên bản đã cài
+Replace the current tabs, bookmarks, history and preferences with this snapshot?	Thay thế tab, dấu trang, lịch sử và tuỳ chọn hiện tại bằng bản lưu này?
+Reset	Đặt lại
+Reset to 100% (Ctrl+0)	Đặt lại 100% (Ctrl+0)
+Reset zoom	Đặt lại thu phóng
+Response received (details unavailable)	Đã nhận phản hồi (không có chi tiết)
+Rest 	Cho nghỉ
+Rest background tabs	Cho nghỉ tab chạy nền
+Rest soon	Nghỉ sớm
+Rest tab	Cho tab nghỉ
+Restart to finish	Khởi động lại để hoàn tất
+Restart to update	Khởi động lại để cập nhật
+Resting: uses no memory	Đang nghỉ: không dùng bộ nhớ
+Restore	Khôi phục
+Restore browser snapshot	Khôi phục bản lưu trình duyệt
+Restore captured browser snapshot	Khôi phục bản lưu trình duyệt đã chụp
+Restore snapshot	Khôi phục bản lưu
+Restore window	Khôi phục cửa sổ
+Resume	Tiếp tục
+Review extension	Xem lại tiện ích
+Review the access this extension requests.	Xem lại các quyền truy cập mà tiện ích này yêu cầu.
+Room for your favorite tools.	Chỗ cho những công cụ bạn yêu thích.
+ROOM TO THINK	KHÔNG GIAN ĐỂ SUY NGHĨ
+Run	Chạy
+Run restricted	Chạy hạn chế
+Run scripts on permitted websites (scripting)	Chạy tập lệnh trên các trang web được phép (scripting)
+Running	Đang chạy
+Running 	Đang chạy
+Save	Lưu
+Save a file from the web to see its progress here.	Tải một tệp từ web để xem tiến trình tại đây.
+Save as PDF	Lưu dưới dạng PDF
+Save as…	Lưu thành…
+Save credential	Lưu thông tin đăng nhập
+Save download	Lưu tệp tải xuống
+Save for later	Lưu để đọc sau
+Save for later, to read offline	Lưu để đọc sau, kể cả ngoại tuyến
+Save login	Lưu thông tin đăng nhập
+Save password?	Lưu mật khẩu?
+Save this session	Lưu phiên này
+Save this session…	Lưu phiên này…
+Save…	Lưu…
+Saved 	Đã lưu
+Saved “	Đã lưu “
+Saved · 	Đã lưu ·
+Saved addresses and form entries	Địa chỉ và dữ liệu biểu mẫu đã lưu
+Saved for later	Đã lưu để đọc sau
+Saved for later. Find it in Read later, even offline.	Đã lưu để đọc sau. Xem trong Đọc sau, kể cả khi ngoại tuyến.
+Saved in Mica	Đã lưu trong Mica
+Saved on this device: it reads without a connection.	Đã lưu trên thiết bị này: có thể đọc khi không có kết nối.
+Saved passwords	Mật khẩu đã lưu
+Schedule background tasks (alarms)	Lên lịch tác vụ chạy nền (alarms)
+Screenshot 	Ảnh chụp màn hình
+Screenshot — Mica	Ảnh chụp màn hình — Mica
+Screenshot copied.	Đã sao chép ảnh chụp màn hình.
+Screenshot of an area	Chụp một vùng
+Screenshot of the whole page	Chụp toàn bộ trang
+Screenshot of what's visible	Chụp phần đang hiển thị
+Search	Tìm kiếm
+Search 	Tìm trên
+Search anything	Tìm bất cứ thứ gì
+Search file name or source	Tìm tên tệp hoặc nguồn
+Search history	Tìm trong lịch sử
+Search is unavailable on this page.	Không thể tìm kiếm trên trang này.
+Search library	Tìm trong thư viện
+Search or type a web address	Tìm kiếm hoặc nhập địa chỉ web
+Search tabs	Tìm tab
+Search tabs, bookmarks, history or the web	Tìm tab, dấu trang, lịch sử hoặc trên web
+Search the web for “	Tìm trên web “
+Search title or website	Tìm tiêu đề hoặc trang web
+see text and images copied to the clipboard	xem văn bản và hình ảnh đã sao chép vào bảng nhớ tạm
+seen in 	xuất hiện trong
+Select a credential matching the current HTTPS website.	Chọn thông tin đăng nhập khớp với trang web HTTPS hiện tại.
+Select a credential.	Chọn một thông tin đăng nhập.
+Select a tab to rest or close it. Pinned tabs are protected.	Chọn một tab để cho nghỉ hoặc đóng. Tab đã ghim được bảo vệ.
+Select one on the left to fill or copy it,\nor create a new one.	Chọn một mục bên trái để điền hoặc sao chép,\nhoặc tạo mục mới.
+Select some text first, then choose Highlight.	Hãy chọn văn bản trước, rồi chọn Đánh dấu.
+Send tab to a device	Gửi tab sang thiết bị
+Send to a device	Gửi sang thiết bị
+Sent to 	Đã gửi tới
+Sent to printer.	Đã gửi tới máy in.
+Separate cookies and sign-ins	Tách riêng cookie và thông tin đăng nhập
+Separate tabs for each part of your day.	Tách riêng tab cho từng phần trong ngày của bạn.
+Serif or sans-serif	Có chân hoặc không chân
+Session	Phiên
+Session 	Phiên
+Sessions	Phiên
+Set password	Đặt mật khẩu
+Settings sync on their own while you're signed in. Your passwords stay encrypted: Pull fetches them, Push uploads changes from this device.	Cài đặt tự đồng bộ khi bạn đăng nhập. Mật khẩu luôn được mã hoá: Kéo về để tải xuống, Đẩy lên để tải lên thay đổi từ thiết bị này.
+Settings synced from your Mica account.	Đã đồng bộ cài đặt từ tài khoản Mica của bạn.
+Shared across your spaces	Dùng chung giữa các không gian
+Shopping	Mua sắm
+Show group	Hiện nhóm
+Show how much memory Mica's web engine uses, and rest background tabs to free it.	Xem engine web của Mica dùng bao nhiêu bộ nhớ và cho tab chạy nền nghỉ để giải phóng.
+Show in folder	Hiện trong thư mục
+Show it on the page	Hiện trên trang
+show notifications	hiển thị thông báo
+Show password	Hiện mật khẩu
+Show sidebar	Hiện thanh bên
+Show sidebar (Ctrl+Shift+B)	Hiện thanh bên (Ctrl+Shift+B)
+Showing 3 of 	Đang hiện 3 trên
+Sidebar	Thanh bên
+Sign in	Đăng nhập
+Sign in and Pull remote before pushing.	Hãy đăng nhập và kéo về từ máy chủ trước khi đẩy lên.
+Sign in first.	Hãy đăng nhập trước.
+Sign in to back up your encrypted vault	Đăng nhập để sao lưu kho mật khẩu đã mã hoá
+Sign in to Mica	Đăng nhập vào Mica
+Sign in with a saved login	Đăng nhập bằng thông tin đã lưu
+Sign in with Discord	Đăng nhập bằng Discord
+Sign in with your saved login	Đăng nhập bằng thông tin đã lưu của bạn
+Sign out	Đăng xuất
+Signed in with Discord · sync available	Đã đăng nhập bằng Discord · có thể đồng bộ
+Signed in, but download did not finish. Your local data is unchanged. Use Pull to retry.	Đã đăng nhập nhưng chưa tải xuống xong. Dữ liệu cục bộ không thay đổi. Dùng Kéo về để thử lại.
+Signed in. Downloading your encrypted data…	Đã đăng nhập. Đang tải xuống dữ liệu đã mã hoá…
+Signed out on this device.	Đã đăng xuất trên thiết bị này.
+Sign-in timed out. Please try again.	Hết thời gian đăng nhập. Vui lòng thử lại.
+Signs you out of most sites	Đăng xuất bạn khỏi hầu hết trang web
+Site permissions	Quyền của trang web
+Site settings	Cài đặt trang web
+Site shortcuts	Lối tắt trang web
+Site shortcuts…	Lối tắt trang web…
+Sites	Trang web
+Sites from this private window won't be added to your history or Top Sites.	Các trang web trong cửa sổ riêng tư này sẽ không được thêm vào lịch sử hoặc Trang hàng đầu.
+Sites may load slower next time	Lần sau trang web có thể tải chậm hơn
+SITES WHERE ADS ARE ALLOWED	TRANG WEB ĐƯỢC PHÉP HIỆN QUẢNG CÁO
+Smaller text	Chữ nhỏ hơn
+Social	Mạng xã hội
+Some Chrome features and toolbar popups aren't supported yet.	Một số tính năng Chrome và cửa sổ bật lên trên thanh công cụ chưa được hỗ trợ.
+Some Chrome features may not work in Mica yet, including toolbar popups. Installation doesn't guarantee compatibility. Store extensions don't update automatically in this version.	Một số tính năng Chrome có thể chưa hoạt động trong Mica, gồm cả cửa sổ bật lên trên thanh công cụ. Cài đặt không đảm bảo tương thích. Tiện ích từ cửa hàng không tự cập nhật trong phiên bản này.
+Something other than your Mica answered on its control pipe.	Một chương trình khác không phải Mica của bạn đã phản hồi trên kênh điều khiển.
+Sound and autoplay	Âm thanh và tự động phát
+SPACE	KHÔNG GIAN
+Split view	Chia màn hình
+Split view holds up to 	Chia màn hình chứa tối đa
+Split view with this tab	Chia màn hình với tab này
+SPOTLIGHT	SPOTLIGHT
+Spotlight results	Kết quả Spotlight
+Spotlight search	Tìm kiếm Spotlight
+Stay	Ở lại
+Stop	Dừng
+Stop forgetting 	Ngừng tự xoá dữ liệu của
+Stop reading aloud	Dừng đọc to
+Store extension settings (storage)	Lưu cài đặt tiện ích (storage)
+Strict	Nghiêm ngặt
+SWITCH SPACE	CHUYỂN KHÔNG GIAN
+Switch theme	Đổi giao diện
+Switch to 	Chuyển sang
+Switch to another tab before resting this one.	Hãy chuyển sang tab khác trước khi cho tab này nghỉ.
+Switch to dark mode	Chuyển sang chế độ tối
+Switch to light mode	Chuyển sang chế độ sáng
+Sync response too large.	Phản hồi đồng bộ quá lớn.
+Sync service rejected the request.	Dịch vụ đồng bộ đã từ chối yêu cầu.
+System	Hệ thống
+TABS	TAB
+TABS & WINDOWS	TAB & CỬA SỔ
+TABS IN THIS WINDOW	TAB TRONG CỬA SỔ NÀY
+TABS, BOOKMARKS & RECENT PLACES	TAB, DẤU TRANG & TRANG GẦN ĐÂY
+Take out of split view	Bỏ khỏi chia màn hình
+Task manager	Trình quản lý tác vụ
+That article is no longer saved.	Bài viết đó không còn được lưu.
+That doesn't look like a website. Try something like example.com.	Đây có vẻ không phải là trang web. Hãy thử dạng như example.com.
+That list doesn't fit: Chromium allows 	Danh sách đó vượt giới hạn: Chromium chỉ cho phép
+The 	Hộp
+The blocker couldn't apply that.	Trình chặn không áp dụng được thay đổi đó.
+The blocker didn't answer (	Trình chặn không phản hồi (
+The browser blocked this file as unsafe.	Trình duyệt đã chặn tệp này vì không an toàn.
+The browser is closing.	Trình duyệt đang đóng.
+The download engine stopped: 	Trình tải xuống đã dừng:
+The download folder is no longer available.	Thư mục tải xuống không còn khả dụng.
+The downloaded setup doesn't match the release checksum.	Tệp cài đặt đã tải không khớp với checksum của bản phát hành.
+The engine download isn't signed by Microsoft.	Gói engine tải về không có chữ ký của Microsoft.
+The engine is up to date (	Engine đã là bản mới nhất (
+The engine package is version 	Gói engine là phiên bản
+The expanded extension exceeds the size limit.	Tiện ích sau khi giải nén vượt quá giới hạn dung lượng.
+The extension contains too many files.	Tiện ích chứa quá nhiều tệp.
+The extension signature is invalid.	Chữ ký của tiện ích không hợp lệ.
+The latest release has no Mica setup to download.	Bản phát hành mới nhất không có tệp cài đặt Mica để tải.
+The link does not contain a valid extension ID.	Liên kết không chứa ID tiện ích hợp lệ.
+The manifest key disagrees with the verified developer key.	Khoá trong manifest không khớp với khoá nhà phát triển đã xác minh.
+The manifest must be an object.	Manifest phải là một đối tượng.
+The operation could not be completed.	Không thể hoàn tất thao tác.
+The package has an invalid or unsupported manifest.	Gói có manifest không hợp lệ hoặc không được hỗ trợ.
+The package has no valid manifest.	Gói không có manifest hợp lệ.
+The release doesn't list a checksum for its setup, so Mica won't install it.	Bản phát hành không kèm checksum cho tệp cài đặt nên Mica sẽ không cài.
+The release download isn't secure (not HTTPS).	Bản tải xuống không an toàn (không phải HTTPS).
+The runtime couldn't load this extension's files. Its package may use unsupported features.	Runtime không tải được các tệp của tiện ích này. Gói có thể dùng tính năng không được hỗ trợ.
+The service returned an unsafe sign-in address.	Dịch vụ trả về địa chỉ đăng nhập không an toàn.
+The signed package ID does not match the store link.	ID của gói đã ký không khớp với liên kết cửa hàng.
+The store package exceeds 64 MB.	Gói từ cửa hàng vượt quá 64 MB.
+The store package is unavailable or exceeds 64 MB.	Gói từ cửa hàng không khả dụng hoặc vượt quá 64 MB.
+The store redirected to an untrusted download host.	Cửa hàng đã chuyển hướng đến máy chủ tải xuống không đáng tin cậy.
+the sync server doesn't support sending tabs yet	máy chủ đồng bộ chưa hỗ trợ gửi tab
+The sync service timed out. Try again.	Dịch vụ đồng bộ hết thời gian chờ. Hãy thử lại.
+The unpacked engine isn't signed by Microsoft.	Engine sau khi giải nén không có chữ ký của Microsoft.
+The video is floating. Close its window to bring it back.	Video đang nổi. Đóng cửa sổ của video để đưa nó trở lại.
+There are no website tabs to save.	Không có tab trang web nào để lưu.
+There isn't enough disk space. Free some space before trying again.	Không đủ dung lượng đĩa. Hãy giải phóng bớt dung lượng rồi thử lại.
+There's no video on this page.	Trang này không có video.
+This article is already saved.	Bài viết này đã được lưu.
+This component is managed by the browser.	Thành phần này do trình duyệt quản lý.
+This download was blocked by your device's policy.	Tệp tải xuống này bị chính sách của thiết bị chặn.
+This engine can't cast. Use Windows Cast below for a wireless display.	Engine này không thể truyền. Hãy dùng Windows Cast bên dưới để chiếu lên màn hình không dây.
+This extension needs features that aren't available in the current browser runtime.	Tiện ích này cần các tính năng chưa có trong runtime trình duyệt hiện tại.
+This file can change your device	Tệp này có thể thay đổi thiết bị của bạn
+This file has moved or was deleted.	Tệp này đã bị di chuyển hoặc xoá.
+This installer needs admin rights, which restricted mode blocks. Turn on Windows Sandbox to try it safely.	Trình cài đặt này cần quyền quản trị, nhưng chế độ hạn chế không cho phép. Hãy bật Windows Sandbox để thử an toàn.
+This is not a Chrome Web Store detail link.	Đây không phải liên kết trang chi tiết trên Chrome Web Store.
+This link	Liên kết này
+This page	Trang này
+This page can't be read in reading mode.	Không thể đọc trang này ở chế độ đọc.
+This page couldn't load (	Không tải được trang này (
+This page crashed. Other tabs are fine. Try again to reload it.	Trang này đã gặp sự cố. Các tab khác vẫn ổn. Nhấn Thử lại để tải lại.
+This page doesn't allow picture-in-picture.	Trang này không cho phép hình trong hình.
+This page doesn't look like an article, so there's nothing to save for reading.	Trang này không giống bài viết nên không có gì để lưu đọc sau.
+This page doesn't look like an article.	Trang này không giống một bài viết.
+This page is already translated. Go back to see the original.	Trang này đã được dịch. Quay lại để xem bản gốc.
+This page says	Trang này cho biết
+This profile's own	Của riêng hồ sơ này
+This profile's own cookies	Cookie riêng của hồ sơ này
+this site	trang web này
+THIS SITE · 	TRANG WEB NÀY ·
+This site hasn't asked for anything yet.	Trang web này chưa yêu cầu quyền nào.
+This site tried to open 	Trang web này đã cố mở
+THIS TAB	TAB NÀY
+This tab is playing audio.	Tab này đang phát âm thanh.
+This vault belongs to another account.	Kho mật khẩu này thuộc về tài khoản khác.
+This vault has no browser snapshot.	Kho mật khẩu này không có bản lưu trình duyệt.
+Tick \"Windows Sandbox\", press OK, then restart Windows.	Đánh dấu \"Windows Sandbox\", nhấn OK rồi khởi động lại Windows.
+today	hôm nay
+Today	Hôm nay
+Toggle sidebar	Bật/tắt thanh bên
+Too many CRX header fields.	Quá nhiều trường tiêu đề CRX.
+Too many store redirects.	Cửa hàng chuyển hướng quá nhiều lần.
+Top Sites	Trang hay truy cập
+Tracker blocking	Chặn theo dõi
+Tracker blocking is off. Sites can follow you from page to page.	Chặn theo dõi đang tắt. Các trang web có thể theo dõi bạn từ trang này sang trang khác.
+Trailing public key bytes.	Khoá công khai có byte thừa ở cuối.
+Translate page to 	Dịch trang sang
+Translate page to English	Dịch trang sang tiếng Anh
+Translating to 	Đang dịch sang
+Tree tabs	Tab dạng cây
+Tree tabs off.	Đã tắt tab dạng cây.
+Tree tabs on: tabs you open from a page sit under it.	Đã bật tab dạng cây: tab bạn mở từ một trang sẽ nằm bên dưới trang đó.
+Truncated archive file.	Tệp lưu trữ bị cắt cụt.
+Truncated protobuf integer.	Số nguyên protobuf bị cắt cụt.
+Truncated protobuf.	Dữ liệu protobuf bị cắt cụt.
+Truncated public key.	Khoá công khai bị cắt cụt.
+Try again	Thử lại
+Try another name or choose All.	Hãy thử tên khác hoặc chọn Tất cả.
+Try another search or choose All.	Hãy thử tìm kiếm khác hoặc chọn Tất cả.
+Turn off tree tabs	Tắt tab dạng cây
+Turn on caret browsing?	Bật duyệt bằng con trỏ văn bản?
+Turn on Sandbox	Bật Sandbox
+Turned off. Turn it on in Manage extensions.	Đã tắt. Bật lại trong Quản lý tiện ích.
+Turning it on adds its extension from the Chrome Web Store on this PC too.	Khi bật, tiện ích tương ứng từ Chrome Web Store cũng sẽ được thêm vào máy tính này.
+Type a shortcut, a space and your words in the address bar: “yt lofi” searches YouTube. %s marks where the words go.	Gõ lối tắt, một dấu cách rồi từ khoá vào thanh địa chỉ: “yt lofi” sẽ tìm trên YouTube. %s đánh dấu vị trí của từ khoá.
+Type a website or a thought. We'll take you there.	Nhập trang web hoặc điều bạn đang nghĩ. Chúng tôi sẽ đưa bạn đến đó.
+Type a website, like example.com. Its pages, and anything they load, won't be filtered.	Nhập một trang web, như example.com. Các trang của nó và mọi thứ chúng tải sẽ không bị lọc.
+Undo	Hoàn tác
+Unexpected database layout in 	Cấu trúc cơ sở dữ liệu không như mong đợi trong
+Ungroup	Bỏ nhóm
+Unlock / create local vault	Mở khoá / tạo kho mật khẩu cục bộ
+Unlock cloud data	Mở khoá dữ liệu đám mây
+Unlock passwords	Mở khoá mật khẩu
+Unlock vault	Mở khoá kho mật khẩu
+Unlock with your master password or Windows Hello\nwhen you need them. Your account works without it.	Mở khoá bằng mật khẩu chính hoặc Windows Hello\nkhi bạn cần. Tài khoản vẫn hoạt động mà không cần nó.
+Unlock your Mica password vault	Mở khoá kho mật khẩu Mica của bạn
+Unlock your passwords	Mở khoá mật khẩu của bạn
+Unlock your vault	Mở khoá kho mật khẩu của bạn
+Unlock your vault first.	Hãy mở khoá kho mật khẩu trước.
+Unlocked · Lock	Đã mở khoá · Khoá
+Unmute	Bật tiếng
+Unmute 	Bật tiếng
+Unmute tab	Bật tiếng tab
+Unnamed group	Nhóm chưa đặt tên
+Unpin tab	Bỏ ghim tab
+Unpin this tab before closing it.	Hãy bỏ ghim tab này trước khi đóng.
+Unsafe archive filename.	Tên tệp trong gói lưu trữ không an toàn.
+Unsafe archive path.	Đường dẫn trong gói lưu trữ không an toàn.
+Unsafe URL in snapshot.	URL không an toàn trong bản lưu.
+Unsupported manifest version.	Phiên bản manifest không được hỗ trợ.
+Unsupported protobuf wire type.	Kiểu wire protobuf không được hỗ trợ.
+Unsupported RSA key size.	Kích thước khoá RSA không được hỗ trợ.
+Unsupported vault format.	Định dạng kho mật khẩu không được hỗ trợ.
+Up to 200 recent finished records. Removing a record keeps its file on disk.	Tối đa 200 mục đã hoàn tất gần đây. Xoá một mục vẫn giữ tệp trên ổ đĩa.
+Up to date	Đã là bản mới nhất
+Update saved password?	Cập nhật mật khẩu đã lưu?
+Updated the saved copy.	Đã cập nhật bản đã lưu.
+Updates	Cập nhật
+Updating extension…	Đang cập nhật tiện ích…
+use 	dùng
+Use a passkey	Dùng passkey
+Use an http:// or https:// address.	Hãy dùng địa chỉ http:// hoặc https://.
+Use at least 12 characters for a new master password.	Mật khẩu chính mới cần ít nhất 12 ký tự.
+use fonts installed on your device	dùng phông chữ đã cài trên thiết bị của bạn
+use motion and light sensors	dùng cảm biến chuyển động và ánh sáng
+Use page numbers or ranges such as 1-3, 5.	Dùng số trang hoặc khoảng trang, ví dụ 1-3, 5.
+Use theme colour	Dùng màu giao diện
+use your camera	dùng camera của bạn
+use your microphone	dùng micrô của bạn
+used on other sites	đã dùng trên trang web khác
+Username	Tên người dùng
+Username or email	Tên người dùng hoặc email
+Using 	Đang dùng
+Usual	Bình thường
+Usual memory saver for 	Tiết kiệm bộ nhớ bình thường cho
+Vault is too large to sync (2 MB limit). Reduce saved history or credentials.	Kho mật khẩu quá lớn để đồng bộ (giới hạn 2 MB). Hãy giảm bớt lịch sử hoặc thông tin đăng nhập đã lưu.
+Vault is unavailable in private browsing.	Kho mật khẩu không khả dụng khi duyệt riêng tư.
+Vault locked. Your account and sync stay available.	Đã khoá kho mật khẩu. Tài khoản và đồng bộ vẫn hoạt động.
+Vault unavailable.	Kho mật khẩu không khả dụng.
+Vault unlocked with master password. Windows Hello was not enabled.	Đã mở khoá kho bằng mật khẩu chính. Windows Hello chưa được bật.
+Vault unlocked. Could not save Windows Hello enrollment on this device.	Đã mở khoá kho mật khẩu. Không thể lưu đăng ký Windows Hello trên thiết bị này.
+Vault unlocked. Use the lock to lock it again.	Đã mở khoá kho mật khẩu. Dùng biểu tượng ổ khoá để khoá lại.
+Vault unlocked. Windows Hello enabled on this device.	Đã mở khoá kho mật khẩu. Đã bật Windows Hello trên thiết bị này.
+Version	Phiên bản
+Web engine	Engine web
+WEB ENGINE	ENGINE WEB
+Web navigation failed: 	Điều hướng web thất bại:
+Website (HTTPS), username and password	Trang web (HTTPS), tên người dùng và mật khẩu
+Website (https://…)	Trang web (https://…)
+Website to allow ads on	Trang web cho phép quảng cáo
+When a site opens an app (Roblox, Discord, Zoom…) Mica asks first.	Khi trang web mở một ứng dụng (Roblox, Discord, Zoom…), Mica sẽ hỏi trước.
+When its last tab closes	Khi tab cuối cùng đóng
+Whole word	Toàn bộ từ
+Window management	Quản lý cửa sổ
+Windows can't read aloud here: 	Windows không thể đọc to ở đây:
+Windows Cast shares your whole screen with a Miracast display.	Windows Cast chia sẻ toàn bộ màn hình của bạn với màn hình Miracast.
+Windows could not open that app.	Windows không mở được ứng dụng đó.
+Windows couldn't create the restricted container.	Windows không tạo được vùng chứa hạn chế.
+Windows couldn't find the restricted container's folder.	Windows không tìm thấy thư mục của vùng chứa hạn chế.
+Windows couldn't name the restricted container.	Windows không đặt tên được cho vùng chứa hạn chế.
+Windows Hello didn't confirm. Use your master password.	Windows Hello không xác nhận. Hãy dùng mật khẩu chính.
+Windows Hello didn't confirm. Your passwords stay locked.	Windows Hello không xác nhận. Mật khẩu của bạn vẫn bị khoá.
+Windows Hello isn't available here. Use your master password.	Windows Hello không khả dụng ở đây. Hãy dùng mật khẩu chính.
+Windows Hello removed. Use your master password.	Đã gỡ Windows Hello. Hãy dùng mật khẩu chính.
+Windows Hello unlock could not be read. Use your master password or forget this device enrollment.	Không đọc được dữ liệu mở khoá Windows Hello. Hãy dùng mật khẩu chính hoặc xoá đăng ký trên thiết bị này.
+Windows Hello was cancelled or unavailable. Use your master password.	Windows Hello đã bị huỷ hoặc không khả dụng. Hãy dùng mật khẩu chính.
+Windows Hello, a phone or a security key	Windows Hello, điện thoại hoặc khoá bảo mật
+Windows manages supported passkeys. Mica does not store or sync passkeys in this password vault.	Windows quản lý các passkey được hỗ trợ. Mica không lưu hay đồng bộ passkey trong kho mật khẩu này.
+Windows Sandbox is off	Windows Sandbox đang tắt
+Windows will check it, and Mica runs apps in restricted mode.	Windows sẽ kiểm tra tệp, và Mica chạy ứng dụng ở chế độ hạn chế.
+Work	Công việc
+working set · CPU, not per-tab	bộ nhớ làm việc · CPU, không theo từng tab
+Working set: Mica + associated WebView2 processes. Shared pages may be counted more than once.	Bộ nhớ làm việc: Mica + các tiến trình WebView2 liên quan. Trang dùng chung có thể bị tính nhiều lần.
+Wrong master password or damaged vault.	Sai mật khẩu chính hoặc kho mật khẩu bị hỏng.
+Wrong master password. Your passwords stay locked.	Sai mật khẩu chính. Mật khẩu của bạn vẫn bị khoá.
+Yellow	Vàng
+Your cloud vault uses a different master password. Enter it to download your data. Local data stays unchanged if you cancel.	Kho mật khẩu đám mây dùng mật khẩu chính khác. Nhập mật khẩu đó để tải dữ liệu xuống. Dữ liệu cục bộ giữ nguyên nếu bạn huỷ.
+Your data	Dữ liệu của bạn
+YOUR EVERYDAY	HẰNG NGÀY CỦA BẠN
+Your files stay where they are	Tệp của bạn vẫn ở nguyên chỗ cũ
+Your frequently visited sites will appear here.	Các trang web bạn hay truy cập sẽ hiện ở đây.
+Your latest 500 unique pages, stored on this device.	500 trang khác nhau gần nhất của bạn, lưu trên thiết bị này.
+YOUR LIBRARY	THƯ VIỆN CỦA BẠN
+Your library, kept on this device.	Thư viện của bạn, lưu trên thiết bị này.
+YOUR LOGINS	THÔNG TIN ĐĂNG NHẬP
+Your passwords and saved browser snapshot are downloaded.	Đã tải xuống mật khẩu và bản lưu trình duyệt của bạn.
+Your passwords are locked	Mật khẩu của bạn đang bị khoá
+Your photo…	Ảnh của bạn…
+Your tools, all in one place	Mọi công cụ của bạn ở một nơi
+Your visited pages will appear here.	Các trang bạn đã truy cập sẽ hiện ở đây.
+You're signed out. Sign in again in Passwords & sync.	Bạn đã đăng xuất. Hãy đăng nhập lại trong Mật khẩu & đồng bộ.
+YouTube ambient	Ánh sáng nền YouTube
+Zoom	Thu phóng
+Zoom for this site (click to change)	Thu phóng cho trang web này (nhấn để thay đổi)
+Zoom in	Phóng to
+Zoom in (Ctrl+Plus)	Phóng to (Ctrl+Plus)
+Zoom out	Thu nhỏ
+Zoom out (Ctrl+Minus)	Thu nhỏ (Ctrl+Minus)
+# Seen on screen, and text built while Mica runs.
+PERMISSIONS	QUYỀN
+ACTION	LỆNH
+SEARCH	TÌM KIẾM
+SHORTCUT	LỐI TẮT
+BOOKMARK	DẤU TRANG
+HISTORY	LỊCH SỬ
+OPEN	ĐANG MỞ
+CLOSED	ĐÃ ĐÓNG
+RESTING	ĐANG NGHỈ
+THIS TAB	TAB NÀY
+Mica and its web engine. Shared pages may be counted more than once.	Mica và engine web của nó. Trang dùng chung có thể bị tính nhiều lần.
+Click to fold · F2 or right-click to rename	Nhấp để thu gọn · F2 hoặc nhấp chuột phải để đổi tên
+Click to show · F2 or right-click to rename	Nhấp để mở rộng · F2 hoặc nhấp chuột phải để đổi tên
+Drag to resize; double-click to make them even	Kéo để đổi kích thước; nhấp đúp để chia đều
+Split view. Click a side to use it; drag a divider to resize. Ctrl+Shift+S ends it.	Chia màn hình. Nhấp vào một bên để dùng; kéo vạch chia để đổi kích thước. Ctrl+Shift+S để tắt.
+Unnamed group	Nhóm chưa đặt tên
+TABS, BOOKMARKS & RECENT PLACES · TYPE > FOR ACTIONS	TAB, DẤU TRANG & NƠI VỪA XEM · GÕ > ĐỂ DÙNG LỆNH
+Nothing blocked on this page	Chưa chặn gì trên trang này
+1 ad or tracker blocked on this page	Đã chặn 1 quảng cáo hoặc trình theo dõi trên trang này
+re:(\d+) ads and trackers blocked on this page	Đã chặn $1 quảng cáo và trình theo dõi trên trang này
+re:([\d.,]+) MB · (\d+) process(es)?	$1 MB · $2 tiến trình
+re:Using (\d+) MB now	Đang dùng $1 MB
+re:(.+) · (\d+) tabs?	$t1 · $2 tab
+re:(\d+) tabs? in the group put to rest\. They come back when you open the group\.	Đã cho $1 tab trong nhóm nghỉ. Chúng sẽ quay lại khi bạn mở nhóm.
+re:(\d+) highlights? on this page\.	$1 đánh dấu trên trang này.
+re:(\d+) ACTIONS?	$1 LỆNH
+re:(\d+) PLACES TO GO	$1 NƠI ĐỂ ĐẾN
+re:(\d+) MATCH(ES)?	$1 KẾT QUẢ
+re:(\d+) TABS · OPEN, RESTING AND RECENTLY CLOSED	$1 TAB · ĐANG MỞ, ĐANG NGHỈ VÀ VỪA ĐÓNG
+re:Press Enter · keyword (.+)	Nhấn Enter · từ khoá $1
+re:Search the web for “(.+)”	Tìm trên web “$1”
+re:Search (.+) for “(.+)”	Tìm “$2” trên $1
+re:Go to “(.+)”	Đi tới “$1”
+re:(.+) follows the usual memory saver\.	$1 dùng chế độ tiết kiệm bộ nhớ bình thường.
+re:(.+) is remembered again\.	Mica sẽ nhớ dữ liệu của $1 trở lại.
+re:(.+) rests two minutes after you leave it\.	$1 sẽ nghỉ hai phút sau khi bạn rời đi.
+re:(.+) stays awake in the background\.	$1 luôn thức khi chạy nền.
+re:The (.+) jar and its cookies are gone\.	Đã xoá hộp $1 và cookie của nó.
+re:In the (.+) jar: its own cookies and sign-ins\.	Trong hộp $1: cookie và đăng nhập riêng.
+re:New tab in the (.+) jar	Tab mới trong hộp $1
+re:Move tab to the (.+) jar	Chuyển tab sang hộp $1
+re:“(.+)” is back: (\d+) tabs? in a folded group\. Open the group to start\.	Đã khôi phục “$1”: $2 tab trong một nhóm thu gọn. Mở nhóm để bắt đầu.
+re:Keep (.+) awake	Giữ $1 luôn thức
+re:Rest (.+) quickly	Cho $1 nghỉ sớm
+re:(\d+) min read	$1 phút đọc
+re:(\d+) background tab\(s\) put to rest\. They reload when reopened\.	Đã cho $1 tab nền nghỉ. Chúng sẽ tải lại khi mở lại.
+re:(\d+) tabs?	$1 tab
+re:(Personal|Work) · (.+)	$t1 · $t2
+re:(.+) · Resting: uses no memory	$t1 · Đang nghỉ: không dùng bộ nhớ
+re:Mica ([\d.]+) is available\. Open Updates to download it\.	Đã có Mica $1. Mở Cập nhật để tải về.
+re:Mica ([\d.]+) is ready\. Restart to update\.	Mica $1 đã sẵn sàng. Khởi động lại để cập nhật.
+re:Downloading Mica ([\d.]+)…	Đang tải Mica $1…
+re:([\d.]+) · available	$1 · có bản mới
+re:([\d.]+) · ready	$1 · sẵn sàng
+re:Download · ([\d.]+) MB	Tải về · $1 MB
+re:([\d.]+) MB of ([\d.]+) MB · (\d+)%	$1 MB / $2 MB · $3%
+Download	Tải về
+Downloading…	Đang tải…
+Update available	Có bản cập nhật
+Couldn't download the update: 	Không tải được bản cập nhật: 
+Mica checks for a new version of itself and of its web engine once a day. A new Mica is downloaded only when you press Download, and installed when you restart it; a new engine downloads in the background and starts the next time you open Mica.	Mica kiểm tra phiên bản mới của chính nó và của bộ máy web mỗi ngày một lần. Mica mới chỉ được tải khi bạn bấm Tải về và được cài khi bạn khởi động lại; bộ máy web mới tải ngầm và chạy vào lần mở Mica kế tiếp.
+Tools	Công cụ
+Account and profiles	Tài khoản và hồ sơ
+Not signed in	Chưa đăng nhập
+Sign in with Discord	Đăng nhập bằng Discord
+SWITCH PROFILE	ĐỔI HỒ SƠ
+This window	Cửa sổ này
+re:(.+) profile · Discord	Hồ sơ $t1 · Discord
+re:(.+) profile · Sign in to sync	Hồ sơ $t1 · Đăng nhập để đồng bộ
+Private window · Sign in to sync	Cửa sổ riêng tư · Đăng nhập để đồng bộ
+Crash reports	Báo cáo sự cố
+No crash reports. Mica hasn't crashed here.	Không có báo cáo sự cố. Mica chưa gặp sự cố trên máy này.
+Mica closed unexpectedly last time. Your tabs are back; Tools › Crash reports has the details.	Lần trước Mica bị đóng đột ngột. Các tab đã được khôi phục; xem chi tiết ở Công cụ › Báo cáo sự cố.
+Mica closed unexpectedly last time. Your tabs are back.	Lần trước Mica bị đóng đột ngột. Các tab đã được khôi phục.
+re:(\d+) tabs side by side\.	$1 tab cạnh nhau.
+re:Split view holds up to (\d+) tabs\.	Chia màn hình chứa tối đa $1 tab.
+Undo update	Hoàn tác cập nhật
+re:Restart on (.+)?	Khởi động lại với bản $1?
+re:Go back to Mica (.+)\. Your tabs and data stay as they are\.	Quay lại Mica $1. Tab và dữ liệu của bạn vẫn giữ nguyên.
+Couldn't undo the update: 	Không hoàn tác được bản cập nhật: 
+the earlier version	bản trước
+TEXT SIZE	CỠ CHỮ
+Large	Lớn
+Larger	Rất lớn
+Makes Mica's sidebar, menus and windows larger, and opens pages at the same size.	Phóng to thanh bên, menu và các cửa sổ của Mica, và mở trang web ở cùng cỡ.
+Save 2FA key?	Lưu khoá 2FA?
+Mica will fill this site's 6-digit codes for you. The key stays in your encrypted vault.	Mica sẽ tự điền mã 6 số của trang này cho bạn. Khoá được giữ trong kho mật khẩu đã mã hoá.
+Not now	Để sau
+2FA CODE	MÃ 2FA
+Copy code	Sao chép mã
+2FA code copied.	Đã sao chép mã 2FA.
+2FA setup key (optional)	Khoá thiết lập 2FA (không bắt buộc)
+Unlock your vault to save the 2FA key.	Mở khoá kho mật khẩu để lưu khoá 2FA.
+Couldn't save the 2FA key: 	Không lưu được khoá 2FA: 
+re:Filled your 2FA code for (.+)\.	Đã điền mã 2FA cho $1.
+re:Filled your 2FA code for (.+) \((.+)\)\.	Đã điền mã 2FA cho $1 ($2).
+re:2FA key saved\. Mica fills the codes for (.+) from now on\.	Đã lưu khoá 2FA. Từ giờ Mica sẽ tự điền mã cho $1.
+Enter the site's 2FA setup key.	Nhập khoá thiết lập 2FA của trang.
+Only time-based (TOTP) 2FA keys are supported.	Chỉ hỗ trợ khoá 2FA theo thời gian (TOTP).
+That doesn't look like a 2FA setup key.	Đây không giống khoá thiết lập 2FA.
+This 2FA key has an unusual time step.	Khoá 2FA này có chu kỳ thời gian bất thường.
+This 2FA key uses an algorithm Mica doesn't know.	Khoá 2FA này dùng thuật toán Mica không hỗ trợ.
+re:This 2FA key asks for (\d+)-digit codes, which Mica can't make\.	Khoá 2FA này cần mã $1 số, Mica không tạo được.
+BACK	QUAY LẠI
+FORWARD	TIẾN TỚI
+Show full history	Xem toàn bộ lịch sử
+Sign-in code	Mã đăng nhập
+After you approve Mica in Discord, the browser asks for this code. Type it there.	Sau khi bạn cho phép Mica trên Discord, trình duyệt sẽ hỏi mã này. Hãy nhập nó ở đó.
+Never share this code. If a page or person asks you for it, you didn't start this sign-in.	Đừng bao giờ chia sẻ mã này. Nếu một trang hay người nào hỏi bạn mã này, thì bạn không phải người bắt đầu lần đăng nhập này.
+Cancel sign-in	Huỷ đăng nhập
+Complete Discord sign-in in your browser, then enter the code Mica shows.	Hoàn tất đăng nhập Discord trong trình duyệt, rồi nhập mã Mica đang hiển thị.
+Sign-in was cancelled in the browser. Try again.	Đăng nhập đã bị huỷ trong trình duyệt. Hãy thử lại.
+Sign-in cancelled.	Đã huỷ đăng nhập.
+Update Mica to sign in.	Hãy cập nhật Mica để đăng nhập.
+The service didn't send a sign-in code, so Mica won't continue.	Dịch vụ không gửi mã đăng nhập nên Mica sẽ không tiếp tục.
+New space	Không gian mới
+Rename space	Đổi tên không gian
+Rename 	Đổi tên 
+Create	Tạo
+Rename	Đổi tên
+Space name	Tên không gian
+Tabs move to Personal	Tab chuyển sang Personal
+A space keeps its own set of tabs in this window, for another part of your day.	Mỗi không gian có bộ tab riêng trong cửa sổ này, cho một phần khác trong ngày của bạn.
+Give it a name, like School or Side project.	Đặt tên cho nó, như Trường học hoặc Dự án riêng.
+re:Keep the name under (\d+) characters\.	Tên phải ngắn hơn $1 ký tự.
+re:There is already a space called (.+)\.	Đã có không gian tên $1.
+re:You can have up to (\d+) spaces\.	Bạn chỉ có thể có tối đa $1 không gian.
+re:Removed (.+)\. Its (\d+) tabs are in Personal now\.	Đã xoá $1. $2 tab của nó giờ nằm ở Personal.
+re:^Removed (.+)$	Đã xoá $1
+Games	Trò chơi
+Play 	Chơi 
+CLOSING ANIMATION	HIỆU ỨNG KHI ĐÓNG
+Stars	Ngôi sao
+Fade	Mờ dần
+Drop	Rơi xuống
+Shatter	Vỡ vụn
+Mica closes at once, without an animation.	Mica đóng ngay, không có hiệu ứng.
+AI side panel	Bảng AI bên cạnh
+AI side panel (Ctrl+Shift+Space)	Bảng AI bên cạnh (Ctrl+Shift+Space)
+AI side panel is off.	Đã tắt bảng AI bên cạnh.
+AI side panel is on. Press Ctrl+Shift+Space or the chat button to open it.	Đã bật bảng AI bên cạnh. Nhấn Ctrl+Shift+Space hoặc nút trò chuyện để mở.
+Any chat site you like, opened in the panel with your profile. It must start with https://.	Trang trò chuyện bất kỳ bạn thích, mở trong bảng bằng hồ sơ của bạn. Địa chỉ phải bắt đầu bằng https://.
+Ask…	Hỏi…
+Choose the AI	Chọn AI
+Close (Ctrl+Shift+Space)	Đóng (Ctrl+Shift+Space)
+Enter a full address starting with https://	Nhập địa chỉ đầy đủ bắt đầu bằng https://
+Explain	Giải thích
+Summarize	Tóm tắt
+Translate	Dịch
+Open in a tab	Mở trong tab
+Opening…	Đang mở…
+The AI side panel isn't available in private windows.	Bảng AI bên cạnh không dùng được trong cửa sổ riêng tư.
+Turn on the AI side panel first: Menu, Tools, AI side panel.	Hãy bật bảng AI bên cạnh trước: Menu, Công cụ, Bảng AI bên cạnh.
+Use it	Dùng địa chỉ này
+Your own AI address	Địa chỉ AI của riêng bạn
+Your own address…	Địa chỉ của riêng bạn…
+Open AI panel	Mở bảng AI
+Close AI panel	Đóng bảng AI
+Turn on AI side panel	Bật bảng AI bên cạnh
+Turn off AI side panel	Tắt bảng AI bên cạnh
+re:Ask AI about “(.+)”	Hỏi AI về “$1”
+re:Opening (.+)…	Đang mở $1…
+re:Your address: (.+)	Địa chỉ của bạn: $1
+re:Copied for (.+)\. Click its chat box and press Ctrl\+V\.	Đã sao chép cho $1. Bấm vào ô trò chuyện của nó rồi nhấn Ctrl+V.
+re:Couldn't open the AI panel: (.+)	Không mở được bảng AI: $1
+Copied	Đã sao chép
+Your own…	Của riêng bạn…
+re:(.+) couldn't load\. Check your connection, or open it in a tab\.	Không tải được $1. Hãy kiểm tra kết nối, hoặc mở nó trong một tab.
+Close the panel (Ctrl+Shift+Space)	Đóng bảng (Ctrl+Shift+Space)
+Run anyway	Vẫn chạy
+Restricted mode seals the app off: it can't see your files, passwords or the internet. Many apps and installers won't work that way. Run anyway opens it normally, so only do that if you trust where it came from.	Chế độ hạn chế cách ly ứng dụng: nó không thấy tệp, mật khẩu hay internet của bạn. Nhiều ứng dụng và trình cài đặt sẽ không chạy được như vậy. Vẫn chạy sẽ mở nó bình thường, nên chỉ làm thế khi bạn tin nguồn của nó.
+This file type can run code. Turn on Windows Sandbox to open it safely, or run it anyway if you trust where it came from.	Loại tệp này có thể chạy mã. Bật Windows Sandbox để mở an toàn, hoặc cứ chạy nếu bạn tin nguồn của nó.
+Import from another browser	Nhập từ trình duyệt khác
+Bring your bookmarks, history, open tabs and extensions over from another browser on this PC. Sign-ins can't come along: you'll sign in to sites again.	Mang dấu trang, lịch sử, tab đang mở và tiện ích từ trình duyệt khác trên máy này sang. Phiên đăng nhập thì không mang theo được: bạn sẽ đăng nhập lại vào các trang.
+FROM	TỪ
+WHAT TO BRING	MANG THEO
+PASSWORDS	MẬT KHẨU
+Open tabs	Tab đang mở
+Extensions (none found)	Tiện ích (không tìm thấy)
+Extensions (Firefox add-ons can't run in Mica)	Tiện ích (tiện ích Firefox không chạy được trong Mica)
+re:Extensions \((\d+)\)	Tiện ích ($1)
+No other browsers found on this PC.	Không tìm thấy trình duyệt nào khác trên máy này.
+Choose the exported file…	Chọn tệp đã xuất…
+Choose your exported passwords	Chọn tệp mật khẩu đã xuất
+Delete that file	Xóa tệp đó
+Importing…	Đang nhập…
+Adding your passwords…	Đang thêm mật khẩu…
+Importing isn't available in private windows.	Không nhập được trong cửa sổ riêng tư.
+Mica doesn't open other browsers' saved passwords. Export them yourself, then choose the file. In Chrome: Settings, Passwords and autofill, Google Password Manager, Settings, Export passwords.	Mica không mở mật khẩu đã lưu của trình duyệt khác. Hãy tự xuất chúng ra, rồi chọn tệp. Trong Chrome: Cài đặt, Mật khẩu và tự động điền, Trình quản lý mật khẩu của Google, Cài đặt, Xuất mật khẩu.
+Mica doesn't open other browsers' saved passwords. Export them yourself, then choose the file. In Edge: Settings, Passwords, the ••• menu, Export passwords.	Mica không mở mật khẩu đã lưu của trình duyệt khác. Hãy tự xuất chúng ra, rồi chọn tệp. Trong Edge: Cài đặt, Mật khẩu, menu •••, Xuất mật khẩu.
+Mica doesn't open other browsers' saved passwords. Export them yourself, then choose the file. In Firefox: Passwords (about:logins), the ••• menu, Export passwords.	Mica không mở mật khẩu đã lưu của trình duyệt khác. Hãy tự xuất chúng ra, rồi chọn tệp. Trong Firefox: Mật khẩu (about:logins), menu •••, Xuất mật khẩu.
+Mica doesn't open other browsers' saved passwords. Export them yourself, then choose the file. In your browser's password settings, choose Export passwords.	Mica không mở mật khẩu đã lưu của trình duyệt khác. Hãy tự xuất chúng ra, rồi chọn tệp. Trong phần cài đặt mật khẩu của trình duyệt, chọn Xuất mật khẩu.
+Brought over {0} from {1}.	Đã chuyển {0} từ {1}.
+Left out: {0}.	Bỏ qua: {0}.
+nothing	không có gì
+(extensions that didn't work in Mica)	(tiện ích không chạy được trong Mica)
+re:(\d+) bookmarks?	$1 dấu trang
+re:(\d+) pages? of history	$1 trang lịch sử
+re:(\d+) extensions?	$1 tiện ích
+re:Added (\d+) passwords?\.	Đã thêm $1 mật khẩu.
+re:Added (\d+) passwords?\. Skipped (\d+) that weren't for https sites or had no password\.	Đã thêm $1 mật khẩu. Bỏ qua $2 mục không phải trang https hoặc không có mật khẩu.
+re:(.+) The exported file is deleted\.	$t1 Đã xóa tệp đã xuất.
+No passwords to add.	Không có mật khẩu nào để thêm.
+re:No passwords to add \((\d+) entr(y|ies) weren't for https sites\)\.	Không có mật khẩu nào để thêm ($1 mục không phải trang https).
+re:Couldn't import: (.+)	Không nhập được: $1
+re:Couldn't read that file: (.+)	Không đọc được tệp đó: $1
+re:Couldn't delete the file: (.+)	Không xóa được tệp: $1
+Switch off	Tắt màn hình
+Swirl	Xoáy
+Melt	Tan chảy
+Dissolve	Tan biến
+CHAT	TRÒ CHUYỆN
+Show the panel	Hiện bảng
+AI side panel settings	Cài đặt bảng AI bên cạnh
+A chat site beside the page, opened with your profile. Nothing on a page goes to it unless you ask.	Một trang trò chuyện bên cạnh trang web, mở bằng hồ sơ của bạn. Không gì trên trang được gửi tới nó trừ khi bạn yêu cầu.
+Ctrl+Shift+Space opens and closes it.	Ctrl+Shift+Space để mở và đóng.
+Show	Hiện
+Hide	Ẩn
+Restore logins from before the last sync	Khôi phục đăng nhập từ trước lần đồng bộ gần nhất
+Restore from before sync	Khôi phục bản trước đồng bộ
+There's no copy from before a sync on this device.	Máy này không có bản sao nào từ trước một lần đồng bộ.
+Restore cancelled; nothing changed.	Đã huỷ khôi phục; không có gì thay đổi.
+Brought back {0} logins from before the last sync.	Đã khôi phục {0} đăng nhập từ trước lần đồng bộ gần nhất.
+Every login from before the last sync is already here.	Mọi đăng nhập từ trước lần đồng bộ gần nhất đều đã có ở đây.
+Kept {0} logins only this device had; they upload in a moment.	Đã giữ {0} đăng nhập chỉ có trên máy này; chúng sẽ được tải lên ngay sau đây.
+Settings sync on their own while you're signed in. Your passwords stay encrypted: Pull fetches them and merges them with this device's, Push uploads changes from this device.	Cài đặt tự đồng bộ khi bạn đăng nhập. Mật khẩu luôn được mã hoá: Kéo về sẽ tải chúng xuống và gộp với mật khẩu trên máy này, Đẩy lên sẽ tải thay đổi từ máy này lên.
+Sync passwords now	Đồng bộ mật khẩu ngay
+Sync now	Đồng bộ ngay
+Sync passwords	Đồng bộ mật khẩu
+Sync	Đồng bộ
+Merge the passwords on this device with your Mica account's and upload the result? Logins you deleted stay deleted; nothing else is removed.	Gộp mật khẩu trên máy này với mật khẩu trong tài khoản Mica rồi tải kết quả lên? Đăng nhập bạn đã xoá sẽ vẫn bị xoá; ngoài ra không xoá gì cả.
+Passwords synced with your Mica account.	Đã đồng bộ mật khẩu với tài khoản Mica.
+Passwords sync on their own too, encrypted: after you save one and when Mica closes. Sync now does it right away.	Mật khẩu cũng tự đồng bộ, luôn được mã hoá: sau mỗi lần bạn lưu và khi đóng Mica. Đồng bộ ngay để làm luôn bây giờ.
+Passwords didn't sync: your Mica account's vault uses another master password. Open Passwords & sync once to join them.	Chưa đồng bộ được mật khẩu: kho trong tài khoản Mica dùng mật khẩu chính khác. Mở Mật khẩu & đồng bộ một lần để nối hai kho.
+Passwords didn't sync: this vault belongs to another Mica account.	Chưa đồng bộ được mật khẩu: kho này thuộc tài khoản Mica khác.
+Passwords didn't sync. Mica tries again next time.	Chưa đồng bộ được mật khẩu. Mica sẽ thử lại lần sau.
+
+Claude opens in your Claude for Chrome extension, so it can read and act on the page.	Claude mở trong extension Claude for Chrome của bạn, nên có thể đọc và thao tác trên trang.
+With Claude for Chrome installed (paid Claude plans), Claude can read and act on the page from this panel.	Khi cài Claude for Chrome (gói Claude trả phí), Claude có thể đọc và thao tác trên trang ngay từ panel này.
+Get Claude for Chrome	Cài Claude for Chrome
+ChatGPT opens in your ChatGPT for Chrome extension. With the ChatGPT desktop app running, it can read and act on the page.	ChatGPT mở trong extension ChatGPT for Chrome của bạn. Khi app ChatGPT desktop đang chạy, ChatGPT có thể đọc và thao tác trên trang.
+With ChatGPT for Chrome and the ChatGPT desktop app, ChatGPT can read and act on the page from this panel.	Khi có ChatGPT for Chrome và app ChatGPT desktop, ChatGPT có thể đọc và thao tác trên trang ngay từ panel này.
+Get ChatGPT for Chrome	Cài ChatGPT for Chrome
+Remove the extension	Gỡ extension
+Couldn't remove the extension: 	Không gỡ được extension: 

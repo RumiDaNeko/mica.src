@@ -1,0 +1,80 @@
+<!-- Mica's look, from the Windows build's Shell.xaml and ApplyTheme (BrowserApp.cs): the same colors, flat rounded
+     buttons that only tint on hover, and a quiet address field. Light and dark follow App.RequestedThemeVariant. -->
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <Styles.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Light">
+     <SolidColorBrush x:Key="Ink" Color="#302D38"/><SolidColorBrush x:Key="Muted" Color="#716B7A"/><SolidColorBrush x:Key="Canvas" Color="#FAF9F6"/>
+     <SolidColorBrush x:Key="Panel" Color="#FFFFFF"/><SolidColorBrush x:Key="Line" Color="#E9E5E9"/><SolidColorBrush x:Key="Hover" Color="#ECE7F2"/>
+     <SolidColorBrush x:Key="Accent" Color="#71608C"/><SolidColorBrush x:Key="Backdrop" Color="#DDD7E5"/><SolidColorBrush x:Key="SideCard" Color="#60FFFFFF"/>
+     <SolidColorBrush x:Key="Divider" Color="#2671608C"/><SolidColorBrush x:Key="FrameEdge" Color="#30FFFFFF"/>
+     <Color x:Key="SystemAccentColor">#71608C</Color>
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+     <SolidColorBrush x:Key="Ink" Color="#F0EBF5"/><SolidColorBrush x:Key="Muted" Color="#B0A7BC"/><SolidColorBrush x:Key="Canvas" Color="#24212A"/>
+     <SolidColorBrush x:Key="Panel" Color="#302B38"/><SolidColorBrush x:Key="Line" Color="#403948"/><SolidColorBrush x:Key="Hover" Color="#453C52"/>
+     <SolidColorBrush x:Key="Accent" Color="#C8B4E0"/><SolidColorBrush x:Key="Backdrop" Color="#332C40"/><SolidColorBrush x:Key="SideCard" Color="#443A50"/>
+     <SolidColorBrush x:Key="Divider" Color="#40C8B4E0"/><SolidColorBrush x:Key="FrameEdge" Color="#30FFFFFF"/>
+     <Color x:Key="SystemAccentColor">#C8B4E0</Color>
+    </ResourceDictionary>
+   </ResourceDictionary.ThemeDictionaries>
+   <FontFamily x:Key="BrandFont">avares://Mica/Assets#Caveat</FontFamily>
+   <FontFamily x:Key="SerifFont">Georgia, Cambria, Noto Serif, DejaVu Serif</FontFamily>
+  </ResourceDictionary>
+ </Styles.Resources>
+
+ <Style Selector="Window"><Setter Property="FontSize" Value="13"/><Setter Property="Foreground" Value="{DynamicResource Ink}"/></Style>
+ <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource Muted}"/></Style>
+ <Style Selector="TextBlock.eyebrow"><Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource Muted}"/></Style>
+
+ <!-- Flat buttons: transparent, rounded 9, Hover tint under the pointer, faded when disabled. -->
+ <Style Selector="Button.flat">
+  <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="9"/>
+  <Setter Property="Padding" Value="12,9"/><Setter Property="Foreground" Value="{DynamicResource Ink}"/><Setter Property="Cursor" Value="Hand"/>
+  <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+ </Style>
+ <Style Selector="Button.flat:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource Hover}"/><Setter Property="Foreground" Value="{DynamicResource Ink}"/></Style>
+ <Style Selector="Button.flat:pressed /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource Hover}"/></Style>
+ <Style Selector="Button.flat:disabled /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/></Style>
+ <Style Selector="Button.flat:disabled"><Setter Property="Opacity" Value="0.35"/></Style>
+ <Style Selector="Button.flat:pressed"><Setter Property="RenderTransform" Value="none"/></Style>
+ <Style Selector="Button.icon"><Setter Property="Width" Value="36"/><Setter Property="Height" Value="34"/><Setter Property="Padding" Value="0"/></Style>
+ <Style Selector="Button.caption"><Setter Property="Width" Value="28"/><Setter Property="Height" Value="26"/><Setter Property="Padding" Value="0"/></Style>
+ <Style Selector="Button.card"><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="Background" Value="{DynamicResource SideCard}"/><Setter Property="Padding" Value="13,12"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+ <Style Selector="Button.on"><Setter Property="Background" Value="{DynamicResource Hover}"/></Style>
+ <Style Selector="Button.muted"><Setter Property="Foreground" Value="{DynamicResource Muted}"/></Style>
+
+ <!-- Line icons (24-unit paths), drawn in the text color around them. -->
+ <Style Selector="Path.glyph">
+  <Setter Property="Stroke" Value="{DynamicResource Ink}"/>
+  <Setter Property="StrokeLineCap" Value="Round"/><Setter Property="StrokeJoin" Value="Round"/>
+  <Setter Property="HorizontalAlignment" Value="Center"/><Setter Property="VerticalAlignment" Value="Center"/>
+ </Style>
+ <Style Selector="Path.glyph.muted"><Setter Property="Stroke" Value="{DynamicResource Muted}"/></Style>
+ <Style Selector="Path.glyph.accent"><Setter Property="Stroke" Value="{DynamicResource Accent}"/></Style>
+
+ <!-- Sidebar tab rows: the tab in front is a white card, the rest tint on hover. -->
+ <Style Selector="Border.tab"><Setter Property="CornerRadius" Value="9"/><Setter Property="Padding" Value="12,0,6,0"/><Setter Property="Height" Value="37"/><Setter Property="Margin" Value="0,1"/><Setter Property="Background" Value="Transparent"/><Setter Property="Cursor" Value="Hand"/></Style>
+ <Style Selector="Border.tab:pointerover"><Setter Property="Background" Value="{DynamicResource Hover}"/></Style>
+ <Style Selector="Border.tab.active"><Setter Property="Background" Value="{DynamicResource Panel}"/></Style>
+ <Style Selector="Border.tab Button.close"><Setter Property="Opacity" Value="0"/></Style>
+ <Style Selector="Border.tab:pointerover Button.close, Border.tab.active Button.close"><Setter Property="Opacity" Value="1"/></Style>
+
+ <!-- The address: quiet text in the toolbar until you click it, then a field. -->
+ <Style Selector="TextBox.address">
+  <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="12"/>
+  <Setter Property="Foreground" Value="{DynamicResource Muted}"/><Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
+  <Setter Property="SelectionBrush" Value="#C4B4DA"/><Setter Property="SelectionForegroundBrush" Value="#302D38"/>
+  <Setter Property="MinHeight" Value="28"/><Setter Property="Padding" Value="6,5"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+  <Setter Property="CornerRadius" Value="8"/>
+ </Style>
+ <Style Selector="TextBox.address /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+ <Style Selector="TextBox.address:pointerover /template/ Border#PART_BorderElement"><Setter Property="Background" Value="{DynamicResource Hover}"/><Setter Property="BorderThickness" Value="0"/></Style>
+ <Style Selector="TextBox.address:focus"><Setter Property="Foreground" Value="{DynamicResource Ink}"/></Style>
+ <Style Selector="TextBox.address:focus /template/ Border#PART_BorderElement"><Setter Property="Background" Value="{DynamicResource Panel}"/><Setter Property="BorderBrush" Value="{DynamicResource Line}"/><Setter Property="BorderThickness" Value="1"/></Style>
+ <Style Selector="TextBox.address /template/ TextBlock#PART_Watermark, TextBox.address /template/ TextBlock#PART_FloatingWatermark"><Setter Property="Foreground" Value="{DynamicResource Muted}"/></Style>
+
+ <Style Selector="ProgressBar.loading"><Setter Property="Foreground" Value="{DynamicResource Accent}"/><Setter Property="Background" Value="Transparent"/><Setter Property="MinHeight" Value="2"/><Setter Property="Height" Value="2"/><Setter Property="CornerRadius" Value="0"/></Style>
+ <Style Selector="ScrollBar"><Setter Property="Opacity" Value="0.45"/></Style>
+</Styles>

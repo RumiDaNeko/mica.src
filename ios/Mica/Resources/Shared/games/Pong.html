@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pong</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2;--cpu:#e5534b}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#26262b;--accent:#7a9cff;--cpu:#ff6b61}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:150px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+.board{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 18px 50px rgba(0,0,0,.08)}
+canvas{display:block;cursor:none}
+.overlay{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:8px;background:color-mix(in srgb,var(--panel) 88%,transparent);text-align:center;padding:20px}
+.overlay[hidden]{display:none}
+.overlay h2{font:400 28px Georgia,serif;margin:0}
+.overlay p{margin:0;color:var(--muted)}
+.levels{display:flex;gap:6px}
+.levels button{background:transparent;color:var(--ink);border:1px solid var(--line);padding:6px 14px}
+.levels button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+kbd{font:11px "Segoe UI",sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel);color:var(--ink)}
+@media (max-width:760px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.keys{display:none}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>Pong</h1></div>
+  <div class="card"><div class="label">You · Mica</div><div class="big"><span id="you">0</span> · <span id="cpu">0</span></div></div>
+  <div class="card"><div class="label">Wins</div><div class="big" id="wins">0</div></div>
+  <div class="keys">Mouse or <kbd>W</kbd> <kbd>S</kbd> / <kbd>&uarr;</kbd> <kbd>&darr;</kbd> move<br><kbd>P</kbd> pause · first to 7</div>
+ </div>
+ <div class="board">
+  <canvas id="field"></canvas>
+  <div class="overlay" id="overlay"><h2 id="otitle">Pong</h2><p id="otext">First to 7 wins.</p>
+   <div class="levels" id="levels"><button data-level="0">Easy</button><button data-level="1" aria-pressed="true">Normal</button><button data-level="2">Hard</button></div>
+   <button id="start">Play</button></div>
+ </div>
+</main>
+<script>
+"use strict";
+// The court is 640 × 400 units, scaled to fit. You are on the left; Mica plays the right.
+const FW=640,FH=400,PW=10,PH=70,R=7,TO=7;
+const LEVELS=[{speed:3.4,react:.5,miss:38},{speed:4.6,react:.72,miss:22},{speed:6.2,react:.9,miss:8}];
+const $=id=>document.getElementById(id),field=$("field"),ctx=field.getContext("2d");
+let scale=1,you,cpu,ball,serveAt=0,level=1,wins=0,state="idle",keys={},last=0,frame=0,aim=0;
+try{wins=+localStorage.getItem("mica-pong-wins")||0;level=+(localStorage.getItem("mica-pong-level")||1)}catch(e){}
+$("wins").textContent=wins;
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function fit(){scale=Math.max(.45,Math.min(1.4,(innerHeight-60)/FH,(innerWidth-230)/FW));const r=devicePixelRatio||1;field.width=FW*scale*r;field.height=FH*scale*r;field.style.width=FW*scale+"px";field.style.height=FH*scale+"px";ctx.setTransform(scale*r,0,0,scale*r,0,0);draw();}
+function levels(){for(const b of document.querySelectorAll("#levels button"))b.setAttribute("aria-pressed",+b.dataset.level===level);}
+function reset(){you={y:FH/2-PH/2,score:0};cpu={y:FH/2-PH/2,score:0};serve(Math.random()<.5?1:-1);stats();}
+function serve(to){ball={x:FW/2,y:FH/2,vx:0,vy:0,to};serveAt=performance.now()+700;}
+function stats(){$("you").textContent=you.score;$("cpu").textContent=cpu.score;}
+function show(t,p,b){$("otitle").textContent=t;$("otext").textContent=p;$("start").textContent=b;$("levels").hidden=state==="paused";$("overlay").hidden=false;$("start").focus();}
+function start(){if(state!=="paused")reset();state="play";$("overlay").hidden=true;last=performance.now();loop();}
+function pause(){if(state==="play"){state="paused";show("Paused","Take a breath.","Resume");}else if(state==="paused"){state="play";$("overlay").hidden=true;last=performance.now();loop();}}
+function loop(){cancelAnimationFrame(frame);frame=requestAnimationFrame(tick);}
+function tick(now){
+ if(state!=="play"){draw();return;}
+ const steps=Math.min(4,Math.max(1,Math.round((now-last)/(1000/60))));last=now;
+ for(let i=0;i<steps&&state==="play";i++)step(now);
+ draw();if(state==="play")frame=requestAnimationFrame(tick);
+}
+function point(toYou){
+ if(toYou)you.score++;else cpu.score++;stats();
+ if(you.score>=TO||cpu.score>=TO){
+  state="over";const won=you.score>cpu.score;if(won){wins++;$("wins").textContent=wins;try{localStorage.setItem("mica-pong-wins",wins)}catch(e){}}
+  show(won?"You win!":"Mica wins",you.score+" – "+cpu.score,"Play again");return;
+ }
+ serve(toYou?1:-1);
+}
+function step(now){
+ if(keys.ArrowUp||keys.KeyW)you.y-=7;if(keys.ArrowDown||keys.KeyS)you.y+=7;you.y=Math.max(0,Math.min(FH-PH,you.y));
+ // Mica watches the ball only once it heads its way, aims a little off, and can't move faster than its level.
+ const L=LEVELS[level];
+ if(ball.vx>0&&ball.x>FW*(1-L.react)){if(!aim||Math.random()<.02)aim=(Math.random()*2-1)*L.miss;}else aim=0;
+ const target=(ball.vx>0?ball.y+aim:FH/2)-PH/2,dy=target-cpu.y;cpu.y+=Math.max(-L.speed,Math.min(L.speed,dy*.2));cpu.y=Math.max(0,Math.min(FH-PH,cpu.y));
+ if(!ball.vx&&now>=serveAt){const a=(Math.random()*.7-.35);ball.vx=Math.cos(a)*5*ball.to;ball.vy=Math.sin(a)*5;}
+ ball.x+=ball.vx;ball.y+=ball.vy;
+ if(ball.y<R){ball.y=R;ball.vy=Math.abs(ball.vy);}if(ball.y>FH-R){ball.y=FH-R;ball.vy=-Math.abs(ball.vy);}
+ const hit=(p,x,dir)=>{
+  if(ball.y<p.y-R||ball.y>p.y+PH+R)return false;
+  // Where it meets the paddle sets the angle; every return is a little faster.
+  const rel=(ball.y-(p.y+PH/2))/(PH/2),sp=Math.min(13,Math.hypot(ball.vx,ball.vy)*1.05+.15),a=rel*.9;
+  ball.vx=Math.cos(a)*sp*dir;ball.vy=Math.sin(a)*sp;ball.x=x;return true;
+ };
+ if(ball.vx<0&&ball.x-R<=24+PW&&ball.x-R>=24-8)hit(you,24+PW+R,1);
+ if(ball.vx>0&&ball.x+R>=FW-24-PW&&ball.x+R<=FW-24+8)hit(cpu,FW-24-PW-R,-1);
+ if(ball.x<-R*2)point(false);else if(ball.x>FW+R*2)point(true);
+}
+function draw(){
+ if(!you)reset();
+ ctx.clearRect(0,0,FW,FH);ctx.fillStyle=css("--line");for(let y=8;y<FH;y+=24)ctx.fillRect(FW/2-1.5,y,3,12);
+ ctx.fillStyle=css("--cell");ctx.font="400 64px Georgia";ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText(you.score,FW/2-70,18);ctx.fillText(cpu.score,FW/2+70,18);
+ ctx.fillStyle=css("--accent");ctx.beginPath();ctx.roundRect(24,you.y,PW,PH,5);ctx.fill();
+ ctx.fillStyle=css("--cpu");ctx.beginPath();ctx.roundRect(FW-24-PW,cpu.y,PW,PH,5);ctx.fill();
+ ctx.fillStyle=css("--ink");ctx.beginPath();ctx.arc(ball.x,ball.y,R,0,7);ctx.fill();
+}
+addEventListener("keydown",e=>{
+ const k=e.code;if(["ArrowUp","ArrowDown","Space"].includes(k))e.preventDefault();
+ if(k==="KeyP"||k==="Escape"){pause();return;}
+ if(state!=="play"){if((k==="Enter"||k==="Space")&&document.activeElement!==$("start"))start();return;}
+ keys[k]=true;
+});
+addEventListener("keyup",e=>{keys[e.code]=false;});
+field.addEventListener("pointermove",e=>{if(state!=="play")return;const r=field.getBoundingClientRect();you.y=Math.max(0,Math.min(FH-PH,(e.clientY-r.top)/scale-PH/2));});
+for(const b of document.querySelectorAll("#levels button"))b.addEventListener("click",()=>{level=+b.dataset.level;levels();try{localStorage.setItem("mica-pong-level",level)}catch(e){}});
+addEventListener("blur",()=>{keys={};if(state==="play")pause();});
+$("start").addEventListener("click",start);
+addEventListener("resize",fit);
+addEventListener("micatheme",function(){try{draw();}catch(e){}});
+levels();reset();fit();
+</script>
+</body>
+</html>

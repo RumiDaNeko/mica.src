@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Desktop Mica's palette: muted lavender, charcoal ink, warm ivory. -->
+<resources>
+    <color name="mica_canvas">#FAF9F6</color>
+    <color name="mica_panel">#F4F0F7</color>
+    <color name="mica_glass">#EBF4F0F7</color>
+    <color name="mica_soft">#ECE7F2</color>
+    <color name="mica_card">#FFFFFF</color>
+    <color name="mica_ink">#2A2530</color>
+    <color name="mica_muted">#716B7A</color>
+    <color name="mica_faint">#A69AAA</color>
+    <color name="mica_line">#D1C2E0</color>
+    <color name="mica_accent">#71608C</color>
+    <color name="mica_accent_soft">#C4B4DA</color>
+    <color name="mica_scrim">#592A2530</color>
+    <color name="mica_good">#3B7D4F</color>
+</resources>

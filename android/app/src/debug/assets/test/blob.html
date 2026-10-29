@@ -1,0 +1,15 @@
+<!doctype html>
+<meta name=viewport content="width=device-width">
+<title>Mica blob test</title>
+<body style="font:18px sans-serif;padding:24px">
+<p><button id=b style="font-size:20px;padding:14px">Download blob</button></p>
+<p><a id=d style="font-size:20px" download="hello.txt" href="data:text/plain,Hello%20from%20a%20data%20URL">Download data URL</a></p>
+<script>
+document.getElementById('b').onclick = () => {
+  const text = 'Mica blob download test\n' + 'x'.repeat(1_000_000);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+  a.download = 'mica-blob.txt';
+  a.click();
+};
+</script>

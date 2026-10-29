@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Mica" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/mica_accent</item>
+        <item name="colorPrimaryDark">@color/mica_canvas</item>
+        <item name="colorAccent">@color/mica_accent</item>
+        <item name="android:windowBackground">@color/mica_canvas</item>
+        <item name="android:textColorPrimary">@color/mica_ink</item>
+        <item name="android:textColorSecondary">@color/mica_muted</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

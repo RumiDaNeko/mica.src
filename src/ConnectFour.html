@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connect Four</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2;--you:#e5534b;--cpu:#f2c230;--rack:#3d6df2}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#17171a;--accent:#7a9cff;--you:#ff6b61;--cpu:#f2c230;--rack:#33498f}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:160px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+#status{font-size:15px}
+.levels{display:flex;gap:6px;flex-wrap:wrap}
+.levels button{background:transparent;color:var(--ink);border:1px solid var(--line);padding:5px 12px;font-size:12px}
+.levels button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.rack{background:var(--rack);border-radius:18px;padding:10px;display:grid;grid-template-columns:repeat(7,var(--s));gap:8px;box-shadow:0 18px 50px rgba(0,0,0,.12);--s:62px}
+.hole{width:var(--s);height:var(--s);border-radius:50%;background:var(--cell);position:relative;overflow:hidden;cursor:pointer}
+.disc{position:absolute;inset:4px;border-radius:50%;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18)}
+.disc.you{background:var(--you)}.disc.cpu{background:var(--cpu)}
+.disc.drop{animation:drop .32s cubic-bezier(.4,1.6,.6,1)}
+@keyframes drop{from{transform:translateY(calc(var(--rows) * -70px))}to{transform:none}}
+.disc.win{outline:4px solid var(--ink);outline-offset:-4px}
+.rack.busy .hole{cursor:default}
+.ghost{opacity:.3}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+kbd{font:11px "Segoe UI",sans-serif;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel);color:var(--ink)}
+@media (max-width:760px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.keys{display:none}.rack{--s:40px;gap:5px}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>Connect Four</h1></div>
+  <div class="card"><div class="label">Turn</div><div id="status">Your move</div></div>
+  <div class="card"><div class="label">You · Mica</div><div class="big"><span id="you">0</span> · <span id="cpu">0</span></div></div>
+  <div class="card"><div class="label">Mica plays</div><div class="levels" id="levels"><button data-depth="2">Easy</button><button data-depth="4" aria-pressed="true">Normal</button><button data-depth="6">Hard</button></div></div>
+  <button id="again">New game</button>
+  <div class="keys">Click a column, or <kbd>1</kbd>–<kbd>7</kbd><br>Four in a row wins</div>
+ </div>
+ <div class="rack" id="rack" style="--rows:6"></div>
+</main>
+<script>
+"use strict";
+// A 7 × 6 board, rows counted from the top. You are red and go first; Mica (yellow) looks a few moves ahead.
+const W=7,H=6,YOU=1,CPU=2,$=id=>document.getElementById(id);
+let board,turn,state="play",depth=4,wins={you:0,cpu:0},hover=-1,lastMove=null,line=null;
+try{const saved=JSON.parse(localStorage.getItem("mica-connect4")||"{}");wins={you:saved.you||0,cpu:saved.cpu||0};depth=saved.depth||4;}catch(e){}
+function save(){try{localStorage.setItem("mica-connect4",JSON.stringify({you:wins.you,cpu:wins.cpu,depth}))}catch(e){}}
+function reset(){board=Array.from({length:H},()=>Array(W).fill(0));turn=YOU;state="play";lastMove=null;line=null;render();status("Your move");}
+function status(t){$("status").textContent=t;}
+function open(c){for(let r=H-1;r>=0;r--)if(!board[r][c])return r;return -1;}
+function moves(b){const order=[3,2,4,1,5,0,6];return order.filter(c=>!b[0][c]);}
+function place(b,c,who){for(let r=H-1;r>=0;r--)if(!b[r][c]){b[r][c]=who;return r;}return -1;}
+function winner(b){
+ for(let r=0;r<H;r++)for(let c=0;c<W;c++){const p=b[r][c];if(!p)continue;
+  for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){const cells=[[r,c]];for(let i=1;i<4;i++){const rr=r+dr*i,cc=c+dc*i;if(rr<0||rr>=H||cc<0||cc>=W||b[rr][cc]!==p)break;cells.push([rr,cc]);}if(cells.length===4)return {p,cells};}}
+ return null;
+}
+// How good a board looks for Mica: open threes and twos in every window of four, and the middle column.
+function score(b){
+ let s=0;const w=(a)=>{const m=a.filter(x=>x===CPU).length,y=a.filter(x=>x===YOU).length;if(m&&y)return 0;if(m===4)return 1e5;if(y===4)return -1e5;if(m===3)return 9;if(y===3)return -11;if(m===2)return 2;if(y===2)return -2;return 0;};
+ for(let r=0;r<H;r++)for(let c=0;c<W;c++)for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){const a=[];for(let i=0;i<4;i++){const rr=r+dr*i,cc=c+dc*i;if(rr<0||rr>=H||cc<0||cc>=W)break;a.push(b[rr][cc]);}if(a.length===4)s+=w(a);}
+ for(let r=0;r<H;r++)if(b[r][3]===CPU)s+=3;else if(b[r][3]===YOU)s-=3;
+ return s;
+}
+function minimax(b,d,alpha,beta,me){
+ const won=winner(b);if(won)return won.p===CPU?1e6+d:-1e6-d;const list=moves(b);if(!list.length)return 0;if(d===0)return score(b);
+ let best=me?-Infinity:Infinity;
+ for(const c of list){const r=place(b,c,me?CPU:YOU),v=minimax(b,d-1,alpha,beta,!me);b[r][c]=0;
+  if(me){best=Math.max(best,v);alpha=Math.max(alpha,v);}else {best=Math.min(best,v);beta=Math.min(beta,v);}if(alpha>=beta)break;}
+ return best;
+}
+function choose(){
+ let best=-Infinity,pick=moves(board)[0];
+ for(const c of moves(board)){const r=place(board,c,CPU),v=minimax(board,depth-1,-Infinity,Infinity,false)+(depth<=2?Math.random()*6:0);board[r][c]=0;if(v>best){best=v;pick=c;}}
+ return pick;
+}
+function drop(c,who){
+ if(state!=="play"||open(c)<0)return false;const r=place(board,c,who);lastMove={r,c};
+ const won=winner(board);
+ if(won){state="over";line=won.cells;if(won.p===YOU){wins.you++;status("You win!");}else {wins.cpu++;status("Mica wins");}save();}
+ else if(!moves(board).length){state="over";status("A draw");}
+ render();return true;
+}
+function play(c){
+ if(state!=="play"||turn!==YOU||!drop(c,YOU))return;
+ if(state!=="play")return;turn=CPU;status("Mica is thinking…");$("rack").classList.add("busy");
+ // A short pause so the move is easy to follow, and the page stays responsive while Mica thinks.
+ setTimeout(()=>{if(state==="play"){drop(choose(),CPU);if(state==="play")status("Your move");}turn=YOU;$("rack").classList.remove("busy");render();},380);
+}
+function render(){
+ const rack=$("rack");rack.innerHTML="";
+ for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+  const hole=document.createElement("div");hole.className="hole";hole.dataset.col=c;const v=board[r][c];
+  if(v){const d=document.createElement("div");d.className="disc "+(v===YOU?"you":"cpu");if(lastMove&&!lastMove.shown&&lastMove.r===r&&lastMove.c===c){d.classList.add("drop");d.style.setProperty("--rows",r+1);}if(line&&line.some(([a,b])=>a===r&&b===c))d.classList.add("win");hole.appendChild(d);}
+  else if(state==="play"&&turn===YOU&&c===hover&&open(c)===r){const d=document.createElement("div");d.className="disc you ghost";hole.appendChild(d);}
+  hole.addEventListener("click",()=>play(c));hole.addEventListener("mouseenter",()=>{if(hover!==c){hover=c;render();}});
+  rack.appendChild(hole);
+ }
+ if(lastMove)lastMove.shown=true;
+ $("you").textContent=wins.you;$("cpu").textContent=wins.cpu;
+ for(const b of document.querySelectorAll("#levels button"))b.setAttribute("aria-pressed",+b.dataset.depth===depth);
+}
+$("rack").addEventListener("mouseleave",()=>{hover=-1;render();});
+for(const b of document.querySelectorAll("#levels button"))b.addEventListener("click",()=>{depth=+b.dataset.depth;save();render();});
+$("again").addEventListener("click",reset);
+addEventListener("keydown",e=>{const n=+e.key;if(n>=1&&n<=7)play(n-1);});
+reset();
+</script>
+</body>
+</html>

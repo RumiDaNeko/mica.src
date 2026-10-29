@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "A website you're on wants to use the camera. Mica asks you first, every site separately.";
+"NSMicrophoneUsageDescription" = "A website you're on wants to use the microphone. Mica asks you first, every site separately.";
+"NSLocationWhenInUseUsageDescription" = "A website you're on wants to know your location.";
+"NSPhotoLibraryAddUsageDescription" = "To save images from websites to your photos.";

@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, username TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY, state TEXT UNIQUE NOT NULL, challenge TEXT NOT NULL, expires INTEGER NOT NULL, status TEXT NOT NULL, user_id TEXT, last_poll INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS vaults(user_id TEXT PRIMARY KEY REFERENCES users(id), version INTEGER NOT NULL, envelope TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS rate_limits(key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS requests_expiry ON requests(expires);
+CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions(expires);
+CREATE INDEX IF NOT EXISTS rate_limits_expiry ON rate_limits(expires);

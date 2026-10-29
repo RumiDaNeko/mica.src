@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN banner TEXT;
+ALTER TABLE users ADD COLUMN accent_color INTEGER;

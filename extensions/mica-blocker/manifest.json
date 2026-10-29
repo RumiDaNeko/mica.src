@@ -1,0 +1,21 @@
+{
+    "manifest_version":  3,
+    "name":  "Mica blocker",
+    "version":  "2026.1025.1500.2",
+    "description":  "Blocks ads and trackers with uBlock Origin Lite's lists, built into Mica.",
+    "permissions":  [
+                        "declarativeNetRequest",
+                        "declarativeNetRequestFeedback",
+                        "storage"
+                    ],
+    "background":  {
+                       "service_worker":  "worker.js"
+                   },
+    "content_scripts":  [
+                            {
+                                "matches":  ["http://*/*", "https://*/*"],
+                                "js":  ["count.js"],
+                                "run_at":  "document_start"
+                            }
+                        ]
+}

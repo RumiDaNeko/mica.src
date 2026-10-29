@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Mica's cross-platform shell (Avalonia + Chromium through CefGlue). It shares Core.cs and the game
+       pages with the Windows build, which keeps compiling from build.ps1 and never sees this folder.
+       CefGlue is built from source (vendor/CefGlue, CEF 134): no CefGlue release on CEF 128+ exists yet,
+       and Chrome extensions need it. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>Mica</AssemblyName>
+    <RootNamespace>Mica</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Version>0.12.21</Version>
+    <ApplicationIcon>..\src\Assets\Brand\Mica.ico</ApplicationIcon>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;ARM64</Platforms>
+    <!-- One platform per build, so only that platform's Chromium is copied (it is ~300 MB each). -->
+    <Arch Condition="'$(Platform)' == 'ARM64'">arm64</Arch>
+    <Arch Condition="'$(Platform)' != 'ARM64'">x64</Arch>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">win-$(Arch)</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-$(Arch)</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-$(Arch)</RuntimeIdentifier>
+    <SelfContained Condition="'$(SelfContained)' == ''">false</SelfContained>
+    <CefGlueTargetPlatform>$(RuntimeIdentifier)</CefGlueTargetPlatform>
+    <CefVersion>134.3.9</CefVersion>
+    <CefGlueDir>$(MSBuildThisFileDirectory)vendor\CefGlue\</CefGlueDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <ProjectReference Include="vendor\CefGlue\CefGlue.Avalonia\CefGlue.Avalonia.csproj" />
+    <ProjectReference Include="vendor\CefGlue\CefGlue.Common\CefGlue.Common.csproj" />
+    <ProjectReference Include="vendor\CefGlue\CefGlue.Common.Shared\CefGlue.Common.Shared.csproj" />
+    <ProjectReference Include="vendor\CefGlue\CefGlue\CefGlue.csproj" />
+  </ItemGroup>
+  <!-- Chromium for the target platform, and CefGlue's helper process (published by its project for each OS). -->
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-'))">
+    <PackageReference Include="chromiumembeddedframework.runtime" Version="$(CefVersion)" PrivateAssets="None" />
+    <PackageReference Include="chromiumembeddedframework.runtime.$(RuntimeIdentifier)" Version="$(CefVersion)" PrivateAssets="None" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'osx-x64'" Include="cef.redist.osx64" Version="$(CefVersion)" PrivateAssets="None" />
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" Include="cef.redist.osx.arm64" Version="$(CefVersion)" PrivateAssets="None" />
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-x64'" Include="cef.redist.linux64" Version="$(CefVersion)" PrivateAssets="None" />
+    <PackageReference Condition="'$(RuntimeIdentifier)' == 'linux-arm64'" Include="cef.redist.linuxarm64" Version="$(CefVersion)" PrivateAssets="None" />
+  </ItemGroup>
+  <!-- The helper process is published while CefGlue builds, after this project was evaluated, so its files are
+       collected here rather than in a static item. -->
+  <Target Name="MicaBrowserProcessFiles" AfterTargets="ResolveProjectReferences">
+    <ItemGroup>
+      <MicaHelperFile Include="$(CefGlueDir)CefGlue.BrowserProcess\bin\$(Platform)\$(Configuration)\net8.0\$(RuntimeIdentifier)\publish\*" />
+      <None Include="@(MicaHelperFile)">
+        <Visible>false</Visible>
+        <Link>CefGlueBrowserProcess\%(MicaHelperFile.Filename)%(MicaHelperFile.Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </None>
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
+    <Compile Include="..\src\Core.cs" Link="Shared\Core.cs" />
+    <Compile Include="..\src\ExtensionPackage.cs" Link="Shared\ExtensionPackage.cs" />
+    <Compile Include="..\src\AiExtensions.cs" Link="Shared\AiExtensions.cs" />
+    <!-- The built-in blockers, as in the Windows build's Extensions\ folder. -->
+    <None Include="..\extensions\**\*" Link="Extensions\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <EmbeddedResource Include="..\src\Tetris.html;..\src\GameHub.html;..\src\Snake.html;..\src\Game2048.html;..\src\Minesweeper.html;..\src\Breakout.html;..\src\Sudoku.html;..\src\Memory.html;..\src\Flappy.html;..\src\Pong.html;..\src\Invaders.html;..\src\ConnectFour.html">
+      <LogicalName>Mica.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\src\Assets\Brand\Mica.ico" LogicalName="Mica.Brand.ico" />
+    <!-- The new tab page; on Windows it is drawn in WPF, here it is a page so it sits in the engine view. -->
+    <EmbeddedResource Include="src\Home.html" LogicalName="Mica.Home.html" />
+    <!-- Mica's wordmark face, as in Shell.xaml. -->
+    <AvaloniaResource Include="..\src\Assets\Brand\Caveat.ttf" Link="Assets\Caveat.ttf" />
+    <Compile Remove="vendor\**;out\**" />
+    <None Remove="vendor\**;out\**" />
+    <EmbeddedResource Remove="vendor\**;out\**" />
+    <AvaloniaXaml Remove="vendor\**;out\**" />
+  </ItemGroup>
+  <Import Project="$(CefGlueDir)CefGlue.Common\build\CefGlue.Common.targets" />
+</Project>

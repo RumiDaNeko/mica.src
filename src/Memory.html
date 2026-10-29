@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory</title>
+<style>
+:root{--canvas:#f6f4ef;--panel:#fffdf8;--ink:#1f1d1a;--muted:#77716a;--line:#e3ddd3;--cell:#ece7de;--accent:#3d6df2}
+:root.dark{--canvas:#17171a;--panel:#202024;--ink:#f1efe9;--muted:#9a968e;--line:#2e2e34;--cell:#26262b;--accent:#7a9cff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden;user-select:none}
+main{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px}
+h1{font:400 30px Georgia,serif;margin:0 0 4px}
+a.back{color:var(--muted);text-decoration:none;font-size:12px}a.back:hover{color:var(--ink)}
+.side{width:150px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.big{font:400 26px Georgia,serif}
+.board{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(4,var(--s));gap:10px}
+.c{width:var(--s);height:var(--s);perspective:600px;cursor:pointer}
+.c>div{position:relative;width:100%;height:100%;transition:transform 260ms ease-out;transform-style:preserve-3d}
+.c.up>div,.c.done>div{transform:rotateY(180deg)}
+.c span{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+.back-face{background:var(--accent);background-image:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25) 0 18%,transparent 19%)}
+.front{background:var(--cell);transform:rotateY(180deg)}
+.c.done .front{opacity:.55}
+svg{width:58%;height:58%}
+.overlay{position:absolute;inset:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:8px;background:color-mix(in srgb,var(--panel) 88%,transparent);text-align:center;padding:20px}
+.overlay[hidden]{display:none}
+.overlay h2{font:400 28px Georgia,serif;margin:0}
+.overlay p{margin:0;color:var(--muted)}
+button{font:inherit;border:0;border-radius:999px;padding:9px 20px;background:var(--accent);color:#fff;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.keys{font-size:12px;color:var(--muted);line-height:1.8}
+@media (max-width:640px){main{flex-direction:column;gap:12px}.side{flex-direction:row;width:auto;flex-wrap:wrap;justify-content:center}.keys{display:none}}
+</style>
+</head>
+<body>
+<main>
+ <div class="side">
+  <div><a class="back" href="https://games.mica.invalid/">&larr; Games</a><h1>Memory</h1></div>
+  <div class="card"><div class="label">Moves</div><div class="big" id="moves">0</div></div>
+  <div class="card"><div class="label">Pairs</div><div class="big"><span id="pairs">0</span> / 8</div></div>
+  <div class="card"><div class="label">Best</div><div class="big" id="best">–</div></div>
+  <div class="keys">Turn two cards at a time and find all eight pairs in as few moves as you can.</div>
+ </div>
+ <div class="board">
+  <div class="grid" id="grid"></div>
+  <div class="overlay" id="overlay" hidden><h2 id="otitle"></h2><p id="otext"></p><button id="again">Play again</button></div>
+ </div>
+</main>
+<script>
+"use strict";
+// Eight simple shapes, drawn here so nothing is fetched.
+const ART=[
+ '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e5534b"/></svg>',
+ '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="#3d6df2"/></svg>',
+ '<svg viewBox="0 0 24 24"><path d="M12 3l9 17H3z" fill="#4cbf6a"/></svg>',
+ '<svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7.1L12 17.3 5.8 21l1.6-7.1L2 9.2l7.1-.6z" fill="#f2c230"/></svg>',
+ '<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#d45c9b"/></svg>',
+ '<svg viewBox="0 0 24 24"><path d="M12 2l8 10-8 10-8-10z" fill="#35b9d6"/></svg>',
+ '<svg viewBox="0 0 24 24"><path d="M15 3a9 9 0 1 0 6 14A8 8 0 0 1 15 3z" fill="#a05bd6"/></svg>',
+ '<svg viewBox="0 0 24 24"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z" fill="#f08a33"/></svg>'];
+const $=id=>document.getElementById(id),grid=$("grid");
+let deck,up,moves,pairs,lock;
+function best(){try{return +localStorage.getItem("mica-memory-best")||0}catch(e){return 0}}
+function fit(){const s=Math.max(56,Math.min(120,Math.floor((Math.min(innerHeight-70,innerWidth-240)-30-28)/4)));grid.style.setProperty("--s",s+"px");}
+function reset(){
+ deck=[...Array(16).keys()].map(i=>i>>1);for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+ up=[];moves=0;pairs=0;lock=false;grid.innerHTML="";
+ deck.forEach((v,i)=>{const c=document.createElement("div");c.className="c";c.dataset.i=i;c.innerHTML='<div><span class="back-face"></span><span class="front">'+ART[v]+'</span></div>';grid.appendChild(c);});
+ $("overlay").hidden=true;const b=best();$("best").textContent=b||"–";stats();
+}
+function stats(){$("moves").textContent=moves;$("pairs").textContent=pairs;}
+function flip(i){
+ const c=grid.children[i];if(lock||c.classList.contains("up")||c.classList.contains("done"))return;
+ c.classList.add("up");up.push(i);if(up.length<2)return;
+ moves++;stats();const [a,b]=up;up=[];
+ if(deck[a]===deck[b]){grid.children[a].classList.add("done");grid.children[b].classList.add("done");pairs++;stats();if(pairs===8)setTimeout(win,350);return;}
+ lock=true;setTimeout(()=>{grid.children[a].classList.remove("up");grid.children[b].classList.remove("up");lock=false;},750);
+}
+function win(){const b=best();let note=moves+" moves";if(!b||moves<b){try{localStorage.setItem("mica-memory-best",moves)}catch(e){}$("best").textContent=moves;note+=" · a new best!";}$("otitle").textContent="All pairs found!";$("otext").textContent=note;$("overlay").hidden=false;$("again").focus();}
+grid.addEventListener("click",e=>{const c=e.target.closest(".c");if(c)flip(+c.dataset.i);});
+$("again").addEventListener("click",reset);
+addEventListener("keydown",e=>{if(e.code==="KeyN")reset();});
+addEventListener("resize",fit);
+fit();reset();
+</script>
+</body>
+</html>
