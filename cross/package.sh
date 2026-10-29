@@ -7,7 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 target="${1:?usage: package.sh linux|macos}"
-version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Mica.Cross.csproj)"
+# The same version as the Windows app (its AppVersion), which a release carries.
+version="$(sed -n 's:.*AppVersion="\([0-9.]*\)".*:\1:p' ../src/BrowserUpdates.cs | head -n 1)"
 mkdir -p out
 case "${ARCH:-$(uname -m)}" in arm64|aarch64) platform=ARM64; arch=arm64 ;; *) platform=x64; arch=x64 ;; esac
 

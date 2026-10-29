@@ -10,7 +10,9 @@
     <RootNamespace>Mica</RootNamespace>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Version>0.12.21</Version>
+    <!-- One version for every build of Mica: the Windows app's AppVersion (src/BrowserUpdates.cs). -->
+    <MicaAppVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../src/BrowserUpdates.cs')), 'AppVersion="([0-9.]+)"').Groups[1].Value)</MicaAppVersion>
+    <Version>$(MicaAppVersion)</Version>
     <ApplicationIcon>..\src\Assets\Brand\Mica.ico</ApplicationIcon>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ApplicationManifest>app.manifest</ApplicationManifest>

@@ -42,8 +42,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgtk-3-0 libxss1 libasound2t64 || \
           sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgtk-3-0 libxss1 libasound2
+      # package.sh makes an AppImage too when appimagetool is there (and a PNG icon with ImageMagick).
+      - name: appimagetool
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get install -y imagemagick
+          sudo curl -fsSL -o /usr/local/bin/appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          sudo chmod +x /usr/local/bin/appimagetool
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> "$GITHUB_ENV"
       - name: Build and self-test
         run: bash cross/test.sh
+        # Runners have no usable GPU: Chromium draws in software instead of restarting its GPU process.
+        env:
+          MICA_NO_GPU: '1'
       - name: Self-test results
         if: always()
         uses: actions/upload-artifact@v4
