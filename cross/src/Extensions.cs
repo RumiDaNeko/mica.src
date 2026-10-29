@@ -29,7 +29,12 @@ namespace Mica {
   internal static List<string> Folders(string profile) {
    var folders=new List<string>();
    foreach(var name in BuiltIn) {string f=Path.Combine(AppContext.BaseDirectory,"Extensions",name);if(File.Exists(Path.Combine(f,"manifest.json")))folders.Add(f);}
-   folders.AddRange(Installed(profile).Values);
+   // An AI extension installed by an older Mica gets the current panel and tab shims before Chromium loads it.
+   foreach(var pair in Installed(profile)) {
+    var ai=BrowserApp.AiExtensionById(pair.Key);
+    if(ai!=null)try {PanelPagePatch.Apply(pair.Value,ai);} catch(IOException) {} catch(UnauthorizedAccessException) {}
+    folders.Add(pair.Value);
+   }
    return folders.Where(f=>!f.Contains(",")).ToList();
   }
 

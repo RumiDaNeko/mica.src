@@ -263,6 +263,10 @@ namespace Mica {
   public static List<CookieJar> DefaultJars() {return new List<CookieJar> {new CookieJar {Id="work",Name="Work",Color="#4A7FD9"},new CookieJar {Id="shopping",Name="Shopping",Color="#E0A526"},new CookieJar {Id="banking",Name="Banking",Color="#3E9B5F"},new CookieJar {Id="social",Name="Social",Color="#D45C9B"}};}
   public static Dictionary<string,string> DefaultKeywords() {return new Dictionary<string,string> {{"yt","https://www.youtube.com/results?search_query=%s"},{"gh","https://github.com/search?q=%s"},{"w","https://en.wikipedia.org/w/index.php?search=%s"},{"maps","https://www.google.com/maps/search/%s"},{"g","https://www.google.com/search?q=%s"},{"so","https://stackoverflow.com/search?q=%s"},{"r","https://www.reddit.com/search/?q=%s"},{"amz","https://www.amazon.com/s?k=%s"}};}
   public static void Save(string path,BrowserState state) { Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))); var temp=path+".tmp"; File.WriteAllText(temp,Serializer().Serialize(state)); if(File.Exists(path))File.Replace(temp,path,null); else File.Move(temp,path); }
+  // Groups an extension makes (Claude's tools keep their tabs in one) belong to its session: they aren't kept for the
+  // next start, and their tabs don't rest while the extension works in them.
+  public const string ExtensionGroupPrefix="ext-";
+  public static bool InExtensionGroup(PageEntry tab) {return tab.Group!=null&&tab.Group.StartsWith(ExtensionGroupPrefix,StringComparison.Ordinal);}
   public static BrowserState Load(string path) {
    BrowserState s=null; try { if(File.Exists(path))s=Serializer().Deserialize<BrowserState>(File.ReadAllText(path)); } catch(Exception e) { if(!(e is IOException||e is ArgumentException||e is InvalidOperationException))throw; }
    if(s==null)s=new BrowserState(); if(s.Tabs==null)s.Tabs=new List<PageEntry>(); if(s.History==null)s.History=new List<PageEntry>(); if(s.Bookmarks==null)s.Bookmarks=new List<PageEntry>();
@@ -277,7 +281,7 @@ namespace Mica {
    if(s.Jars==null||s.Jars.Count==0)s.Jars=DefaultJars();s.Jars.RemoveAll(j=>j==null||string.IsNullOrEmpty(j.Id));
    if(s.SiteKeywords==null)s.SiteKeywords=DefaultKeywords();if(s.SiteMemory==null)s.SiteMemory=new Dictionary<string,string>();if(s.AutoClearSites==null)s.AutoClearSites=new List<string>();
    foreach(var t in s.Tabs)if(t!=null&&t.Jar!=null&&!s.Jars.Any(j=>j.Id==t.Jar))t.Jar=null;
-   if(s.Groups==null)s.Groups=new List<TabGroup>();s.Groups.RemoveAll(g=>g==null||string.IsNullOrEmpty(g.Id));s.NormalizeGroups();
+   if(s.Groups==null)s.Groups=new List<TabGroup>();s.Groups.RemoveAll(g=>g==null||string.IsNullOrEmpty(g.Id)||g.Id.StartsWith(ExtensionGroupPrefix,StringComparison.Ordinal));s.NormalizeGroups();
    if(s.Tabs.Count==0)s.AddTab("mica://home"); if(!s.Tabs.Any(t=>t.Id==s.ActiveId))s.ActiveId=s.Tabs[0].Id; s.Space=s.Tabs.First(t=>t.Id==s.ActiveId).Space; return s;
   }
  }

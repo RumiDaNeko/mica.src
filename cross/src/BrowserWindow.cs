@@ -99,7 +99,10 @@ namespace Mica {
   Button spaceButton,avatarButton,railAvatar;
   // Text size: these grow with it (Personalize.cs ApplyTextScale).
   readonly LayoutTransformControl sidebarScale=new LayoutTransformControl(),toolbarScale=new LayoutTransformControl();LayoutTransformControl islandScale;Grid frameInside;
+  // The window extensions' own tabs open in (ExtensionWindows).
+  internal static BrowserWindow Main;
   public BrowserWindow(string profilePath,string selfTestResult) {
+   if(Main==null)Main=this;
    profile=profilePath;statePath=Path.Combine(profile,"session.json");
    state=StateStore.Load(statePath);
    if(state.SiteZoom==null)state.SiteZoom=new Dictionary<string,double>();

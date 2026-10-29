@@ -30,7 +30,7 @@ namespace Mica {
    islandDivider=new Border {Width=1,Height=12,Margin=new Thickness(0,0,0,0),Opacity=0,VerticalAlignment=VerticalAlignment.Center};islandDivider.SetResourceReference(Border.BackgroundProperty,"Line");
    var dot=new Border {Width=6,Height=6,CornerRadius=new CornerRadius(3),Margin=new Thickness(0,0,7,0),VerticalAlignment=VerticalAlignment.Center};dot.SetResourceReference(Border.BackgroundProperty,"Accent");
    var row=new StackPanel {Orientation=Orientation.Horizontal};row.Children.Add(islandMessage);row.Children.Add(islandDivider);row.Children.Add(dot);row.Children.Add(islandMemory);
-   islandDownloads=new StackPanel();islandMedia=new StackPanel();var stack=new StackPanel {HorizontalAlignment=HorizontalAlignment.Right};stack.Children.Add(islandMedia);stack.Children.Add(islandDownloads);row.HorizontalAlignment=HorizontalAlignment.Right;stack.Children.Add(row);
+   islandDownloads=new StackPanel();islandMedia=new StackPanel();islandZoom=new StackPanel();var stack=new StackPanel {HorizontalAlignment=HorizontalAlignment.Right};stack.Children.Add(islandMedia);stack.Children.Add(islandZoom);stack.Children.Add(islandDownloads);row.HorizontalAlignment=HorizontalAlignment.Right;stack.Children.Add(row);
    islandCard=new Border {CornerRadius=new CornerRadius(13),BorderThickness=new Thickness(1),Padding=new Thickness(11,5,12,5),Margin=new Thickness(8,8,8,14),Child=stack,Resources=window.Resources,RenderTransform=new TranslateTransform(),Tag="island",
     ToolTip="Memory used by Mica and its web engine. Shared pages may be counted more than once."};
    islandCard.SetResourceReference(Border.BackgroundProperty,"PopupPanel");islandCard.SetResourceReference(Border.BorderBrushProperty,"PopupLine");
@@ -234,7 +234,7 @@ namespace Mica {
    try {topLeft=islandCard.PointToScreen(new Point(0,0));bottomRight=islandCard.PointToScreen(new Point(islandCard.ActualWidth,islandCard.ActualHeight));}catch(InvalidOperationException){return;}
    const double reach=36;
    bool near=cursor.X>=topLeft.X-reach&&cursor.X<=bottomRight.X+reach&&cursor.Y>=topLeft.Y-reach&&cursor.Y<=bottomRight.Y+reach;
-   if(IslandHasDownloads||IslandHasMedia)near=false;
+   if(IslandHasDownloads||IslandHasMedia||IslandHasZoom)near=false;
    if(near==islandAway)return;islandAway=near;
    // Fully transparent popups let clicks through to the page underneath.
    Animate(islandCard,UIElement.OpacityProperty,near?0:1,near?120:220);

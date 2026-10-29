@@ -430,18 +430,32 @@ return 'none';})()";
     Dispatcher.UIThread.Post(delegate {window.OpenFromPage(url,background);});
     return true;
    }
+   protected override bool DoClose(CefBrowser browser) {int id=browser.Identifier;Dispatcher.UIThread.Post(delegate {window.ClosedByEngine(id);});return false;}
   }
   internal void OpenFromPage(string url,bool background) {
    Trace("popup "+url);
    if((url??"").StartsWith("https://open.mica.invalid/",StringComparison.OrdinalIgnoreCase)) {
     Uri uri;if(!Uri.TryCreate(url,UriKind.Absolute,out uri))return;
+    // Claude asks for one of its tabs to come forward (a page out of sight can't be captured or clicked).
+    var focus=System.Text.RegularExpressions.Regex.Match(uri.Query,"(?:^|[?&])url=([^&]+)");
+    if(uri.Query.Contains("focus=")){if(focus.Success)FrontTabAt(Uri.UnescapeDataString(focus.Groups[1].Value));return;}
     url=Uri.UnescapeDataString(uri.Fragment.TrimStart('#'));
     background=uri.Query.Contains("active=0");
    }
-   if(!Navigation.IsWeb(url))return;
-   string keep=state.ActiveId;var tab=state.AddTab(url);tab.Title=new Uri(url).Host;RenderTabs();
+   bool home=url=="mica://home";
+   if(!home&&!Navigation.IsWeb(url))return;
+   string keep=state.ActiveId;var tab=state.AddTab(url);if(!home)tab.Title=new Uri(url).Host;RenderTabs();
    if(background){Show(tab.Id);Show(keep);}else Show(tab.Id);
    Save();
+  }
+  void FrontTabAt(string address) {
+   var found=tabs.Values.FirstOrDefault(t=>t.View!=null&&string.Equals(t.View.Address,address,StringComparison.Ordinal))??tabs.Values.FirstOrDefault(t=>t.Entry.Url==Navigation.FromEngine(address));
+   if(found!=null&&found!=Active)Show(found.Entry.Id);
+  }
+  // The engine closed a page's browser (an extension's chrome.tabs.remove or windows.remove, or the page itself).
+  internal void ClosedByEngine(int browser) {
+   var gone=tabs.Values.FirstOrDefault(t=>t.View!=null&&t.View.Host!=null&&t.View.Host.GetBrowser().Identifier==browser);
+   if(gone!=null)CloseTab(gone.Entry.Id);
   }
  }
 

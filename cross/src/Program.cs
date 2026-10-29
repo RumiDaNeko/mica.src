@@ -56,6 +56,7 @@ namespace Mica {
     if(extensions.Count>0)flags.Add(new KeyValuePair<string,string>("load-extension",string.Join(",",extensions)));
     // As on Windows: an extension driving a page (Claude for Chrome) doesn't get Chrome's "is debugging" bar.
     flags.Add(new KeyValuePair<string,string>("silent-debugger-extension-api",""));
+    CefRuntimeLoader.DefaultClient=new ExtensionWindows();
     CefRuntimeLoader.Initialize(new CefSettings {RootCachePath=engine,CachePath=Path.Combine(engine,"Default"),PersistSessionCookies=true,LogSeverity=CefLogSeverity.Warning,LogFile=Path.Combine(Profile,"engine.log"),LocalesDirPath=Directory.Exists(locales)?locales:null},flags.ToArray(),BuiltInPages.Schemes());
    }).StartWithClassicDesktopLifetime(args);
    if(Private)try {Directory.Delete(Profile,true);} catch(Exception) {}

@@ -50,7 +50,7 @@ namespace Mica {
    Check("reading mode opens over the page (the island says so)",reading=="true"&&lastStatus.StartsWith("Reading mode")&&islandMessage.Text==lastStatus,reading+" / "+lastStatus);
    ToggleReader();await Task.Delay(600);
    Check("reading mode closes",await EvalAsync(web.View,"Promise.resolve(String(!!document.getElementById('mica-reader')))",5)=="false",null);
-   Check("the island is up, showing memory",island.IsOpen&&islandMemory.Text.Contains("MB"),"open="+island.IsOpen+" text="+islandMemory.Text);
+   Check("the island is up, showing memory",island.IsOpen&&islandMemory.Text.Contains("MB"),"open="+island.IsOpen+" text="+islandMemory.Text+" state="+WindowState+" visible="+IsVisible+" full="+islandFullscreen+" inactive="+islandInactive);
    state.SiteMemory["example.com"]="never";
    Show(first.Entry.Id);RestIdleTabs(true);await Task.Delay(1500);
    Check("a site kept awake doesn't rest",web.View!=null,null);
@@ -94,5 +94,53 @@ namespace Mica {
    await Page("leaves the error page",first,delegate {Navigate("mica://2048");},"mica://2048","2048");
    Check("error page gone",!errorPanel.IsVisible&&first.View.IsVisible,null);
   }
+  // What Claude Code's tools do through Claude for Chrome: make a window for the session, group a tab in it, name
+  // and colour the group, open another tab into it, navigate, screenshot, upload a file and close a tab. Run from the
+  // extension's own page (the panel), which reaches the same browser APIs as its worker.
+  async Task ClaudeTools() {
+   int before=state.Tabs.Count;var had=new System.Collections.Generic.HashSet<string>(state.Tabs.Select(t=>t.Id));
+   string upload=Path.Combine(profile,"claude-upload.txt");File.WriteAllText(upload,"hello from Mica");
+   string probe=ClaudeToolsProbe.Replace("__UPLOAD__",new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(upload));
+   string answer=await EvalAsync(aiView,probe,120)??await Js(aiView,"JSON.stringify(self.__claudeOut||{})");Trace("claude tools: "+answer);
+   System.Collections.Generic.Dictionary<string,string> found;
+   try {found=new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string,string>>(answer);}catch(Exception){found=new System.Collections.Generic.Dictionary<string,string>();}
+   Func<string,string> api=k=>found!=null&&found.ContainsKey(k)?found[k]:"missing";Func<string,bool> ok=k=>api(k)!="missing"&&!api(k).StartsWith("ERR",StringComparison.Ordinal);
+   Check("Claude makes a window for its session",ok("windows.create")&&api("windows.create").Contains("\"tab\":"),api("windows.create"));
+   Check("Claude groups a tab and names the group",api("tabGroups.get")=="\"Claude session|blue\""&&api("tabs.query group")=="true",api("tabs.group")+" "+api("tabGroups.get")+" "+api("tabs.query group"));
+   Check("Claude opens a tab into its group",api("tabs.group second")=="2",api("tabs.create in window")+" "+api("tabs.group second"));
+   Check("Claude's tabs open as Mica tabs",api("as mica tabs")=="true",api("as mica tabs")+" tabs "+before+" -> "+state.Tabs.Count);
+   Check("Claude navigates its tab",api("tabs.update navigate").Contains("example.com"),api("tabs.update navigate"));
+   Check("Claude screenshots its tab",ok("screenshot")&&api("screenshot")!="0",api("screenshot"));
+   Check("Claude uploads a file into the page",api("setFileInputFiles")=="\"claude-upload.txt\"",api("setFileInputFiles"));
+   await Task.Delay(1000);
+   Check("Claude closes its tab and Mica stays open",api("tabs.remove")=="\"closed\""&&IsVisible,api("tabs.remove")+" visible="+IsVisible);
+   foreach(var extra in state.Tabs.Where(t=>!had.Contains(t.Id)).Select(t=>t.Id).ToList())CloseTab(extra);
+   state.RecentlyClosed.Clear();
+  }
+  const string ClaudeToolsProbe=@"(async()=>{const out=self.__claudeOut={};
+const run=async(name,fn,ms=20000)=>{try{const v=await Promise.race([fn(),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);out[name]=v===undefined?'ok':JSON.stringify(v).slice(0,200);}catch(e){out[name]='ERR '+(e&&e.message||e);}};
+const settle=async id=>{for(let i=0;i<60;i++){const t=await chrome.tabs.get(id);if(t.status==='complete'&&t.url&&!t.url.startsWith('about:'))return t;await new Promise(r=>setTimeout(r,250));}return chrome.tabs.get(id);};
+const before=(await chrome.windows.getAll({windowTypes:['normal','popup','app','devtools']})).length;
+let windowId,tabId,group,second;
+await run('windows.create',async()=>{const w=await chrome.windows.create({url:'chrome://newtab/',focused:false,type:'normal'});windowId=w.id;tabId=w.tabs[0].id;return {id:w.id,tab:tabId};},30000);
+await run('tabs.group',async()=>{const{windowId:w}=await chrome.tabs.get(tabId);group=await chrome.tabs.group({tabIds:[tabId],createProperties:{windowId:w}});return group;});
+await run('tabGroups.update',async()=>(await chrome.tabGroups.update(group,{title:'Claude session',color:chrome.tabGroups.Color.BLUE})).title);
+await run('tabGroups.get',async()=>{const g=await chrome.tabGroups.get(group);return g.title+'|'+g.color;});
+await run('tabs.query group',async()=>(await chrome.tabs.query({groupId:group})).map(t=>t.id).join()===String(tabId));
+await run('tabs.create in window',async()=>{const t=await chrome.tabs.create({windowId,url:'chrome://newtab/',active:false});second=t.id;return t.id;},30000);
+await run('tabs.group second',async()=>{await chrome.tabs.group({tabIds:[second],groupId:group});return (await chrome.tabs.query({groupId:group})).length;});
+await run('tabs.update navigate',async()=>{await chrome.tabs.update(tabId,{url:'https://example.com/'});return (await settle(tabId)).url;},30000);
+await run('debugger.attach',async()=>{await chrome.debugger.attach({tabId},'1.3');});
+await run('screenshot',async()=>(await chrome.debugger.sendCommand({tabId},'Page.captureScreenshot',{format:'png'})).data.length);
+await run('setFileInputFiles',async()=>{
+ await chrome.debugger.sendCommand({tabId},'Runtime.evaluate',{expression:""(()=>{const i=document.createElement('input');i.type='file';i.id='mica-upload';document.body.appendChild(i);})()""});
+ const doc=await chrome.debugger.sendCommand({tabId},'DOM.getDocument',{});
+ const node=await chrome.debugger.sendCommand({tabId},'DOM.querySelector',{nodeId:doc.root.nodeId,selector:'#mica-upload'});
+ await chrome.debugger.sendCommand({tabId},'DOM.setFileInputFiles',{nodeId:node.nodeId,files:[__UPLOAD__]});
+ return (await chrome.debugger.sendCommand({tabId},'Runtime.evaluate',{expression:""document.getElementById('mica-upload').files[0].name"",returnByValue:true})).result.value;});
+await run('debugger.detach',async()=>{await chrome.debugger.detach({tabId});});
+await run('as mica tabs',async()=>(await chrome.windows.getAll({windowTypes:['normal','popup','app','devtools']})).length-before<=2);
+await run('tabs.remove',async()=>{await chrome.tabs.remove(second);await new Promise(r=>setTimeout(r,1500));try{await chrome.tabs.get(second);return 'still there';}catch(e){return 'closed';}});
+return JSON.stringify(out);})()";
  }
 }

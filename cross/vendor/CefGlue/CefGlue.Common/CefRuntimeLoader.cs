@@ -15,6 +15,10 @@ namespace Xilium.CefGlue.Common
 
         private static Action<BrowserProcessHandler> _delayedInitialization;
 
+        /// <summary>Mica: the client for browser windows Chromium opens on its own (Chrome style), such as an
+        /// extension's chrome.tabs.create or chrome.windows.create. Set before the runtime loads.</summary>
+        public static CefClient DefaultClient { get; set; }
+
         public static void Initialize(CefSettings settings = null, KeyValuePair<string, string>[] flags = null, CustomScheme[] customSchemes = null)
         {
             _delayedInitialization = (browserProcessHandler) => InternalInitialize(settings, flags, customSchemes, browserProcessHandler);

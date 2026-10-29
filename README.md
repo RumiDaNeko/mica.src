@@ -10,6 +10,10 @@ Chạy `installer-output/Mica-0.12.0-Setup.exe`. Installer giao diện Mica, kè
 
 Mở `run.cmd` hoặc bản cập nhật `release-v0.12.0/Mica.exe`. Giữ các DLL cạnh file EXE. Nếu Mica đang mở, đóng cửa sổ hiện tại trước khi mở bản mới. Bản portable 0.9 yêu cầu Windows x64 và .NET Framework 4.8; không cần cài Edge/WebView2 riêng. Giải nén toàn bộ ZIP, giữ thư mục Runtime cạnh EXE. Bản build phát triển không kèm Runtime vẫn cần WebView2 cài trên máy.
 
+## Cập nhật 0.12.32
+
+Claude in Chrome dùng được trong Mica khi Claude Code điều khiển trình duyệt: tạo cửa sổ và nhóm tab cho phiên, mở tab vào nhóm, điều hướng, chụp màn hình, tải file lên và đóng tab. Nhóm tab của Claude hiện trong sidebar Mica với đúng tên và màu, không bị ngủ khi Claude đang làm việc, và không giữ lại sau khi mở lại Mica. Extension cài từ bản Mica cũ được vá lại ngay khi khởi động, không cần mở AI panel. Sửa lỗi nặng: extension đóng một tab (`chrome.tabs.remove`) trước đây làm tắt cả cửa sổ Mica. Bản macOS/Linux: tab và cửa sổ extension tự mở giờ thành tab Mica thay vì cửa sổ Chromium trống; chưa chạy trên máy Mac thật.
+
 ## Cập nhật 0.11.3
 
 Menu Space và menu trình duyệt bấm một lần mở, bấm lại đóng, không chạy lại animation mở. Áp dụng cả sidebar mở rộng và thu gọn.

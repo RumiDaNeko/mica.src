@@ -40,9 +40,16 @@ namespace Mica {
 
   async Task<CoreWebView2Profile> EnsureExtensionProfile() {
    if(extensionProfileTask==null)extensionProfileTask=CreateExtensionProfile();
-   try {return await extensionProfileTask;}
+   CoreWebView2Profile ready;
+   try {ready=await extensionProfileTask;}
    catch {extensionProfileTask=null;throw;}
+   if(!privateMode&&!aiExtensionsRepaired){aiExtensionsRepaired=true;RepairAiExtensions();}
+   return ready;
   }
+  // Claude Code drives Claude for Chrome from its worker, often with no panel open, so the AI extensions get Mica's
+  // current shim at start, not only when the panel shows them.
+  bool aiExtensionsRepaired;
+  async void RepairAiExtensions() {foreach(var ai in AiExtensions)await AiExtensionInstalled(ai);}
   async Task<CoreWebView2Profile> CreateExtensionProfile() {
    var sharedEnvironment=await EnsureEnvironment();
    if(closing)throw new OperationCanceledException("The browser is closing.");
@@ -57,7 +64,7 @@ namespace Mica {
     if(closing)throw new OperationCanceledException("The browser is closing.");
     view.CoreWebView2.Settings.IsWebMessageEnabled=false;
     view.CoreWebView2.Settings.AreHostObjectsAllowed=false;
-    RegisterOwnTarget(view.CoreWebView2);
+    KeepWindowOpen(view);RegisterOwnTarget(view.CoreWebView2);
     return view.CoreWebView2.Profile;
    }catch {
     window.Closing-=onClosing;Find<Grid>("Root").Children.Remove(view);view.Dispose();

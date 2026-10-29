@@ -35,9 +35,82 @@ namespace Mica {
     core.CallDevToolsProtocolMethodAsync("Target.setDiscoverTargets","{\"discover\":true}");
    }catch(Exception){targetWatcher=old;return;}
    if(old!=null)StopTargetWatcher(old);targetHandler=handler;
+   ListenToExtensionWorkers(core);
   }
   static bool WatcherAsleep() {try {return targetWatcher.IsSuspended;}catch(Exception){return true;}}
-  static void StopTargetWatcher(CoreWebView2 core) {try {if(targetHandler!=null)core.GetDevToolsProtocolEventReceiver("Target.targetCreated").DevToolsProtocolEventReceived-=targetHandler;}catch(Exception){}}
+  static void StopTargetWatcher(CoreWebView2 core) {
+   try {if(targetHandler!=null)core.GetDevToolsProtocolEventReceiver("Target.targetCreated").DevToolsProtocolEventReceived-=targetHandler;}catch(Exception){}
+   try {if(groupsHandler!=null)core.GetDevToolsProtocolEventReceiver("Runtime.bindingCalled").DevToolsProtocolEventReceived-=groupsHandler;}catch(Exception){}
+   groupsHandler=null;workerSessions.Clear();
+  }
+
+  // The tab groups AI extensions make (Claude's tools keep their tabs in one) show in Mica's tab list. The engine
+  // can't group tabs, so the extension's shim keeps them (ClaudeSidePanelPatch.TabsShim) and reports them from its
+  // worker through a DevTools binding; Mica listens on the worker from the same view that watches targets.
+  static readonly Dictionary<string,string> workerSessions=new Dictionary<string,string>();
+  static EventHandler<CoreWebView2DevToolsProtocolEventReceivedEventArgs> groupsHandler;
+  async void ListenToExtensionWorkers(CoreWebView2 core) {
+   try {
+    var all=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(await core.CallDevToolsProtocolMethodAsync("Target.getTargets","{}"));
+    foreach(Dictionary<string,object> info in (System.Collections.ArrayList)all["targetInfos"])if((string)info["type"]=="service_worker")ListenToExtensionWorker((string)info["targetId"],(string)info["url"]);
+   }catch(Exception){}
+  }
+  async void ListenToExtensionWorker(string target,string url) {
+   var core=targetWatcher;
+   if(core==null||privateMode||!AiExtensions.Any(ai=>(url??"").StartsWith("chrome-extension://"+ai.Id+"/",StringComparison.Ordinal))||workerSessions.ContainsKey(target))return;
+   workerSessions[target]=null;
+   try {
+    if(groupsHandler==null){groupsHandler=OnGroupsReported;core.GetDevToolsProtocolEventReceiver("Runtime.bindingCalled").DevToolsProtocolEventReceived+=groupsHandler;}
+    var ser=new JavaScriptSerializer();
+    string session=(string)ser.Deserialize<Dictionary<string,object>>(await core.CallDevToolsProtocolMethodAsync("Target.attachToTarget",ser.Serialize(new {targetId=target,flatten=true})))["sessionId"];
+    if(targetWatcher!=core)return;
+    workerSessions[target]=session;
+    await core.CallDevToolsProtocolMethodForSessionAsync(session,"Runtime.addBinding","{\"name\":\"__micaGroups\"}");
+    await core.CallDevToolsProtocolMethodForSessionAsync(session,"Runtime.evaluate","{\"expression\":\"self.__micaGroupsNow&&self.__micaGroupsNow()\"}");
+   }catch(Exception){workerSessions.Remove(target);}
+  }
+  void OnGroupsReported(object sender,CoreWebView2DevToolsProtocolEventReceivedEventArgs e) {
+   try {
+    var call=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(e.ParameterObjectAsJson);
+    if((string)call["name"]!="__micaGroups"||!workerSessions.ContainsValue(e.SessionId))return;
+    string payload=(string)call["payload"];
+    window.Dispatcher.BeginInvoke(new Action(async delegate {foreach(var browser in Program.Browsers.Where(b=>!b.closing&&!b.privateMode).ToList())await browser.ShowExtensionGroups(payload);}));
+   }catch(Exception){}
+  }
+  // Chrome's group colours, as Mica's.
+  static readonly Dictionary<string,string> chromeGroupColors=new Dictionary<string,string> {{"blue","#4A7FD9"},{"red","#D9534F"},{"yellow","#E0A526"},{"green","#3E9B5F"},{"pink","#D45C9B"},{"purple","#8B62D9"},{"cyan","#2E9FB5"},{"orange","#E07B35"},{"grey","#8A8A93"}};
+  internal static string ExtensionGroupId(string extension,object group) {return StateStore.ExtensionGroupPrefix+extension.Substring(0,Math.Min(8,extension.Length))+"-"+group;}
+  // Puts this window's tabs into the extension's groups (and out of the ones they left), keeping the group's
+  // title, colour and folding as the extension set them.
+  async Task ShowExtensionGroups(string payload) {
+   var ser=new JavaScriptSerializer();var report=ser.Deserialize<Dictionary<string,object>>(payload);
+   string extension=(string)report["extension"],prefix=ExtensionGroupId(extension,"");
+   var byTarget=new Dictionary<string,PageEntry>();
+   foreach(var pair in views.ToList()) {
+    var core=LiveCore(pair.Value);var tab=state.Tabs.FirstOrDefault(t=>t.Id==pair.Key);if(core==null||tab==null)continue;
+    try {var info=ser.Deserialize<Dictionary<string,object>>(await core.CallDevToolsProtocolMethodAsync("Target.getTargetInfo","{}"))["targetInfo"] as Dictionary<string,object>;byTarget[(string)info["targetId"]]=tab;}catch(Exception){}
+   }
+   if(closing)return;
+   var placed=new Dictionary<string,string>();
+   foreach(Dictionary<string,object> group in (System.Collections.ArrayList)report["groups"]) {
+    var members=((System.Collections.ArrayList)group["targets"]).OfType<string>().Where(byTarget.ContainsKey).Select(t=>byTarget[t]).Where(t=>!t.Pinned).ToList();
+    if(members.Count==0)continue;
+    string id=ExtensionGroupId(extension,group["id"]);var mica=state.FindGroup(id);
+    if(mica==null){mica=new TabGroup {Id=id};state.Groups.Add(mica);}
+    object value;string color;
+    mica.Name=group.TryGetValue("title",out value)?value as string??"":"";
+    mica.Color=group.TryGetValue("color",out value)&&chromeGroupColors.TryGetValue(value as string??"",out color)?color:chromeGroupColors["grey"];
+    mica.Collapsed=group.TryGetValue("collapsed",out value)&&value is bool&&(bool)value;
+    foreach(var tab in members)placed[tab.Id]=id;
+   }
+   // Tabs out of sight (resting, or in another window) keep the group they had.
+   foreach(var tab in state.Tabs) {
+    string want;bool known=byTarget.ContainsValue(tab);
+    if(placed.TryGetValue(tab.Id,out want))tab.Group=want;
+    else if(known&&tab.Group!=null&&tab.Group.StartsWith(prefix,StringComparison.Ordinal))tab.Group=null;
+   }
+   state.NormalizeGroups();RenderTabs();Save();
+  }
   // The watcher's view can go away (closed, put to rest or frozen); hand over to a view that stays awake.
   void ReplaceTargetWatcher(WebView2 leaving) {
    if(targetWatcher==null||leaving==null||LiveCore(leaving)!=null&&LiveCore(leaving)!=targetWatcher)return;
@@ -53,6 +126,18 @@ namespace Mica {
    try {
     var target=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(e.ParameterObjectAsJson)["targetInfo"] as Dictionary<string,object>;
     if(target!=null&&(string)target["type"]=="page")AdoptTarget((string)target["targetId"]);
+    else if(target!=null&&(string)target["type"]=="service_worker")ListenToExtensionWorker((string)target["targetId"],(string)target["url"]);
+   }catch(Exception){}
+  }
+  // The engine's control closes the window it sits in when its page asks to close (a page's window.close(), an
+  // extension's chrome.tabs.remove or windows.remove). Views inside Mica's window may only close themselves.
+  static void KeepWindowOpen(WebView2 view) {
+   try {
+    const System.Reflection.BindingFlags inside=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Public;
+    // The control keeps its engine wiring in a helper (WebView2Base), which handles the request.
+    var helper=typeof(WebView2).GetFields(inside).Select(f=>f.GetValue(view)).FirstOrDefault(v=>v!=null&&v.GetType().Name=="WebView2Base");
+    var closer=helper==null?null:helper.GetType().GetMethod("CoreWebView2_WindowCloseRequested",inside);
+    if(closer!=null)view.CoreWebView2.WindowCloseRequested-=(EventHandler<object>)Delegate.CreateDelegate(typeof(EventHandler<object>),helper,closer);
    }catch(Exception){}
   }
   static bool AnyBrowserOpen() {return Program.Browsers.Any(b=>!b.closing);}
@@ -87,7 +172,7 @@ namespace Mica {
    engineWindowTimer.Tick+=async delegate {
     var app=Program.Browsers.FirstOrDefault(b=>!b.closing);if(app==null)return;
     try {
-     if(targetWatcher==null||WatcherDead()){targetWatcher=null;foreach(var b in Program.Browsers.Where(x=>!x.closing)){var live=new[]{b.extensionView}.Concat(b.views.Values).FirstOrDefault(v=>v!=null&&LiveCore(v)!=null);if(live!=null){b.EnsureTargetWatcher(LiveCore(live));break;}}}
+     if(targetWatcher==null||WatcherDead()){targetWatcher=null;workerSessions.Clear();groupsHandler=null;foreach(var b in Program.Browsers.Where(x=>!x.closing)){var live=new[]{b.extensionView}.Concat(b.views.Values).FirstOrDefault(v=>v!=null&&LiveCore(v)!=null);if(live!=null){b.EnsureTargetWatcher(LiveCore(live));break;}}}
      if(targetWatcher==null||!EngineHasOwnWindow(targetWatcher.BrowserProcessId))return;
      engineSweeps++;
      var all=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(await targetWatcher.CallDevToolsProtocolMethodAsync("Target.getTargets","{}"));

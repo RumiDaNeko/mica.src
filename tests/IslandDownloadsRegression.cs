@@ -7,6 +7,22 @@ using System.Windows.Controls;
 
 namespace Mica {
  partial class BrowserApp {
+  delegate bool ChildWindowProc(IntPtr hwnd,IntPtr data);
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool EnumChildWindows(IntPtr parent,ChildWindowProc proc,IntPtr data);
+  [System.Runtime.InteropServices.DllImport("user32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd,System.Text.StringBuilder name,int size);
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd,uint message,IntPtr wParam,IntPtr lParam);
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd,out WheelRect rect);
+  struct WheelRect {public int Left,Top,Right,Bottom;}
+  static IntPtr PageWidgetWindow(IntPtr top) {
+   IntPtr found=IntPtr.Zero;
+   EnumChildWindows(top,delegate(IntPtr hwnd,IntPtr data) {var name=new System.Text.StringBuilder(64);GetClassName(hwnd,name,64);if(name.ToString()=="Chrome_RenderWidgetHostHWND"&&found==IntPtr.Zero)found=hwnd;return true;},IntPtr.Zero);
+   return found;
+  }
+  // WM_MOUSEWHEEL with MK_CONTROL: the engine reads Ctrl from the message itself.
+  static void PostCtrlWheel(IntPtr hwnd,int delta) {
+   WheelRect r;GetWindowRect(hwnd,out r);int x=(r.Left+r.Right)/2,y=(r.Top+r.Bottom)/2;
+   PostMessage(hwnd,0x020A,new IntPtr((delta<<16)|0x0008),new IntPtr((y<<16)|(x&0xFFFF)));
+  }
   // Downloads in the island: at most two, newest first, staying put under the pointer, and leaving after their linger.
   async Task RunIslandDownloadsTest() {
    var log=regressionLog;string dir=Path.Combine(profile,"island-downloads");Directory.CreateDirectory(dir);
@@ -39,6 +55,31 @@ namespace Mica {
     log.Add("speeds: "+r0+", "+r1+", "+r2+" shown as "+FormatBytes((long)r2)+"/s");
     RegressionCheck("downloads show a smoothed speed",delegate {Require(r0<0&&Math.Abs(r1-2000000)<1&&Math.Abs(r2-1600000)<1,r0+", "+r1+", "+r2);});
     islandSpeeds.Remove("speed");
+    // Zoom: a change of your own (Ctrl +/-, Ctrl+wheel) brings up − 110% + in the island; its buttons zoom; it leaves on its own.
+    Navigate("https://example.com/",false);await WaitForPage();var view=CurrentView();
+    for(int i=0;i<60&&!(LiveCore(view)!=null&&LiveCore(view).Source.StartsWith("https://example.com",StringComparison.Ordinal));i++)await Task.Delay(250);
+    await Task.Delay(1200);
+    // As a person would: Ctrl+wheel up, posted to the page's window so the real mouse stays put.
+    // Setting ZoomFactor from code isn't reported by the engine, and DevTools key presses don't reach its shortcuts.
+    IntPtr page=PageWidgetWindow(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+    for(int i=0;i<2;i++){PostCtrlWheel(page,120);await Task.Delay(400);}
+    await Task.Delay(1000);
+    double wheeled=view.ZoomFactor;
+    RegressionCheck("zooming the page shows the zoom row in the island",delegate {Require(wheeled>1.05&&IslandHasZoom&&islandZoomLevel.Text==Math.Round(wheeled*100)+"%",wheeled+" "+(IslandHasZoom?islandZoomLevel.Text:"no row"));});
+    CaptureElement(islandCard,"island-zoom.png");
+    Func<string,Button> zoomButton=tag=>((Grid)islandZoom.Children[0]).Children.OfType<Button>().First(b=>(string)b.Tag==tag);
+    zoomButton("island-zoom-out").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));await Task.Delay(300);
+    double smaller=NextZoom(wheeled,-1);
+    RegressionCheck("the island's minus zooms out a step",delegate {Require(Math.Abs(view.ZoomFactor-smaller)<0.01&&islandZoomLevel.Text==Math.Round(smaller*100)+"%",view.ZoomFactor+" "+islandZoomLevel.Text);});
+    islandAway=false;WatchIslandPointer();
+    RegressionCheck("the zoom row keeps the island up under the pointer",delegate {Require(!islandAway,"stepped aside");});
+    zoomButton("island-zoom-reset").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));await Task.Delay(300);
+    RegressionCheck("reset goes back to 100% and isn't kept",delegate {Require(Math.Abs(view.ZoomFactor-1)<0.01&&islandZoomLevel.Text=="100%"&&!state.SiteZoom.ContainsKey("example.com"),view.ZoomFactor+" "+islandZoomLevel.Text);});
+    await Task.Delay(IslandZoomLinger+TimeSpan.FromMilliseconds(600));
+    RegressionCheck("the zoom row leaves on its own",delegate {Require(!IslandHasZoom,"still shown");});
+    ZoomView(view,1.5);await Task.Delay(300);
+    RegressionCheck("Mica's own zoom (site card, menu) doesn't bring it up",delegate {Require(!IslandHasZoom,"shown");});
+    ZoomView(view,1);await Task.Delay(300);
    }catch(Exception e){log.Add("ERROR "+e);regressionFailures++;}
    log.Add(regressionFailures==0?"ALL PASS":regressionFailures+" FAILURE(S)");
    File.WriteAllLines(Path.Combine(dir,"result.txt"),log);window.Close();

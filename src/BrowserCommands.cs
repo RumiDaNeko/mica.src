@@ -39,9 +39,9 @@ namespace Mica {
     add("Translate page to "+LanguageName(UiLanguage),"","translation language",delegate {TranslatePage(UiLanguage);});
     if(UiLanguage!="en")add("Translate page to English","","translation language",delegate {TranslatePage("en");});
     add("Highlights and notes","","annotate mark",ShowHighlights);
-    add("Zoom in","Ctrl+Plus","bigger larger",delegate {ZoomView(view,NextZoom(view.ZoomFactor,1));});
-    add("Zoom out","Ctrl+Minus","smaller",delegate {ZoomView(view,NextZoom(view.ZoomFactor,-1));});
-    if(Math.Abs(view.ZoomFactor-PageBase)>0.001)add("Reset zoom","Ctrl+0",Math.Round(PageBase*100)+"%",delegate {ZoomView(view,PageBase);});
+    add("Zoom in","Ctrl+Plus","bigger larger",delegate {ZoomView(view,NextZoom(view.ZoomFactor,1));ShowIslandZoom(view);});
+    add("Zoom out","Ctrl+Minus","smaller",delegate {ZoomView(view,NextZoom(view.ZoomFactor,-1));ShowIslandZoom(view);});
+    if(Math.Abs(view.ZoomFactor-PageBase)>0.001)add("Reset zoom","Ctrl+0",Math.Round(PageBase*100)+"%",delegate {ZoomView(view,PageBase);ShowIslandZoom(view);});
     add("Site settings","","permissions cookies "+site,ShowSiteCard);
     add("Ads on this site: "+(AdsHint()=="Blocked"?"allow":"block"),"","adblock ublock",ToggleAdsHere);
     string mode=SiteMemoryMode(tab);

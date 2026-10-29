@@ -28,6 +28,11 @@ namespace Xilium.CefGlue.Common.InternalHandlers
             commandLine.AppendSwitch(CommandLineArgs.ParentProcessId, _currentProcessId);
         }
 
+        protected override CefClient GetDefaultClient()
+        {
+            return CefRuntimeLoader.DefaultClient;
+        }
+
         protected override void OnContextInitialized()
         {
             _handler?.HandleContextInitialized();

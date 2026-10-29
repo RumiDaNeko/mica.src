@@ -1,5 +1,24 @@
 # Mica handoff for Claude — 0.12.0
 
+## Latest: 0.12.32 — Claude in Chrome driven by Claude Code (Windows + cross)
+
+Why it broke: the installed Mica (28 Oct build) wrote only the old side-panel shim into Claude for Chrome, and newer builds re-applied the shim only when the AI panel showed the extension. Claude Code drives the extension from its service worker with no panel open, so it hit the engine's missing tab groups and windows ("Failed to create fallback window for session group", "no tab group"). The engine's own popup window was the "bare window".
+
+Windows (src/):
+- BrowserExtensions.cs `RepairAiExtensions`: the first extension-profile use per window re-applies `ClaudeSidePanelPatch` to every installed AI extension (reloads it only when the files changed).
+- AiExtensions.cs `TabsShim`: reports its groups through `self.__micaGroups` (a DevTools binding) with each member's DevTools target id; `front()` also sends `url=` (used by cross).
+- BrowserExtensionWindows.cs: the target watcher attaches (flatten) to AI extension service workers, adds the binding, and `ShowExtensionGroups` mirrors them into Mica groups `ext-<id8>-<group>` (Chrome colour names mapped to Mica's palette). Core.cs: `ext-` groups are dropped at load and their tabs never rest (`StateStore.InExtensionGroup`).
+- Big fix: WebView2's WPF control closes its parent Window on `WindowCloseRequested` (chrome.tabs.remove / windows.remove / allowed window.close()), which closed the whole Mica window. `KeepWindowOpen` removes the control's handler (reflection on its WebView2Base helper) for tab, AI panel, extension host and blocker views; a tab view now closes only its tab.
+- tests/ClaudeExtProbe.cs (`--claudeext-test`): accepts `MICA_CLAUDE_DIR` (unpacked copy) besides `MICA_CLAUDE_CRX`; new worker probe runs Claude Code's sequence inside the extension's worker over DevTools (window, group, title/colour, second tab, navigate, screenshot, DOM.setFileInputFiles, tabs.remove) and checks the Mica group. Result 2026-10-29: ALL PASS (23 checks) with the user's 1.0.102 copy, Mica off-screen and not focused.
+
+Cross (cross/):
+- CEF Chrome style gives extension-created tabs/windows its own Chromium window, never OnBeforePopup. vendor CefGlue: `CefRuntimeLoader.DefaultClient` (returned by GetDefaultClient). src/ExtensionWindows.cs closes such a window in OnBeforeBrowse/OnAddressChange and opens the page as a Mica tab (chrome://newtab → Home); DevTools and extension pages keep their window.
+- AiPanel.cs: `focus=…&url=` brings the matching tab forward; `DoClose` from the engine closes the Mica tab. Extensions.cs re-applies the AI shims at every start. No tab groups UI in cross yet: groups live in the shim only.
+- SelfTestFeatures.cs `ClaudeTools`: same sequence from the panel page. Windows-hosted cross self-test with Claude installed: ALL PASSED; the island / AI-width checks failed in some runs (timing, also seen without Claude tools). Not run on a real Mac: macOS behaviour of the default client (window flash, activation) is unverified; CI (cross.yml) builds and runs the self-test without --claude.
+
+Known: CoreTests' `reject file:///C:/secret` fails on HEAD too (stale since local files are allowed). Extension groups don't sync back (renaming/ungrouping in Mica isn't sent to the extension). The worker attach may keep the AI extension's worker awake while Mica runs.
+Release: release-v0.12.32 (Runtime hardlinked from release-v0.12.31). Not installed over the user's Mica.
+
 ## Latest completed: 0.12.0 — Custom Windows installer
 
 ## Completed

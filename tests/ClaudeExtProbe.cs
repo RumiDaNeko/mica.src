@@ -15,13 +15,25 @@ namespace Mica {
    window.WindowState=WindowState.Normal;window.Left=-6000;window.Top=-6000;
    var flush=new System.Windows.Threading.DispatcherTimer {Interval=TimeSpan.FromSeconds(2)};flush.Tick+=delegate {try {File.WriteAllLines(Path.Combine(dir,"result.txt"),log.Concat(new[]{"(still running)"}));}catch(Exception){}};flush.Start();
    try {
-    string crx=Environment.GetEnvironmentVariable("MICA_CLAUDE_CRX");
-    if(string.IsNullOrEmpty(crx)||!File.Exists(crx)){log.Add("no Claude for Chrome package; skipped");await Task.Delay(1500);}
+    // The store package, or an unpacked copy of it (MICA_CLAUDE_DIR, e.g. copied from another profile).
+    string crx=Environment.GetEnvironmentVariable("MICA_CLAUDE_CRX"),unpacked=Environment.GetEnvironmentVariable("MICA_CLAUDE_DIR");
+    bool haveCrx=!string.IsNullOrEmpty(crx)&&File.Exists(crx),haveDir=!string.IsNullOrEmpty(unpacked)&&File.Exists(Path.Combine(unpacked??"","manifest.json"));
+    if(!haveCrx&&!haveDir){log.Add("no Claude for Chrome package; skipped");await Task.Delay(1500);}
     else {
-     var prepared=ExtensionPackage.PrepareBytes(File.ReadAllBytes(crx),ClaudeExtensionId,Path.Combine(profile,"StoreExtensions"));
+     PreparedExtension prepared;
+     if(haveCrx)prepared=ExtensionPackage.PrepareBytes(File.ReadAllBytes(crx),ClaudeExtensionId,Path.Combine(profile,"StoreExtensions"));
+     else {
+      string copy=Path.Combine(profile,"StoreExtensions","package-"+Guid.NewGuid().ToString("N"));
+      foreach(var file in Directory.GetFiles(unpacked,"*",SearchOption.AllDirectories)){string to=Path.Combine(copy,file.Substring(unpacked.TrimEnd('\\','/').Length+1));Directory.CreateDirectory(Path.GetDirectoryName(to));File.Copy(file,to);}
+      prepared=new PreparedExtension {Folder=copy,Version="unpacked"};
+     }
      var installed=await (await EnsureExtensionProfile()).AddBrowserExtensionAsync(prepared.Folder);
      RegressionCheck("the store package keeps its store id",delegate {Require(installed.Id==ClaudeExtensionId,installed.Id);});
      Navigate("https://example.com/",false);await WaitFor(()=>CurrentView()!=null&&CurrentView().CoreWebView2!=null,20000);await WaitForPage().ContinueWith(t=>{});
+     // Claude Code drives the extension from its worker, with no panel open and often with Mica in the background.
+     LoadExtensionRecords();RememberExtension(ClaudeExtensionId,prepared.Folder,"Chrome Web Store",prepared.Version);
+     aiPatchChecked.Remove(ClaudeExtensionId);await ClaudeExtensionInstalled();await Task.Delay(3000);
+     await RunClaudeWorkerProbe(log);
      SetAiEnabled(true);ChooseAiProvider("claude",null);SetAiOpen(true);
      Func<string> panel=()=>{var core=aiView==null?null:LiveCore(aiView);return core==null?"":core.Source;};
      // Installing opens the extension's sign-in page as a tab; the panel follows whichever tab is in front.
@@ -133,5 +145,70 @@ window.__probeDone=true;return JSON.stringify(out);})()";
    string answer="";for(int i=0;i<40;i++){await Task.Delay(250);answer=await frame.ExecuteScriptAsync("window.__mica");if(answer!="\"waiting\"")break;}
    return answer;
   }
+  // What Claude Code's tools do through the extension's worker: find or make a window for the session's group,
+  // group a tab in it, open another, navigate, screenshot and upload a file.
+  async Task RunClaudeWorkerProbe(System.Collections.Generic.List<string> log) {
+   var ser=new System.Web.Script.Serialization.JavaScriptSerializer();
+   string upload=Path.Combine(profile,"claude-upload.txt");File.WriteAllText(upload,"hello from Mica");
+   string script=ClaudeWorkerProbe.Replace("__UPLOAD__",ser.Serialize(upload));
+   string answer=await EvaluateInExtensionWorker(ClaudeExtensionId,script,90000);log.Add("worker apis: "+answer);
+   System.Collections.Generic.Dictionary<string,string> found;
+   try {found=ser.Deserialize<System.Collections.Generic.Dictionary<string,string>>(answer);}catch(Exception){found=new System.Collections.Generic.Dictionary<string,string>();}
+   Func<string,string> api=k=>found.ContainsKey(k)?found[k]:"missing";Func<string,bool> ok=k=>api(k)!="missing"&&!api(k).StartsWith("ERR",StringComparison.Ordinal);
+   RegressionCheck("the worker finds or makes a normal window for a session",delegate {Require(ok("windows.getLastFocused normal")||ok("windows.create")&&api("windows.create").Contains("\"tab\":"),api("windows.getLastFocused normal")+" / "+api("windows.create"));});
+   RegressionCheck("the worker groups a tab, names and colors the group",delegate {Require(ok("tabs.group")&&api("tabGroups.get")=="\"Claude session|blue\""&&api("tabs.query group")=="true",api("tabs.group")+" "+api("tabGroups.get")+" "+api("tabs.query group"));});
+   RegressionCheck("a tab opened into the group's window joins it",delegate {Require(ok("tabs.create in window")&&api("tabs.group second")=="2",api("tabs.create in window")+" "+api("tabs.group second"));});
+   RegressionCheck("the worker navigates its tab",delegate {Require(api("tabs.update navigate").Contains("example.com"),api("tabs.update navigate"));});
+   RegressionCheck("the worker screenshots its tab",delegate {Require(ok("debugger.attach")&&ok("screenshot")&&api("screenshot")!="0",api("debugger.attach")+" "+api("screenshot"));});
+   RegressionCheck("the worker uploads a file into the page",delegate {Require(api("setFileInputFiles")=="\"claude-upload.txt\"",api("setFileInputFiles"));});
+   RegressionCheck("the worker closes its tab, in Mica too",delegate {Require(api("tabs.remove")=="\"closed\""&&api("group after remove")=="1"&&state.Tabs.Count(t=>t.Url.Contains("google.com"))==0,api("tabs.remove")+" "+api("group after remove")+" "+string.Join(",",state.Tabs.Select(t=>t.Url)));});
+   await Task.Delay(1500);
+   RegressionCheck("Mica shows the session's group",delegate {Require(state.Tabs.Any(t=>state.FindGroup(t.Group)!=null&&state.FindGroup(t.Group).Name=="Claude session"&&state.FindGroup(t.Group).Color=="#4A7FD9"),string.Join(",",state.Tabs.Select(t=>t.Url+"="+t.Group)));});
+  }
+  // Runs a script in an extension's service worker over DevTools and returns its string result.
+  async Task<string> EvaluateInExtensionWorker(string id,string expression,int timeout) {
+   var core=LiveCore(CurrentView());var ser=new System.Web.Script.Serialization.JavaScriptSerializer();
+   string target=null;
+   for(int i=0;i<40&&target==null;i++) {
+    var all=ser.Deserialize<System.Collections.Generic.Dictionary<string,object>>(await core.CallDevToolsProtocolMethodAsync("Target.getTargets","{}"));
+    foreach(System.Collections.Generic.Dictionary<string,object> info in (System.Collections.ArrayList)all["targetInfos"])
+     if((string)info["type"]=="service_worker"&&((string)info["url"]).StartsWith("chrome-extension://"+id+"/",StringComparison.Ordinal))target=(string)info["targetId"];
+    if(target==null)await Task.Delay(250);
+   }
+   if(target==null)return "{\"error\":\"no worker\"}";
+   var attached=ser.Deserialize<System.Collections.Generic.Dictionary<string,object>>(await core.CallDevToolsProtocolMethodAsync("Target.attachToTarget",ser.Serialize(new {targetId=target,flatten=true})));
+   string session=(string)attached["sessionId"];
+   var call=core.CallDevToolsProtocolMethodForSessionAsync(session,"Runtime.evaluate",ser.Serialize(new {expression,awaitPromise=true,returnByValue=true}));
+   if(await Task.WhenAny(call,Task.Delay(timeout))!=call)return "{\"error\":\"timeout\"}";
+   var result=ser.Deserialize<System.Collections.Generic.Dictionary<string,object>>(await call);
+   try {await core.CallDevToolsProtocolMethodAsync("Target.detachFromTarget",ser.Serialize(new {sessionId=session}));}catch(Exception){}
+   var value=((System.Collections.Generic.Dictionary<string,object>)result["result"]);object text;
+   return value.TryGetValue("value",out text)&&text is string?(string)text:ser.Serialize(result);
+  }
+  const string ClaudeWorkerProbe=@"(async()=>{const out={};
+const run=async(name,fn,ms=15000)=>{try{const v=await Promise.race([fn(),new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);out[name]=v===undefined?'ok':JSON.stringify(v).slice(0,200);}catch(e){out[name]='ERR '+(e&&e.message||e);}};
+const settle=async id=>{for(let i=0;i<60;i++){const t=await chrome.tabs.get(id);if(t.status==='complete'&&t.url&&!t.url.startsWith('about:'))return t;await new Promise(r=>setTimeout(r,250));}return chrome.tabs.get(id);};
+let windowId,tabId,group,second;
+await run('windows.getLastFocused normal',async()=>{const w=await chrome.windows.getLastFocused({windowTypes:['normal']});windowId=w.id;return {id:w.id,type:w.type};});
+await run('windows.create',async()=>{const w=await chrome.windows.create({url:'chrome://newtab/',focused:false,type:'normal'});if(windowId===undefined)windowId=w.id;tabId=w.tabs[0].id;return {id:w.id,tab:tabId,type:w.type};},30000);
+await run('tabs.group',async()=>{const{windowId:w}=await chrome.tabs.get(tabId);group=await chrome.tabs.group({tabIds:[tabId],createProperties:{windowId:w}});return group;});
+await run('tabGroups.update',async()=>{const g=await chrome.tabGroups.update(group,{title:'Claude session',color:chrome.tabGroups.Color.BLUE});return g.title;});
+await run('tabGroups.get',async()=>{const g=await chrome.tabGroups.get(group);return g.title+'|'+g.color;});
+await run('tabs.query group',async()=>(await chrome.tabs.query({groupId:group})).map(t=>t.id).join()===String(tabId));
+await run('tabs.create in window',async()=>{const t=await chrome.tabs.create({windowId,url:'chrome://newtab/',active:false});second=t.id;return t.id;},30000);
+await run('tabs.group second',async()=>{await chrome.tabs.group({tabIds:[second],groupId:group});return (await chrome.tabs.query({groupId:group})).length;});
+await run('tabs.update navigate',async()=>{await chrome.tabs.update(tabId,{url:'https://example.com/'});return (await settle(tabId)).url;},30000);
+await run('debugger.attach',async()=>{await chrome.debugger.attach({tabId},'1.3');});
+await run('screenshot',async()=>(await chrome.debugger.sendCommand({tabId},'Page.captureScreenshot',{format:'png'})).data.length);
+await run('setFileInputFiles',async()=>{
+ await chrome.debugger.sendCommand({tabId},'Runtime.evaluate',{expression:""(()=>{const i=document.createElement('input');i.type='file';i.id='mica-upload';document.body.appendChild(i);})()""});
+ const doc=await chrome.debugger.sendCommand({tabId},'DOM.getDocument',{});
+ const node=await chrome.debugger.sendCommand({tabId},'DOM.querySelector',{nodeId:doc.root.nodeId,selector:'#mica-upload'});
+ await chrome.debugger.sendCommand({tabId},'DOM.setFileInputFiles',{nodeId:node.nodeId,files:[__UPLOAD__]});
+ return (await chrome.debugger.sendCommand({tabId},'Runtime.evaluate',{expression:""document.getElementById('mica-upload').files[0].name"",returnByValue:true})).result.value;});
+await run('debugger.detach',async()=>{await chrome.debugger.detach({tabId});});
+await run('tabs.remove',async()=>{await chrome.tabs.remove(second);await new Promise(r=>setTimeout(r,1500));try{await chrome.tabs.get(second);return 'still there';}catch(e){return 'closed';}});
+await run('group after remove',async()=>(await chrome.tabs.query({groupId:group})).length);
+return JSON.stringify(out);})()";
  }
 }

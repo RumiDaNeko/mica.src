@@ -79,8 +79,19 @@ namespace Mica {
   if (!G.Color) G.Color = { GREY: 'grey', BLUE: 'blue', RED: 'red', YELLOW: 'yellow', GREEN: 'green', PINK: 'pink', PURPLE: 'purple', CYAN: 'cyan', ORANGE: 'orange' };
   let state = { next: 1001, groups: {}, members: {} }, ready = null;
   const load = () => ready || (ready = (async () => { try { const v = area && (await area.get(KEY))[KEY]; if (v && v.groups) state = v; } catch (e) {} return state; })());
-  if (chrome.storage && chrome.storage.onChanged) chrome.storage.onChanged.addListener((c, a) => { if (a === 'session' && c[KEY] && c[KEY].newValue) state = c[KEY].newValue; });
-  const save = async () => { try { if (area) await area.set({ [KEY]: state }); } catch (e) {} };
+  // Mica shows the groups in its own tab list. It listens on the worker through __micaGroups (a DevTools binding it
+  // adds) and finds its tabs by their DevTools targets; elsewhere, or before Mica is listening, this does nothing.
+  let reportSoon = null;
+  const report = () => { if (typeof self.__micaGroups !== 'function') return; clearTimeout(reportSoon); reportSoon = setTimeout(async () => {
+    try {
+      const targets = {}; for (const t of await chrome.debugger.getTargets()) if (typeof t.tabId === 'number') targets[t.tabId] = t.id;
+      const groups = Object.values(state.groups).map(g => Object.assign({}, g, { targets: Object.keys(state.members).filter(id => state.members[id] === g.id && targets[id]).map(id => targets[id]) }));
+      self.__micaGroups(JSON.stringify({ extension: chrome.runtime.id, groups }));
+    } catch (e) {}
+  }, 120); };
+  self.__micaGroupsNow = async () => { await load(); report(); };
+  if (chrome.storage && chrome.storage.onChanged) chrome.storage.onChanged.addListener((c, a) => { if (a === 'session' && c[KEY] && c[KEY].newValue) { state = c[KEY].newValue; report(); } });
+  const save = async () => { try { if (area) await area.set({ [KEY]: state }); } catch (e) {} report(); };
   const isPanel = t => !!(t && typeof t.url === 'string' && pages.some(p => t.url.startsWith(p)));
   const fix = t => { if (t && typeof t.id === 'number') { const g = state.members[t.id]; t.groupId = g === undefined ? NONE : g; } return t; };
   const fixWin = w => { if (w) { w.type = 'normal'; if (w.tabs) w.tabs = w.tabs.filter(t => !isPanel(t)).map(fix); } return w; };
@@ -120,7 +131,7 @@ namespace Mica {
   const front = async tabId => {
     try {
       const target = (await chrome.debugger.getTargets()).find(x => x.tabId === tabId); if (!target) return;
-      let asked = { id: -1 }; try { asked = (await o.create({ url: 'https://open.mica.invalid/?from=claude&focus=' + encodeURIComponent(target.id), active: false })) || asked; } catch (e) {}
+      let asked = { id: -1 }; try { asked = (await o.create({ url: 'https://open.mica.invalid/?from=claude&focus=' + encodeURIComponent(target.id) + '&url=' + encodeURIComponent(target.url || ''), active: false })) || asked; } catch (e) {}
       for (let i = 0; i < 16; i++) { await new Promise(r => setTimeout(r, 150)); try { await o.get(asked.id); } catch (e) { break; } }
       await new Promise(r => setTimeout(r, 350));
     } catch (e) {}
@@ -200,7 +211,7 @@ namespace Mica {
   });
   W.getLastFocused = api(async info => lastFocused(!!(info && info.populate)));
   W.getCurrent = api(async info => lastFocused(!!(info && info.populate)));
-  load().then(async () => { try { const live = new Set((await o.query({})).map(t => t.id)), stale = Object.keys(state.members).map(Number).filter(id => !live.has(id)); if (stale.length) { await drop(stale); await save(); } } catch (e) {} });
+  load().then(async () => { try { const live = new Set((await o.query({})).map(t => t.id)), stale = Object.keys(state.members).map(Number).filter(id => !live.has(id)); if (stale.length) { await drop(stale); await save(); } } catch (e) {} report(); });
 })();
 ";
   // True when something changed. The shim goes first in the worker: an import in a module worker, importScripts

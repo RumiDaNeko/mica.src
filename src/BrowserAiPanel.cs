@@ -241,7 +241,7 @@ namespace Mica {
    try {
     aiHost.Children.Add(view);var engine=await EnsureEnvironment();await view.EnsureCoreWebView2Async(engine,ViewOptions(engine));
     if(closing||!AiEnabled){aiHost.Children.Remove(view);view.Dispose();return;}
-    var core=view.CoreWebView2;await ApplyMicaAgent(core);RegisterOwnTarget(core);ApplyTrackingPrevention(core);
+    var core=view.CoreWebView2;KeepWindowOpen(view);await ApplyMicaAgent(core);RegisterOwnTarget(core);ApplyTrackingPrevention(core);
     core.Settings.AreHostObjectsAllowed=false;core.Settings.IsWebMessageEnabled=false;core.Settings.IsGeneralAutofillEnabled=false;await ShimClaudeSidePanel(core);
     // Links and pop-ups from the chat open as ordinary tabs.
     core.NewWindowRequested+=delegate(object sender,CoreWebView2NewWindowRequestedEventArgs e) {e.Handled=true;string uri=e.Uri;if(Navigation.IsWeb(uri))window.Dispatcher.BeginInvoke(new Action(delegate {if(!closing)Navigate(uri,true);}));};

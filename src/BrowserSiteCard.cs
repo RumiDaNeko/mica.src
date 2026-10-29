@@ -22,7 +22,9 @@ namespace Mica {
   // The zoom Mica last gave each view. The engine reports zoom changes later, so a report matching it is
   // Mica's own change coming back, and only a different one (Ctrl +/-, Ctrl+wheel) is the user's.
   readonly Dictionary<WebView2,double> zoomSet=new Dictionary<WebView2,double>();readonly Dictionary<WebView2,DateTime> zoomSetAt=new Dictionary<WebView2,DateTime>();
-  void SetViewZoom(WebView2 view,double zoom) {zoomSet[view]=zoom;zoomSetAt[view]=DateTime.UtcNow;if(Math.Abs(view.ZoomFactor-zoom)>0.001)view.ZoomFactor=zoom;}
+  // Only an actual change starts the quiet moment: the user's own zoom passing back through here (to remember it)
+  // must not make the next Ctrl+wheel notch look like Mica's.
+  void SetViewZoom(WebView2 view,double zoom) {zoomSet[view]=zoom;if(Math.Abs(view.ZoomFactor-zoom)<=0.001)return;zoomSetAt[view]=DateTime.UtcNow;view.ZoomFactor=zoom;if(CurrentView()==view)UpdateZoomBadge();}
   void AttachSiteZoom(WebView2 view) {
    Action apply=delegate {
     var core=LiveCore(view);if(core==null)return;string site=SiteFor(core.Source);if(site==null)return;
@@ -37,7 +39,7 @@ namespace Mica {
     if(zoomSetAt.TryGetValue(view,out at)&&(DateTime.UtcNow-at).TotalMilliseconds<1000){if(Math.Abs(view.ZoomFactor-set)>0.001)SetViewZoom(view,set);return;}
     zoomSet[view]=view.ZoomFactor;
     var core=LiveCore(view);if(core==null)return;string site=SiteFor(core.Source);if(site==null)return;
-    RememberZoom(site,view.ZoomFactor);
+    RememberZoom(site,view.ZoomFactor);ShowIslandZoom(view);
    };
    view.Unloaded+=delegate {if(LiveCore(view)==null){zoomSet.Remove(view);zoomSetAt.Remove(view);}};
   }
@@ -82,6 +84,7 @@ namespace Mica {
    bool show=Math.Abs(zoom-PageBase)>0.001;badge.Visibility=show?Visibility.Visible:Visibility.Collapsed;
    if(show)Find<TextBlock>("ZoomText").Text=Math.Round(zoom*100)+"%";
    if(zoomMenuLevel!=null)zoomMenuLevel.Text=Math.Round(zoom*100)+"%";
+   FollowIslandZoom();
   }
   // Zoom in the browser menu, as − 100% + on one row; the menu stays open while you click.
   TextBlock zoomMenuLevel;

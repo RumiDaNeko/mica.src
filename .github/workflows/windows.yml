@@ -1,12 +1,14 @@
 # Builds the Windows app (WPF + WebView2) on every push. build.ps1 fetches the WebView2 SDK itself.
-# Installers and releases stay on the release machine: they need the signing key, which never leaves D:\creds.
+# The installer job packs the same three installers as a local release (full, app-only update, lite) from a
+# release folder with the bundled engine. They come out unsigned: publishing and the release signatures stay
+# on the release machine, because the signing key never leaves D:\creds.
 name: Windows
 
 on:
   push:
-    paths: ['src/**', 'tests/**', 'installer/**', 'build.ps1', '.github/workflows/windows.yml']
+    paths: ['src/**', 'tests/**', 'installer/**', 'build.ps1', 'build-installer.ps1', 'package-portable.ps1', '.github/workflows/windows.yml']
   pull_request:
-    paths: ['src/**', 'tests/**', 'installer/**', 'build.ps1', '.github/workflows/windows.yml']
+    paths: ['src/**', 'tests/**', 'installer/**', 'build.ps1', 'build-installer.ps1', 'package-portable.ps1', '.github/workflows/windows.yml']
   workflow_dispatch:
 
 jobs:
@@ -24,4 +26,33 @@ jobs:
         with:
           name: mica-windows
           path: dist
+          retention-days: 14
+
+  installer:
+    runs-on: windows-latest
+    steps:
+      - name: Keep line endings
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+      # The pinned engine CAB (about 300 MB) is kept between runs; package-portable.ps1 checks its hash and Microsoft signature either way.
+      - uses: actions/cache@v4
+        with:
+          path: .deps/webview2-fixed-x64.cab
+          key: webview2-fixed-${{ hashFiles('package-portable.ps1') }}
+      - name: Release folder with the bundled engine
+        id: release
+        shell: powershell
+        run: |
+          $version=([regex]::Match((Get-Content src\BrowserUpdates.cs -Raw),'AppVersion="([^"]+)"')).Groups[1].Value
+          if(!$version){throw 'AppVersion not found'}
+          .\package-portable.ps1 -OutputDirectory "release-v$version"
+          "version=$version" | Out-File $env:GITHUB_OUTPUT -Append -Encoding ascii
+      - name: Installers
+        shell: powershell
+        run: .\build-installer.ps1 -OutputDirectory installer-output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mica-${{ steps.release.outputs.version }}-installers-unsigned
+          path: installer-output/Mica-*
+          compression-level: 0
           retention-days: 14

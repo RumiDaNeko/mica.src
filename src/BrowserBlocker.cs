@@ -96,7 +96,7 @@ namespace Mica {
   WebView2 blockerControl;
   async Task<string> RunInExtension(string id,string page,string expression) {
    var engine=await EnsureEnvironment();await EnsureExtensionProfile();
-   if(blockerControl==null){var view=new WebView2 {Width=1,Height=1,Visibility=Visibility.Hidden,IsHitTestVisible=false,Focusable=false};Find<Grid>("Root").Children.Add(view);blockerControl=view;await view.EnsureCoreWebView2Async(engine,ViewOptions(engine));RegisterOwnTarget(view.CoreWebView2);}
+   if(blockerControl==null){var view=new WebView2 {Width=1,Height=1,Visibility=Visibility.Hidden,IsHitTestVisible=false,Focusable=false};Find<Grid>("Root").Children.Add(view);blockerControl=view;await view.EnsureCoreWebView2Async(engine,ViewOptions(engine));KeepWindowOpen(view);RegisterOwnTarget(view.CoreWebView2);}
    var core=blockerControl.CoreWebView2;string url="chrome-extension://"+id+"/"+page;
    if(core.Source!=url) {
     var loaded=new TaskCompletionSource<string>();EventHandler<CoreWebView2NavigationCompletedEventArgs> done=null;

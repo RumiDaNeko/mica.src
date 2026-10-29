@@ -35,7 +35,7 @@ namespace Mica {
   }
 
   async Task RunSelfTest(string resultFile) {
-   trace=new System.Collections.Concurrent.ConcurrentQueue<string>();
+   trace=new System.Collections.Concurrent.ConcurrentQueue<string>();ExtensionWindows.Log=Trace;
    DownloadFolderOverride=Path.Combine(profile,"Downloads");
    try {
     var first=Active;
@@ -43,6 +43,14 @@ namespace Mica {
     if(first.View.IsBrowserInitialized)ready.TrySetResult(true);else first.View.BrowserInitialized+=delegate {ready.TrySetResult(true);};
     Check("engine starts",await Task.WhenAny(ready.Task,Task.Delay(30000))==ready.Task,"browser never initialized");
     Check("starts on a new tab",state.Tabs.Count==1&&first.Entry.Url=="mica://home"&&address.Text=="A fresh start","tabs="+state.Tabs.Count+" url="+first.Entry.Url);
+    // Installing Claude for Chrome opens its sign-in page with chrome.tabs.create; it comes in as a Mica tab, not a
+    // Chromium window. It is closed again so the checks below start from one tab.
+    if(claudeLoaded) {
+     for(int i=0;i<100&&!state.Tabs.Any(t=>(t.Url??"").StartsWith("https://claude.ai/",StringComparison.Ordinal));i++)await Task.Delay(100);
+     Check("an extension's new tab opens as a Mica tab",state.Tabs.Any(t=>(t.Url??"").StartsWith("https://claude.ai/",StringComparison.Ordinal)),string.Join(" ",state.Tabs.Select(t=>t.Url)));
+     foreach(var extra in state.Tabs.Where(t=>t.Id!=first.Entry.Id).Select(t=>t.Id).ToList())CloseTab(extra);
+     Show(first.Entry.Id);state.RecentlyClosed.Clear();await Task.Delay(300);
+    }
 
     await Page("games hub from the address bar",first,delegate {Navigate("mica://games");},"mica://games","Games");
     Check("address bar shows mica://games",address.Text=="mica://games",address.Text);
@@ -108,6 +116,7 @@ namespace Mica {
      // How Claude reads and acts on a page: the debugger API on the tab, here reading the page's title through it.
      string driven=await EvalAsync(aiView,"(async()=>{const t=(await chrome.tabs.query({})).find(x=>x.url==='https://example.com/');const d={tabId:t.id};await chrome.debugger.attach(d,'1.3');try{const r=await chrome.debugger.sendCommand(d,'Runtime.evaluate',{expression:'document.title',returnByValue:true});return r.result.value;}finally{await chrome.debugger.detach(d);}})()",15);
      Check("Claude's debugger reaches the page",driven=="Example Domain",driven);
+     await ClaudeTools();
      ToggleAi();await Task.Delay(500);
      Check("closing gives the width back and the buttons return",Math.Abs(Width-before)<1&&aiCaptionSlot.Children.Count==0&&!aiDock.IsVisible,"width "+Width);
     }
