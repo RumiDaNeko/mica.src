@@ -266,19 +266,23 @@
     function mix(a, b, t) { return "rgb(" + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], t)); }).join(",") + ")"; }
     function pinned(section) { var r = section.getBoundingClientRect(); return clamp(-r.top / (r.height - window.innerHeight)); }
     function fadeUp(el, t) { el.style.opacity = t; el.style.transform = "translateY(" + lerp(16, 0, t) + "px)"; }
-    // A pinned device sits between its heading and its caption: on a short window it shrinks to fit
-    // instead of sliding under the heading.
-    function fitBelow(head, device, caption) {
-      var vh = device.parentNode.clientHeight || window.innerHeight;
-      var keep = device.style.transform;
-      device.style.width = ""; device.style.top = ""; device.style.transform = "none";
+    // Where a pinned device goes. It is laid out at its full size ("big": as wide as the CSS allows and as
+    // tall as the window under the nav), and scaled down to sit between the heading and the caption while
+    // those show ("fit"). Scenes move between the two, so the device is big whenever nothing else is on screen.
+    function layout(head, device, caption) {
+      var vh = device.parentNode.clientHeight || window.innerHeight, nav = 52;
+      device.style.width = ""; device.style.top = "0px"; device.style.transform = "none";
       var r = device.getBoundingClientRect(), ratio = r.height / r.width;
-      device.style.transform = keep;
-      var top = head.offsetTop + head.offsetHeight + 24;
-      var bottom = vh - (caption ? caption.offsetHeight + vh * .06 + 16 : vh * .05);
-      var w = Math.max(220, Math.min(r.width, (bottom - top) / ratio));
-      device.style.width = w + "px";
-      device.style.top = (top + w * ratio / 2) + "px";
+      var big = Math.min(r.width, (vh - nav - 32) / ratio);
+      device.style.width = big + "px";
+      var h = big * ratio;
+      var top = head.offsetTop + head.offsetHeight + 20;
+      var bottom = vh - (caption ? caption.offsetHeight + vh * .06 + 12 : vh * .04);
+      var fit = Math.max(.3, Math.min(1, (bottom - top) / h));
+      return { h: h, fit: fit, fitY: top + h * fit / 2, bigY: nav + (vh - nav) / 2 };
+    }
+    function place(device, L, scale, y) {
+      device.style.transform = "translate(-50%," + (y - L.h / 2) + "px) scale(" + scale + ")";
     }
     var list = [];
 
@@ -354,8 +358,8 @@
       var caps = keys.querySelector(".keycaps"), kbds = Array.prototype.slice.call(caps.querySelectorAll("kbd"));
       var monitor = keys.querySelector(".keys-monitor"), after = keys.querySelector(".layer-after");
       var head = keys.querySelector(".keys-head"), caption = keys.querySelector(".keys-caption");
-      monitor.style.transformOrigin = "50% 36%";
-      list.push({ measure: function () { fitBelow(head, monitor, null); }, render: function () {
+      var L = null;
+      list.push({ measure: function () { L = layout(head, monitor, null); }, render: function () {
         var p = pinned(keys);
         var rise = ease(span(p, .06, .18)), press = span(p, .24, .30), gone = span(p, .36, .44);
         caps.style.opacity = rise * (1 - gone);
@@ -366,7 +370,8 @@
         });
         after.style.opacity = span(p, .28, .38);
         var settle = ease(span(p, 0, .2)), zoomIn = ease(span(p, .46, .80));
-        monitor.style.transform = "translate(-50%," + lerp(-50, -66, zoomIn) + "%) scale(" + (lerp(.9, 1, settle) * lerp(1, 1.18, zoomIn)) + ")";
+        // Into Spotlight's search box: past full size, with the screen's upper part in the middle of the window.
+        place(monitor, L, lerp(L.fit * lerp(.94, 1, settle), 1.15, zoomIn), lerp(L.fitY, L.bigY + L.h * .12, zoomIn));
         monitor.style.filter = after.style.opacity < 1 ? "brightness(" + lerp(.8, 1, +after.style.opacity) + ")" : "none";
         head.style.opacity = 1 - span(p, .46, .56);
         fadeUp(caption, span(p, .80, .90));
@@ -379,21 +384,23 @@
       themes.classList.add("animated");
       var laptop = themes.querySelector(".themes-laptop"), after = themes.querySelector(".layer-after"), sweep = themes.querySelector(".sweep");
       var caption = themes.querySelector(".themes-caption"), head = themes.querySelector(".themes-head"), eyebrow = head.querySelector(".eyebrow");
-      list.push({ measure: function () { fitBelow(head, laptop, caption); }, render: function () {
+      var L = null;
+      list.push({ measure: function () { L = layout(head, laptop, caption); }, render: function () {
         var p = pinned(themes);
         var wipe = ease(span(p, .22, .70)), edge = lerp(100, 0, wipe);
         after.style.clipPath = "inset(0 0 0 " + edge + "%)";
         sweep.style.left = edge + "%";
         sweep.style.opacity = span(p, .18, .24) * (1 - span(p, .70, .76));
-        laptop.style.transform = "translate(-50%,-50%) scale(" + lerp(.92, 1, ease(span(p, 0, .2))) + ")";
+        var grow = ease(span(p, .08, .22)), back = ease(span(p, .72, .80));
+        place(laptop, L, lerp(lerp(L.fit * .94, L.fit, ease(span(p, 0, .08))), 1, grow - back), lerp(L.fitY, L.bigY, grow - back));
         if (!darkPage.matches) {
           themes.style.backgroundColor = mix([251, 251, 253], [0, 0, 0], wipe);
           themes.style.color = mix([29, 29, 31], [245, 245, 247], wipe);
           caption.style.color = mix([110, 110, 115], [161, 161, 166], wipe);
           eyebrow.style.color = mix([107, 79, 143], [201, 179, 234], wipe);
         } else { themes.style.backgroundColor = themes.style.color = caption.style.color = eyebrow.style.color = ""; }
-        head.style.opacity = 1;
-        fadeUp(caption, span(p, .76, .86));
+        head.style.opacity = 1 - span(p, .06, .16) + span(p, .74, .82);
+        fadeUp(caption, span(p, .78, .88));
       } });
     })();
 
