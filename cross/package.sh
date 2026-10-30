@@ -14,8 +14,10 @@ case "${ARCH:-$(uname -m)}" in arm64|aarch64) platform=ARM64; arch=arm64 ;; *) p
 
 # "dotnet publish -o" would also send CefGlue's helper process (a project reference published for each OS) into that
 # folder, so Mica publishes to its own publish folder, with the helper under CefGlueBrowserProcess/, and is copied.
+# Packages carry the .NET runtime (self-contained): a machine without .NET would otherwise refuse to start Mica
+# ("You must install .NET"), and from Finder the app just closes without a word. Dev builds (test.sh) stay small.
 publish() {
-  dotnet publish -c Release -r "$1" -p:Platform=$platform
+  dotnet publish -c Release -r "$1" -p:Platform=$platform --self-contained true
   rm -rf "$2"; mkdir -p "$2"; cp -a "bin/$platform/Release/net8.0/$1/publish/." "$2/"
 }
 
@@ -100,7 +102,13 @@ EOF
 </dict></plist>
 EOF
     codesign --force --deep --options runtime --timestamp --entitlements out/entitlements.plist --sign "$SIGN_ID" "$bundle"
+  else
+    # Unsigned builds still get an ad-hoc signature over the whole bundle. The .NET apphost arrives ad-hoc signed
+    # on its own, which seals none of the bundle; once downloaded, Gatekeeper calls such an app "damaged" with no
+    # way to open it. Sealed ad-hoc, it is only "unverified", which Privacy & Security lets the user open.
+    codesign --force --deep --sign - "$bundle"
   fi
+  codesign --verify --deep --strict "$bundle"
   # The usual drag-to-install window: Mica beside a shortcut to Applications, big icons, no toolbar. Finder lays
   # the window out on a writable copy of the image; where Finder can't be scripted (some build machines), the
   # image still opens to the same two icons, just in Finder's default arrangement.
