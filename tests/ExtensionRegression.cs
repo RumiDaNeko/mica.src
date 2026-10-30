@@ -45,6 +45,11 @@ namespace Mica {
     log.Add("PASS MV3 unpacked extension installs enabled and enumerates");
     ShowExtensions();await WaitFor(()=>!extensionsBusy,8000);await Task.Delay(150);
     Require(displayedExtensions.Count==1&&extensionRows.Children.OfType<System.Windows.Controls.Border>().Any(b=>(string)b.Tag==fixture.Id),"User extension not shown in redesigned manager");
+    var row=extensionRows.Children.OfType<System.Windows.Controls.Border>().First(b=>(string)b.Tag==fixture.Id);
+    var toggle=((System.Windows.Controls.Grid)row.Child).Children.OfType<System.Windows.Controls.StackPanel>().SelectMany(p=>p.Children.OfType<System.Windows.Controls.Primitives.ToggleButton>()).FirstOrDefault();
+    Require(toggle!=null&&toggle.IsChecked==true&&toggle.ActualWidth>=30&&toggle.ActualWidth<=48,"Enabled extension has no switch that's on: "+(toggle==null?"none":toggle.IsChecked+" "+toggle.ActualWidth));
+    {var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap((int)Math.Ceiling(row.ActualWidth),(int)Math.Ceiling(row.ActualHeight),96,96,System.Windows.Media.PixelFormats.Pbgra32);bitmap.Render(row);var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));using(var file=File.Create(Path.Combine(profile,"extension-row.png")))encoder.Save(file);}
+    log.Add("PASS an enabled extension shows a switch that's on");
     ExtensionUi<System.Windows.Controls.TextBox>("ExtensionSearch").Text="nothing matches";Require(!extensionRows.Children.OfType<System.Windows.Controls.Border>().Any(b=>b.Tag!=null),"Extension search failed");ExtensionUi<System.Windows.Controls.TextBox>("ExtensionSearch").Clear();
     ExtensionUi<System.Windows.Controls.Button>("FilterDisabledExtensions").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));Require(!extensionRows.Children.OfType<System.Windows.Controls.Border>().Any(b=>b.Tag!=null),"Disabled filter included enabled item");ExtensionUi<System.Windows.Controls.Button>("FilterAllExtensions").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));extensionsWindow.Close();
     log.Add("PASS redesigned manager shows user extension and filters by name and enabled state");

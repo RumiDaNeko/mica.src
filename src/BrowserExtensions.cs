@@ -226,6 +226,25 @@ namespace Mica {
    }catch(Exception e){if(!FaviconCache.IsExpected(e))throw;}
    return new TextBlock {Text="\uEA86",FontFamily=new FontFamily("Segoe MDL2 Assets"),FontSize=22,Foreground=Brush("Accent"),VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};
   }
+  // An on/off switch: a pill track with a knob that sits right and takes the accent when on. Parsed once.
+  static ControlTemplate switchTemplate;
+  static ControlTemplate SwitchTemplate() {
+   if(switchTemplate==null)switchTemplate=(ControlTemplate)XamlReader.Parse(@"<ControlTemplate TargetType='ToggleButton' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
+ <Border x:Name='Track' Width='38' Height='22' CornerRadius='11' Background='{DynamicResource Canvas}' BorderBrush='{DynamicResource Line}' BorderThickness='1' SnapsToDevicePixels='True'>
+  <Ellipse x:Name='Knob' Width='14' Height='14' Margin='3,0,0,0' HorizontalAlignment='Left' VerticalAlignment='Center' Fill='{DynamicResource Muted}'/>
+ </Border>
+ <ControlTemplate.Triggers>
+  <Trigger Property='IsMouseOver' Value='True'><Setter TargetName='Track' Property='BorderBrush' Value='{DynamicResource Muted}'/></Trigger>
+  <Trigger Property='IsKeyboardFocused' Value='True'><Setter TargetName='Track' Property='BorderBrush' Value='{DynamicResource Accent}'/></Trigger>
+  <Trigger Property='IsChecked' Value='True'>
+   <Setter TargetName='Track' Property='Background' Value='{DynamicResource Accent}'/><Setter TargetName='Track' Property='BorderBrush' Value='{DynamicResource Accent}'/>
+   <Setter TargetName='Knob' Property='HorizontalAlignment' Value='Right'/><Setter TargetName='Knob' Property='Margin' Value='0,0,3,0'/><Setter TargetName='Knob' Property='Fill' Value='White'/>
+  </Trigger>
+  <Trigger Property='IsEnabled' Value='False'><Setter Property='Opacity' Value='0.5'/></Trigger>
+ </ControlTemplate.Triggers>
+</ControlTemplate>");
+   return switchTemplate;
+  }
   void RenderExtensions(List<CoreWebView2BrowserExtension> installed) {
    displayedExtensions=installed.Where(e=>!IsHiddenExtension(e.Id)).ToList();if(extensionRows==null)return;extensionRows.Children.Clear();
    ExtensionUi<TextBlock>("ExtensionCount").Text=displayedExtensions.Count+" installed";
@@ -238,7 +257,7 @@ namespace Mica {
     var row=new Grid {Margin=new Thickness(16)};row.ColumnDefinitions.Add(new ColumnDefinition {Width=new GridLength(54)});row.ColumnDefinitions.Add(new ColumnDefinition());row.ColumnDefinitions.Add(new ColumnDefinition {Width=GridLength.Auto});
     row.Children.Add(new Border {Width=40,Height=40,Background=Brush("Hover"),CornerRadius=new CornerRadius(10),Child=ExtensionIcon(item),HorizontalAlignment=HorizontalAlignment.Left});
     var detail=new StackPanel {Margin=new Thickness(0,0,12,0),VerticalAlignment=VerticalAlignment.Center};detail.Children.Add(new TextBlock {Text=item.Name,FontSize=13,FontWeight=FontWeights.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis,ToolTip=item.Name});detail.Children.Add(new TextBlock {Text=(item.IsEnabled?"Enabled":"Disabled")+" · "+(record==null?"Added to Mica":record.Source)+(record==null||string.IsNullOrEmpty(record.Version)?"":" · "+record.Version),FontSize=10,Foreground=Brush("Muted"),Margin=new Thickness(0,6,0,0),TextTrimming=TextTrimming.CharacterEllipsis});Grid.SetColumn(detail,1);row.Children.Add(detail);
-    var controls=new StackPanel {Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};var toggle=new Button {Content=item.IsEnabled?"On":"Off",Background=item.IsEnabled?Brush("Hover"):Brush("Canvas"),Foreground=item.IsEnabled?Brush("Accent"):Brush("Muted"),MinWidth=48,Padding=new Thickness(10,7,10,7),ToolTip=(item.IsEnabled?"Disable ":"Enable ")+item.Name};System.Windows.Automation.AutomationProperties.SetName(toggle,(item.IsEnabled?"Disable ":"Enable ")+item.Name);bool enabled=!item.IsEnabled;toggle.Click+=async delegate {await RunExtensionAction(async delegate {if(extension.Id==AmbientExtensionId)await SetAmbientExtension(enabled);else await extension.EnableAsync(enabled);},"Extension "+(enabled?"enabled":"disabled")+". Reload open pages to apply the change.");};controls.Children.Add(toggle);
+    var controls=new StackPanel {Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};var toggle=new System.Windows.Controls.Primitives.ToggleButton {IsChecked=item.IsEnabled,Template=SwitchTemplate(),Cursor=Cursors.Hand,FocusVisualStyle=null,ToolTip=(item.IsEnabled?"Disable ":"Enable ")+item.Name};System.Windows.Automation.AutomationProperties.SetName(toggle,(item.IsEnabled?"Disable ":"Enable ")+item.Name);bool enabled=!item.IsEnabled;toggle.Click+=async delegate {await RunExtensionAction(async delegate {if(extension.Id==AmbientExtensionId)await SetAmbientExtension(enabled);else await extension.EnableAsync(enabled);},"Extension "+(enabled?"enabled":"disabled")+". Reload open pages to apply the change.");};controls.Children.Add(toggle);
     var remove=new Button {Content="\uE74D",FontFamily=new FontFamily("Segoe MDL2 Assets"),FontSize=13,Foreground=Brush("Muted"),Margin=new Thickness(8,0,0,0),Padding=new Thickness(9),ToolTip="Remove "+item.Name};System.Windows.Automation.AutomationProperties.SetName(remove,"Remove "+item.Name);remove.Click+=async delegate {await RunExtensionAction(async delegate {await RemoveManagedExtension(extension);},"Extension removed. Reload pages to clear its changes.");};controls.Children.Add(remove);Grid.SetColumn(controls,2);row.Children.Add(controls);
     extensionRows.Children.Add(new Border {Background=Brush("Panel"),BorderBrush=Brush("Line"),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(12),Margin=new Thickness(0,0,0,9),Child=row,Tag=item.Id});
    }
