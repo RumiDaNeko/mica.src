@@ -65,6 +65,8 @@ namespace Mica {
     // Machines with no usable GPU (build machines): Chromium's GPU process would crash and restart over and over,
     // stalling pages, so it draws in software from the start.
     if(Environment.GetEnvironmentVariable("MICA_NO_GPU")=="1"){flags.Add(new KeyValuePair<string,string>("disable-gpu",""));flags.Add(new KeyValuePair<string,string>("disable-gpu-compositing",""));}
+    // Extra Chromium switches for diagnosing (MICA_CHROMIUM_SWITCHES="use-mock-keychain other-switch=value").
+    foreach(var item in (Environment.GetEnvironmentVariable("MICA_CHROMIUM_SWITCHES")??"").Split(' ',StringSplitOptions.RemoveEmptyEntries)){int eq=item.IndexOf('=');flags.Add(new KeyValuePair<string,string>(eq<0?item:item.Substring(0,eq),eq<0?"":item.Substring(eq+1)));}
     CefRuntimeLoader.DefaultClient=new ExtensionWindows();
     CefRuntimeLoader.Initialize(new CefSettings {RootCachePath=engine,CachePath=Path.Combine(engine,"Default"),PersistSessionCookies=true,LogSeverity=CefLogSeverity.Warning,LogFile=Path.Combine(Profile,"engine.log"),LocalesDirPath=Directory.Exists(locales)?locales:null},flags.ToArray(),BuiltInPages.Schemes());
    }).StartWithClassicDesktopLifetime(args);

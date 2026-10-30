@@ -93,23 +93,32 @@ jobs:
           verdict="$(spctl --assess --type execute -vv "$copy" 2>&1 || true)"; echo "Gatekeeper: $verdict"
           if echo "$verdict" | grep -qiE 'damaged|invalid signature|code has no resources|not signed at all'; then echo "::error::Gatekeeper sees a broken signature"; exit 1; fi
           [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$app/Contents/Info.plist")" = Mica ]
-          # A throwaway profile, as test.sh uses, and at most 5 minutes. If it hangs, what it was doing is printed: a
-          # stack sample of the app and Chromium's log.
-          profile="$RUNNER_TEMP/dmg-profile"
-          "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt" --profile "$profile" & pid=$!
-          for i in $(seq 1 300); do kill -0 $pid 2>/dev/null || break; sleep 1; done
-          if kill -0 $pid 2>/dev/null; then
-            echo "::error::The app from the image did not finish its self-test in 5 minutes"
-            sample $pid 3 -file "$RUNNER_TEMP/mica.sample" >/dev/null 2>&1 || true
-            grep -E 'Thread_|^ +[0-9]+ ' "$RUNNER_TEMP/mica.sample" | head -150 || true
-            echo "--- engine.log"; grep -v 'angle_platform\|gl_display\|gl_initializer' "$profile/engine.log" 2>/dev/null | tail -40 || true
-            echo "--- results so far"; tail -n 5 "$RUNNER_TEMP/dmg-test.txt.partial" 2>/dev/null || true
-            kill -9 $pid; code=142
-          else
-            set +e; wait $pid; code=$?; set -e
-          fi
-          tail -n 5 "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || echo "No result file: the app from the image exited early (code $code)."
-          grep '^FAIL' "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || true
+          # Runs the app from the image's self-test for at most 5 minutes; on a hang prints the main thread's stack
+          # and Chromium's log. $1 names the run, $2 adds Chromium switches,
+          # $3 runs another copy of the executable.
+          run_app() {
+            profile="$RUNNER_TEMP/dmg-profile-$1"; result="$RUNNER_TEMP/dmg-test-$1.txt"; rm -rf "$profile"
+            MICA_CHROMIUM_SWITCHES="$2" "${3:-$app/Contents/MacOS/Mica}" --self-test "$result" --profile "$profile" & pid=$!
+            for i in $(seq 1 300); do kill -0 $pid 2>/dev/null || break; sleep 1; done
+            if kill -0 $pid 2>/dev/null; then
+              echo "::error::The app from the image ($1) did not finish its self-test in 5 minutes"
+              sample $pid 3 -file "$RUNNER_TEMP/mica-$1.sample" >/dev/null 2>&1 || true
+              awk '/^Call graph:/{f=1} f' "$RUNNER_TEMP/mica-$1.sample" | awk '/Thread_/{n++} n<=1' | head -120 || true
+              echo "--- engine.log"; grep -v 'angle_platform\|gl_display\|gl_initializer' "$profile/engine.log" 2>/dev/null | tail -20 || true
+              echo "--- results so far"; tail -n 5 "$result.partial" 2>/dev/null || true
+              kill -9 $pid; wait $pid 2>/dev/null; return 142
+            fi
+            set +e; wait $pid; local code=$?; set -e
+            tail -n 5 "$result" 2>/dev/null || echo "No result file: the app from the image ($1) exited early (code $code)."
+            grep '^FAIL' "$result" 2>/dev/null || true
+            return $code
+          }
+          set +e; run_app plain ""; code=$?; set -e
+          # A hang is told apart: with Chromium's stand-in keychain, does it start? (Keychain prompts can't be
+          # answered on a build machine.)
+          if [ $code -eq 142 ]; then set +e; run_app mock-keychain "use-mock-keychain"; echo "With the stand-in keychain: exit $?"; set -e; fi
+          # And outside the app bundle (the same files, as in the build folder, where the self-test passes)?
+          if [ $code -eq 142 ]; then flat="$RUNNER_TEMP/flat"; rm -rf "$flat"; ditto "$app/Contents/MacOS" "$flat"; set +e; run_app outside-bundle "" "$flat/Mica"; echo "Outside the bundle: exit $?"; set -e; fi
           exit $code
       - uses: actions/upload-artifact@v4
         if: success() || failure()
