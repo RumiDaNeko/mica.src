@@ -113,12 +113,12 @@ jobs:
             grep '^FAIL' "$result" 2>/dev/null || true
             return $code
           }
-          set +e; run_app plain ""; code=$?; set -e
-          # A hang is told apart: with Chromium's stand-in keychain, does it start? (Keychain prompts can't be
-          # answered on a build machine.)
-          if [ $code -eq 142 ]; then set +e; run_app mock-keychain "use-mock-keychain"; echo "With the stand-in keychain: exit $?"; set -e; fi
-          # And outside the app bundle (the same files, as in the build folder, where the self-test passes)?
-          if [ $code -eq 142 ]; then flat="$RUNNER_TEMP/flat"; rm -rf "$flat"; ditto "$app/Contents/MacOS" "$flat"; set +e; run_app outside-bundle "" "$flat/Mica"; echo "Outside the bundle: exit $?"; set -e; fi
+          # As installed: copied out of the image, as into Applications.
+          installed="$RUNNER_TEMP/installed/Mica.app"; rm -rf "$(dirname "$installed")"; mkdir -p "$(dirname "$installed")"; ditto "$app" "$installed"
+          set +e; run_app installed "" "$installed/Contents/MacOS/Mica"; code=$?; set -e
+          # Run straight from the read-only image, Chromium offers to install itself (a modal alert). Reported, not
+          # required: does --no-first-run keep that away?
+          set +e; run_app from-image "no-first-run"; echo "From the image with no-first-run: exit $?"; set -e
           exit $code
       - uses: actions/upload-artifact@v4
         if: success() || failure()

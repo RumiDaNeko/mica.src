@@ -62,6 +62,9 @@ namespace Mica {
     foreach(var name in ChromiumUi.Switches)flags.Add(new KeyValuePair<string,string>(name,""));
     // The self-test asks for the camera on machines that have none (build machines): Chromium's stand-in camera.
     if(SelfTestResult!=null)flags.Add(new KeyValuePair<string,string>("use-fake-device-for-media-stream",""));
+    // Nor does it touch the keychain: on macOS Chromium keeps its storage key there, and a key left by another build
+    // waits for an approval a build machine can't give.
+    if(SelfTestResult!=null)flags.Add(new KeyValuePair<string,string>("use-mock-keychain",""));
     // Machines with no usable GPU (build machines): Chromium's GPU process would crash and restart over and over,
     // stalling pages, so it draws in software from the start.
     if(Environment.GetEnvironmentVariable("MICA_NO_GPU")=="1"){flags.Add(new KeyValuePair<string,string>("disable-gpu",""));flags.Add(new KeyValuePair<string,string>("disable-gpu-compositing",""));}
