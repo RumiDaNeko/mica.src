@@ -72,7 +72,7 @@ namespace Mica {
     if(!alive||closing)return null;
     var core=view.CoreWebView2;core.Settings.IsWebMessageEnabled=false;core.Settings.AreHostObjectsAllowed=false;core.Settings.IsGeneralAutofillEnabled=false;core.Settings.IsPasswordAutosaveEnabled=false;
     Func<bool> live=()=>alive&&!closing;WatchSitePermissions(live,view,address);WatchPageDialogs(live,view);WatchLogins(live,view,core,popup);
-    Action showAddress=delegate {Uri uri;bool web=Uri.TryCreate(core.Source,UriKind.Absolute,out uri)&&Navigation.IsWeb(core.Source);address.Text=web?uri.Host+uri.PathAndQuery:core.Source;lockIcon.Text=web&&uri.Scheme=="https"?"":"";popup.Title=(string.IsNullOrWhiteSpace(core.DocumentTitle)?address.Text:core.DocumentTitle)+" — Mica";};
+    Action showAddress=delegate {Uri uri;bool web=Uri.TryCreate(core.Source,UriKind.Absolute,out uri)&&Navigation.IsWeb(core.Source);address.Text=web?uri.Host+uri.PathAndQuery:core.Source;lockIcon.Text=web&&uri.Scheme=="https"&&!CertificateOverridden(uri.Host)?"":"";popup.Title=(string.IsNullOrWhiteSpace(core.DocumentTitle)?address.Text:core.DocumentTitle)+" — Mica";};
     core.SourceChanged+=delegate {showAddress();};core.DocumentTitleChanged+=delegate {showAddress();};
     core.WindowCloseRequested+=delegate {popup.Close();};
     // A player inside a pop-up goes fullscreen across the monitor, not just inside the pop-up.

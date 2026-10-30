@@ -69,6 +69,47 @@ namespace Mica {
    else Navigate(url,false);
   }
 
+  // A certificate that doesn't check out stops the page. The user can still go on to that host for the rest of
+  // the session (a router's or printer's own page, a site whose certificate just expired), never for a revoked one.
+  // Private windows keep their own list: the engine remembers the choice per profile, too.
+  static readonly HashSet<string> certAllowed=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+  // Tab id -> the address whose certificate failed during the navigation in flight.
+  readonly Dictionary<string,string> certFailures=new Dictionary<string,string>();
+  string CertKey(string host) {return (privateMode?"private:":"")+host;}
+  internal bool CertificateOverridden(string host) {return certAllowed.Contains(CertKey(host));}
+  static bool IsCertificateError(CoreWebView2WebErrorStatus status) {
+   return status==CoreWebView2WebErrorStatus.CertificateCommonNameIsIncorrect||status==CoreWebView2WebErrorStatus.CertificateExpired
+    ||status==CoreWebView2WebErrorStatus.CertificateIsInvalid||status==CoreWebView2WebErrorStatus.CertificateRevoked;
+  }
+  void WatchCertificates(string id,CoreWebView2 core) {
+   core.ServerCertificateErrorDetected+=delegate(object sender,CoreWebView2ServerCertificateErrorDetectedEventArgs e) {
+    Uri uri;if(!Uri.TryCreate(e.RequestUri,UriKind.Absolute,out uri))return;
+    if(e.ErrorStatus!=CoreWebView2WebErrorStatus.CertificateRevoked&&CertificateOverridden(uri.Host)){e.Action=CoreWebView2ServerCertificateErrorAction.AlwaysAllow;return;}
+    if(!certFailures.ContainsKey(id))certFailures[id]=e.RequestUri;
+   };
+  }
+  void ShowCertificateOffer(string id,string fallback,CoreWebView2WebErrorStatus status) {
+   string url;if(!certFailures.TryGetValue(id,out url))url=fallback;certFailures.Remove(id);
+   Uri uri;string host=Uri.TryCreate(url??"",UriKind.Absolute,out uri)&&!string.IsNullOrEmpty(uri.Host)?uri.Host:null;
+   string name=host??"This site";
+   string why=status==CoreWebView2WebErrorStatus.CertificateExpired?name+"'s security certificate has expired, or this PC's clock is wrong."
+    :status==CoreWebView2WebErrorStatus.CertificateCommonNameIsIncorrect?"The certificate "+name+" sent belongs to a different address."
+    :status==CoreWebView2WebErrorStatus.CertificateRevoked?name+"'s security certificate was withdrawn by whoever issued it."
+    :name+"'s security certificate isn't from anyone Windows trusts.";
+   ShowError(why+" Someone could be pretending to be this site to see what you send. Go back unless you know why, like a device on your own network.");
+   Find<TextBlock>("ErrorTitle").Text="This connection isn't private.";
+   Status(name+" didn't prove it is who it says it is.");
+   if(host==null||status==CoreWebView2WebErrorStatus.CertificateRevoked)return;
+   var button=Find<Button>("CertButton");button.Tag=url;button.Content="Go to "+host+" anyway";button.Visibility=Visibility.Visible;
+  }
+  void ContinueDespiteCertificate() {
+   var button=Find<Button>("CertButton");var url=button.Tag as string;if(url==null)return;
+   certAllowed.Add(CertKey(new Uri(url).Host));button.Visibility=Visibility.Collapsed;
+   var view=views.ContainsKey(state.ActiveId??"")?views[state.ActiveId]:null;
+   if(view!=null&&view.CoreWebView2!=null){Find<Border>("ErrorPanel").Visibility=Visibility.Collapsed;Find<Grid>("WebHost").Visibility=Visibility.Visible;view.CoreWebView2.Navigate(url);}
+   else Navigate(url,false);
+  }
+
   // Strict in private windows; otherwise what the user picked (Balanced by default).
   static readonly string[] TrackingNames={"Off","Basic","Balanced","Strict"};
   int TrackingLevel() {return privateMode?3:Math.Max(0,Math.Min(3,state.TrackingLevel??(state.StrictTracking?3:2)));}

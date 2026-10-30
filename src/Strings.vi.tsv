@@ -1328,3 +1328,12 @@ Couldn't remove the extension: 	Không gỡ được extension:
 PRIVACY	QUYỀN RIÊNG TƯ
 SITES	TRANG WEB
 TOOLS	CÔNG CỤ
+This connection isn't private.	Kết nối này không riêng tư.
+Go anyway	Vẫn vào
+Not secure: you went on despite this site's certificate	Không an toàn: bạn đã vào dù chứng chỉ của trang này có vấn đề
+re:Go to (.+) anyway	Vẫn vào $1
+re:(.+) didn't prove it is who it says it is\.	$1 không chứng minh được mình đúng là trang đó.
+re:(.+)'s security certificate has expired, or this PC's clock is wrong\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ bảo mật của $1 đã hết hạn, hoặc đồng hồ của máy tính này đang sai. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.
+re:The certificate (.+) sent belongs to a different address\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ mà $1 gửi về là của một địa chỉ khác. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.
+re:(.+)'s security certificate was withdrawn by whoever issued it\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ bảo mật của $1 đã bị bên cấp thu hồi. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.
+re:(.+)'s security certificate isn't from anyone Windows trusts\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ bảo mật của $1 không do bên nào mà Windows tin cậy cấp. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.

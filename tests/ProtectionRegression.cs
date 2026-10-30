@@ -56,6 +56,21 @@ namespace Mica {
    source=CurrentView().CoreWebView2.Source;
    RegressionCheck("sites without HTTPS still open after a warning",delegate {Require(source.StartsWith("http://")&&new Uri(source).Host.EndsWith("neverssl.com"),"Loaded "+source);});
 
+   // A broken certificate stops the page with a way on, remembered for that host only.
+   Func<Task> certOffer=async delegate {await WaitFor(delegate {return Find<Button>("CertButton").IsVisible;},25000).ContinueWith(t=>{});};
+   Navigate("https://expired.badssl.com/",false);await certOffer();
+   string certText=Find<TextBlock>("ErrorTitle").Text+" "+Find<TextBlock>("ErrorText").Text;
+   RegressionCheck("an expired certificate stops the page with a way on",delegate {Require(Find<Button>("CertButton").IsVisible&&certText.Contains("expired"),"Shown: "+certText);});
+   await Task.Delay(400);SaveWindowImage(Path.Combine(dir,"certificate-offer.png"));
+   ContinueDespiteCertificate();await Task.Delay(500);await WaitForPage();
+   source=CurrentView().CoreWebView2.Source;
+   RegressionCheck("going on anyway opens the page",delegate {Require(source.StartsWith("https://expired.badssl.com")&&!Find<Border>("ErrorPanel").IsVisible&&CertificateOverridden("expired.badssl.com"),"Loaded "+source+", error shown: "+Find<Border>("ErrorPanel").IsVisible);});
+   Navigate("https://self-signed.badssl.com/",false);await certOffer();
+   certText=Find<TextBlock>("ErrorText").Text;
+   RegressionCheck("another host with a bad certificate still asks",delegate {Require(Find<Button>("CertButton").IsVisible&&certText.Contains("trusts"),"Shown: "+certText);});
+   Navigate("https://expired.badssl.com/",false);await Task.Delay(500);await WaitForPage();
+   RegressionCheck("the choice is kept for that host",delegate {Require(!Find<Border>("ErrorPanel").IsVisible&&CurrentView().CoreWebView2.Source.StartsWith("https://expired.badssl.com"),"Error: "+Find<TextBlock>("ErrorText").Text);});
+
    var core=CurrentView().CoreWebView2;
    RegressionCheck("tracker blocking is Balanced by default",delegate {Require(core.Profile.PreferredTrackingPreventionLevel==CoreWebView2TrackingPreventionLevel.Balanced,"Level "+core.Profile.PreferredTrackingPreventionLevel);});
    ToggleTrackerBlocking();

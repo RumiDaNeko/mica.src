@@ -108,14 +108,14 @@ namespace Mica {
    CloseMenus();var tab=Active;var view=CurrentView();var core=view==null?null:LiveCore(view);
    if(tab==null||!Navigation.IsWeb(tab.Url)||core==null){Status("Open a website to see its settings.");return;}
    if(siteCard==null){siteCard=CreatePopup("SiteCardPopup",330);siteCard.Placement=PlacementMode.Bottom;siteCard.VerticalOffset=6;}
-   var body=PopupBody(siteCard);var uri=new Uri(tab.Url);string site=SiteFor(tab.Url),origin=uri.GetLeftPart(UriPartial.Authority);bool secure=uri.Scheme=="https";
+   var body=PopupBody(siteCard);var uri=new Uri(tab.Url);string site=SiteFor(tab.Url),origin=uri.GetLeftPart(UriPartial.Authority);bool overridden=uri.Scheme=="https"&&CertificateOverridden(uri.Host),secure=uri.Scheme=="https"&&!overridden;
 
    // Who you're talking to, and whether anyone can listen in.
    var head=new StackPanel {Margin=new Thickness(12,8,12,6)};
    var host=DialogText(Navigation.AddressLabel(origin),14,"Ink");host.FontWeight=FontWeights.SemiBold;host.TextTrimming=TextTrimming.CharacterEllipsis;head.Children.Add(host);
    var line=new StackPanel {Orientation=Orientation.Horizontal,Margin=new Thickness(0,5,0,0)};
    var lockIcon=DialogText(secure?"\uE72E":"\uE7BA",11,secure?"Accent":"Muted");lockIcon.FontFamily=new System.Windows.Media.FontFamily("Segoe MDL2 Assets");lockIcon.Margin=new Thickness(0,1,6,0);line.Children.Add(lockIcon);
-   line.Children.Add(DialogText(secure?"Connection is secure":"Not secure: what you send here can be read on the way",11,"Muted"));head.Children.Add(line);
+   line.Children.Add(DialogText(secure?"Connection is secure":overridden?"Not secure: you went on despite this site's certificate":"Not secure: what you send here can be read on the way",11,"Muted"));head.Children.Add(line);
    body.Children.Add(head);MenuDivider(body);
 
    // Zoom: − 100% + and a reset, for this site.
