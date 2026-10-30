@@ -84,6 +84,13 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "$app"
           codesign -dv "$app" 2>&1 | grep -E 'Identifier|Signature|Sealed'
           test -L "$mount/Applications"
+          # As if downloaded: a copy out of the image, quarantined. Gatekeeper rejects an ad-hoc app, but it must say
+          # it can't check the developer ("rejected"/"unidentified"), never that the app is damaged.
+          copy="$RUNNER_TEMP/downloaded/Mica.app"; rm -rf "$(dirname "$copy")"; mkdir -p "$(dirname "$copy")"; ditto "$app" "$copy"
+          xattr -w com.apple.quarantine "0081;$(printf %x "$(date +%s)");Safari;" "$copy"
+          codesign --verify --deep --strict --verbose=2 "$copy"
+          verdict="$(spctl --assess --type execute -vv "$copy" 2>&1 || true)"; echo "Gatekeeper: $verdict"
+          if echo "$verdict" | grep -qiE 'damaged|invalid signature|code has no resources|not signed at all'; then echo "::error::Gatekeeper sees a broken signature"; exit 1; fi
           [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$app/Contents/Info.plist")" = Mica ]
           set +e; "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt"; code=$?; set -e
           tail -n 5 "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || echo "No result file: the app from the image exited early (code $code)."
