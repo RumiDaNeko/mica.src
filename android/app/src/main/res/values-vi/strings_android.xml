@@ -217,6 +217,7 @@
     <string name="site_info">Thông tin trang</string>
     <string name="site_secure">Kết nối an toàn</string>
     <string name="site_not_secure">Kết nối không an toàn: đừng nhập mật khẩu hay thông tin thẻ ở đây.</string>
+    <string name="site_cert_overridden">Không an toàn: bạn đã vào dù chứng chỉ của trang này có vấn đề.</string>
     <string name="site_certificate">Chứng chỉ của %1$s, hiệu lực đến %2$s</string>
     <string name="text_size">Cỡ chữ</string>
     <string name="forget">Quên</string>
@@ -226,6 +227,12 @@
     <string name="clear">Xoá</string>
     <string name="site_data_cleared">Đã xoá dữ liệu trang</string>
     <string name="error_title">Có chút trục trặc.</string>
+    <string name="cert_title">Kết nối này không riêng tư.</string>
+    <string name="cert_expired">Chứng chỉ bảo mật của %1$s đã hết hạn, hoặc đồng hồ của điện thoại này đang sai.</string>
+    <string name="cert_mismatch">Chứng chỉ mà %1$s gửi về là của một địa chỉ khác.</string>
+    <string name="cert_untrusted">Chứng chỉ bảo mật của %1$s không do bên nào mà Android tin cậy cấp.</string>
+    <string name="cert_warning">Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.</string>
+    <string name="cert_go">Vẫn vào %1$s</string>
     <string name="error_offline_title">Ôi, không có internet.</string>
     <string name="error_offline">Mica không kết nối được internet. Hãy kiểm tra Wi-Fi hoặc dữ liệu di động rồi thử lại. Trong lúc chờ, chơi một trò nhé.</string>
     <string name="error_text">Không tải được trang này (%1$s). Hãy kiểm tra địa chỉ và kết nối rồi thử lại.</string>

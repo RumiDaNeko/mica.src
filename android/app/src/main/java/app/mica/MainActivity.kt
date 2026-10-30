@@ -977,7 +977,8 @@ class MainActivity : AppCompatActivity(), Browser.Host {
         val prefs = (application as MicaApp).prefs
         val secure = tab.url.startsWith("https://", true)
         val cert = tab.view?.certificate
-        val detail = if (!secure) getString(R.string.site_not_secure) else {
+        val detail = if (!secure) getString(R.string.site_not_secure)
+        else if (Https.certificateAllowed(host, tab.isPrivate)) getString(R.string.site_cert_overridden) else {
             val by = cert?.issuedBy?.oName?.takeIf { it.isNotBlank() } ?: cert?.issuedBy?.cName?.takeIf { it.isNotBlank() }
             val until = cert?.validNotAfterDate?.let { java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM).format(it) }
             getString(R.string.site_secure) + if (by != null && until != null) "\n" + getString(R.string.site_certificate, by, until) else ""

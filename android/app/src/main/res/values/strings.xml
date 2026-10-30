@@ -269,6 +269,7 @@
     <string name="site_info">Site info</string>
     <string name="site_secure">Connection is secure</string>
     <string name="site_not_secure">Connection isn\'t secure: don\'t enter passwords or card details here.</string>
+    <string name="site_cert_overridden">Not secure: you went on despite this site\'s certificate.</string>
     <string name="site_certificate">Certificate from %1$s, valid until %2$s</string>
     <string name="text_size">Text size</string>
     <string name="forget">Forget</string>
@@ -281,6 +282,12 @@
     <string name="error_offline_title">Oh no, no internet.</string>
     <string name="error_offline">Mica can\'t reach the internet. Check your Wi-Fi or mobile data, then try again. Meanwhile, there are games.</string>
     <string name="error_text">This page couldn\'t load (%1$s). Check the address and your connection, then try again.</string>
+    <string name="cert_title">This connection isn\'t private.</string>
+    <string name="cert_expired">%1$s\'s security certificate has expired, or this phone\'s clock is wrong.</string>
+    <string name="cert_mismatch">The certificate %1$s sent belongs to a different address.</string>
+    <string name="cert_untrusted">%1$s\'s security certificate isn\'t from anyone Android trusts.</string>
+    <string name="cert_warning">Someone could be pretending to be this site to see what you send. Go back unless you know why, like a device on your own network.</string>
+    <string name="cert_go">Go to %1$s anyway</string>
     <string name="error_games">Play a game while you wait</string>
     <string name="try_again">Try again</string>
     <string name="blob_saved">Saved %1$s to Downloads</string>

@@ -396,6 +396,7 @@ class Browser(private val app: MicaApp) {
     }
 
     private fun endPrivate() {
+        Https.forgetPrivateCertificates()
         spaces.removeAll { it.id == PRIVATE }
         groups.removeAll { it.space == PRIVATE }
         if (activeSpaceId == PRIVATE) {
@@ -1112,7 +1113,7 @@ class Browser(private val app: MicaApp) {
     }
 
     /** A main-frame load that failed, so the page that finishes next gets Mica's error screen instead. */
-    private class Failure(val url: String, val code: Int, val description: String, val insecure: String? = null)
+    private class Failure(val url: String, val code: Int, val description: String, val insecure: String? = null, val cert: Int? = null)
 
     private fun failed(view: WebView, request: WebResourceRequest, error: android.webkit.WebResourceError): Failure? {
         if (!request.isForMainFrame) return null
@@ -1122,7 +1123,7 @@ class Browser(private val app: MicaApp) {
         return Failure(request.url.toString(), error.errorCode, d)
     }
 
-    private fun showFailure(view: WebView, f: Failure) = view.evaluateJavascript(ErrorPage.script(app, f.url, f.code, f.description, f.insecure), null)
+    private fun showFailure(view: WebView, f: Failure) = view.evaluateJavascript(ErrorPage.script(app, f.url, f.code, f.description, f.insecure, f.cert), null)
 
     private inner class Client(val tab: Tab) : WebViewClient() {
         private var failure: Failure? = null
@@ -1137,16 +1138,18 @@ class Browser(private val app: MicaApp) {
             }
         }
 
-        // A certificate that doesn't check out never loads. If it's the https:// twin Mica tried, the plain address is offered.
         override fun onReceivedHttpAuthRequest(view: WebView, handler: android.webkit.HttpAuthHandler, host: String, realm: String?) {
             if (tab !== active || this@Browser.host == null) handler.cancel() else this@Browser.host?.onHttpAuth(tab, host, handler)
         }
 
         override fun onReceivedSslError(view: WebView, handler: android.webkit.SslErrorHandler, error: android.net.http.SslError) {
+            // A certificate that doesn't check out stops the page, unless you chose Go anyway for that host this session.
+            // If it's the https:// twin Mica tried, the plain address is offered instead.
+            val host = Uri.parse(error.url).host?.lowercase()
+            if (host != null && Https.certificateAllowed(host, tab.isPrivate)) { handler.proceed(); return }
             handler.cancel()
             val was = tab.upgraded
-            val host = Uri.parse(error.url).host?.lowercase()
-            failure = Failure(error.url, ERROR_FAILED_SSL_HANDSHAKE, "ERR_CERT_INVALID", was?.takeIf { Domains.hostOf(it) == host })
+            failure = Failure(error.url, ERROR_FAILED_SSL_HANDSHAKE, "ERR_CERT_INVALID", was?.takeIf { Domains.hostOf(it) == host }, error.primaryError)
         }
         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
             val url = request.url.toString()
@@ -1166,6 +1169,13 @@ class Browser(private val app: MicaApp) {
             if (request.url.host == Https.CONTINUE_HOST) {
                 val plain = request.url.getQueryParameter("u")
                 if (request.hasGesture() && plain != null && plain.startsWith("http://", true)) { Https.allow(Domains.hostOf(plain)); tab.upgraded = null; view.loadUrl(plain) }
+                return true
+            }
+            // "Go to … anyway" on the certificate error page: only from a tap, and only to an https:// address.
+            if (request.url.host == Https.CERT_HOST) {
+                val target = request.url.getQueryParameter("u")
+                val h = target?.let { Uri.parse(it).host }
+                if (request.hasGesture() && target != null && h != null && target.startsWith("https://", true)) { Https.allowCertificate(h, tab.isPrivate); view.loadUrl(target) }
                 return true
             }
             if (scheme == "http" && request.isForMainFrame) {

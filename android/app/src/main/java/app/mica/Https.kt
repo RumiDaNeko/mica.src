@@ -18,6 +18,18 @@ object Https {
 
     fun allow(host: String) { allowed.add(Domains.registrable(host.lowercase())) }
 
+    /** Hosts you went on to despite their certificate, until Mica closes. Private tabs keep their own. */
+    private val certAllowed = HashSet<String>()
+
+    /** The certificate error page's "Go to … anyway" goes here, caught like [CONTINUE_HOST]. */
+    const val CERT_HOST = "continue-cert.mica.invalid"
+
+    private fun certKey(host: String, isPrivate: Boolean) = (if (isPrivate) "private:" else "") + host.lowercase()
+    fun allowCertificate(host: String, isPrivate: Boolean) { certAllowed.add(certKey(host, isPrivate)) }
+    fun certificateAllowed(host: String, isPrivate: Boolean) = certKey(host, isPrivate) in certAllowed
+    /** The last private tab closed: its choices go with it. */
+    fun forgetPrivateCertificates() { certAllowed.removeAll { it.startsWith("private:") } }
+
     /** The https:// address to load instead of [url], or null to load it as it is. */
     fun upgrade(url: String): String? {
         if (!url.startsWith("http://", true)) return null
