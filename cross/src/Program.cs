@@ -73,6 +73,8 @@ namespace Mica {
  }
  sealed class App : Application {
   public override void Initialize() {
+   // The Mac menu bar's app menu takes this name; without it Avalonia shows "Avalonia Application".
+   Name="Mica";
    Styles.Add(new FluentTheme());
    Styles.Add(new Avalonia.Markup.Xaml.Styling.StyleInclude(new Uri("avares://Mica/")) {Source=new Uri("avares://Mica/src/Theme.axaml")});
   }
