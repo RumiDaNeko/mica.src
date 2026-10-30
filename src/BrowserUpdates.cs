@@ -13,7 +13,7 @@ namespace Mica {
  // comes from GitHub Releases and the web engine from Microsoft; both are checked once a day
  // in the background, and this page shows them and lets you check now.
  partial class BrowserApp {
-  internal const string AppVersion="0.12.34";
+  internal const string AppVersion="0.12.35";
   static readonly Version CurrentApp=Version.Parse(AppVersion);
   Window updatesWindow;
   static string engineUpdateNote,appUpdateNote;

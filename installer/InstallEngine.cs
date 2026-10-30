@@ -9,7 +9,7 @@ using Microsoft.Win32;
 
 namespace Mica {
  internal sealed class InstallEngine {
-  internal const string Version="0.12.34";
+  internal const string Version="0.12.35";
   internal readonly string Root,StartLink,DesktopLink,RegistryPrefix;
   internal const string Marker="mica-install.txt";
   // An app-only update leaves the engine out and names the engine it was built for; the installed one is reused.
