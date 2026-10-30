@@ -156,11 +156,11 @@ namespace Mica {
   // ── The site card (click the lock): the connection, zoom, how the tab rests, and forgetting the site's cookies.
   void ShowSiteCard() {
    var tab=Active;if(tab==null||!Navigation.IsWeb(tab.Entry.Url))return;
-   string site=SiteOf(tab.Entry.Url),url=tab.Entry.Url;bool secure=url.StartsWith("https://");
+   string site=SiteOf(tab.Entry.Url),url=tab.Entry.Url;
    MenuCard(addressButton,330,PlacementMode.Bottom,delegate(StackPanel body,Popup popup) {
     var head=new StackPanel {Margin=new Thickness(12,8,12,10)};
     head.Children.Add(new TextBlock {Text=site,FontSize=15,FontWeight=FontWeight.SemiBold});
-    head.Children.Add(Muted(new TextBlock {Text=secure?"Connection is secure. What you send here stays between you and this site.":"Not secure. Don't type passwords or card numbers here.",FontSize=11,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,5,0,0)}));
+    head.Children.Add(Muted(new TextBlock {Text=ConnectionLine(url),FontSize=11,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,5,0,0)}));
     body.Children.Add(head);
     ZoomRow(body);
     MenuDivider(body);

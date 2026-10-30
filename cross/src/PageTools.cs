@@ -174,7 +174,7 @@ namespace Mica {
   // ── The error page, as on Windows: the page steps aside for "A small detour." and a way back.
   readonly Border errorPanel=new Border {IsVisible=false};
   readonly TextBlock errorTitle=new TextBlock {Text="A small detour.",FontSize=32,TextWrapping=TextWrapping.Wrap},errorText=new TextBlock {TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,16)};
-  readonly Button errorGames=new Button {Content="Play a game while you wait",Margin=new Thickness(8,0,0,0)};
+  readonly Button errorGames=new Button {Content="Play a game while you wait",Margin=new Thickness(8,0,0,0)},errorCert=new Button {Content="Go anyway",Margin=new Thickness(8,0,0,0)};
   void BuildErrorPanel() {
    Res(errorPanel,Border.BackgroundProperty,"Canvas");
    var stack=new StackPanel {VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center,MaxWidth=480};
@@ -182,7 +182,8 @@ namespace Mica {
    var actions=new StackPanel {Orientation=Orientation.Horizontal};
    var retry=new Button {Content="Try again"};retry.Classes.Add("flat");retry.Classes.Add("on");retry.Click+=delegate {Reload();};
    errorGames.Classes.Add("flat");errorGames.Classes.Add("muted");errorGames.Click+=delegate {Navigate("mica://games");};
-   actions.Children.Add(retry);actions.Children.Add(errorGames);stack.Children.Add(actions);
+   errorCert.Classes.Add("flat");errorCert.Classes.Add("muted");errorCert.Click+=delegate {ContinueDespiteCertificate();};
+   actions.Children.Add(retry);actions.Children.Add(errorCert);actions.Children.Add(errorGames);stack.Children.Add(actions);
    errorPanel.Child=stack;
   }
   static bool ConnectionError(CefErrorCode code) {
@@ -190,11 +191,12 @@ namespace Mica {
     ||code==CefErrorCode.ConnectionReset||code==CefErrorCode.ConnectionTimedOut||code==CefErrorCode.TimedOut||code==CefErrorCode.NetworkChanged;
   }
   void LoadFailed(CrossTab tab,CefErrorCode code,string text,string failed) {
-   tab.Error=code;
+   tab.Error=code;tab.CertUrl=null;
+   if(CertificateError(code)){CertificateFailed(tab,code,failed);return;}
    tab.ErrorText=code==CefErrorCode.InternetDisconnected?"Mica can't reach the internet. Check your Wi-Fi or cable, then try again."
     :code==CefErrorCode.NameNotResolved?"We couldn't find "+HostOf(failed)+". Check the address, or your connection."
     :ConnectionError(code)?HostOf(failed)+" didn't answer. Check your connection, then try again."
-    :code.ToString().Contains("Cert")||code.ToString().Contains("Ssl")?HostOf(failed)+" didn't prove it is who it says it is, so Mica stopped here to keep you safe."
+    :code.ToString().Contains("Ssl")?HostOf(failed)+" didn't prove it is who it says it is, so Mica stopped here to keep you safe."
     :"This page couldn't load ("+text+"). Check the address and your connection, then try again.";
    if(tab==Active)Show(tab.Entry.Id);
   }
@@ -202,12 +204,55 @@ namespace Mica {
   void ShowError(CrossTab tab) {
    bool show=tab!=null&&tab.Error!=null&&!SpotlightOpen;errorPanel.IsVisible=show;
    if(!show)return;
+   bool cert=CertificateError(tab.Error.Value);errorTitle.Text=cert?"This connection isn't private.":"A small detour.";
    errorText.Text=tab.ErrorText;errorGames.IsVisible=ConnectionError(tab.Error.Value);
+   errorCert.IsVisible=cert&&tab.CertUrl!=null;if(errorCert.IsVisible)errorCert.Content="Go to "+HostOf(tab.CertUrl)+" anyway";
    if(tab.View!=null)tab.View.IsVisible=false;
   }
   void HideError(CrossTab tab) {
-   if(tab==null||tab.Error==null)return;tab.Error=null;
+   if(tab==null||tab.Error==null)return;tab.Error=null;tab.CertUrl=null;
    if(tab==Active){errorPanel.IsVisible=false;if(tab.View!=null&&!SpotlightOpen)tab.View.IsVisible=true;}
+  }
+  // A certificate that doesn't check out stops the page, as on Windows (BrowserProtection.cs). The user can still go
+  // on to that host for the rest of the session (a router's or printer's own page, a site whose certificate just
+  // expired), never for a revoked one. A private window is a process of its own, so it keeps its own list.
+  static readonly HashSet<string> certAllowed=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+  static bool CertificateOverridden(string host) {lock(certAllowed)return host!=null&&certAllowed.Contains(host);}
+  static bool CertificateError(CefErrorCode code) {return code<=CefErrorCode.CertCommonNameInvalid&&code>=CefErrorCode.CertEnd;}
+  // Chrome style shows Chromium's own warning page for a certificate the handler leaves alone, so every one is
+  // answered here: on for a host the user allowed, otherwise cancelled and Mica's page says why.
+  sealed class Certificates : RequestHandler {
+   readonly BrowserWindow window;readonly CrossTab tab;
+   public Certificates(BrowserWindow w,CrossTab t) {window=w;tab=t;}
+   protected override bool OnCertificateError(CefBrowser browser,CefErrorCode certError,string requestUrl,CefSslInfo sslInfo,CefCallback callback) {
+    Uri uri;bool allowed=certError!=CefErrorCode.CertRevoked&&Uri.TryCreate(requestUrl??"",UriKind.Absolute,out uri)&&CertificateOverridden(uri.Host);
+    window.Trace("certificate "+certError+" "+requestUrl+(allowed?" (allowed)":""));
+    if(allowed){callback.Continue();return true;}
+    callback.Cancel();
+    Dispatcher.UIThread.Post(delegate {if(window.tabs.ContainsKey(tab.Entry.Id))window.LoadFailed(tab,certError,"",requestUrl);});
+    return true;
+   }
+  }
+  void CertificateFailed(CrossTab tab,CefErrorCode code,string url) {
+   string host=HostOf(url);
+   string why=code==CefErrorCode.CertDateInvalid?host+"'s security certificate has expired, or this computer's clock is wrong."
+    :code==CefErrorCode.CertCommonNameInvalid?"The certificate "+host+" sent belongs to a different address."
+    :code==CefErrorCode.CertRevoked?host+"'s security certificate was withdrawn by whoever issued it."
+    :host+"'s security certificate isn't from anyone this computer trusts.";
+   tab.ErrorText=why+" Someone could be pretending to be this site to see what you send. Go back unless you know why, like a device on your own network.";
+   Uri uri;if(code!=CefErrorCode.CertRevoked&&Uri.TryCreate(url??"",UriKind.Absolute,out uri)&&!string.IsNullOrEmpty(uri.Host))tab.CertUrl=url;
+   if(tab==Active){Show(tab.Entry.Id);Status(host+" didn't prove it is who it says it is.");}
+  }
+  void ContinueDespiteCertificate() {
+   var tab=Active;if(tab==null||tab.CertUrl==null)return;string url=tab.CertUrl;
+   lock(certAllowed)certAllowed.Add(new Uri(url).Host);
+   Navigate(url);
+  }
+  // What the site card says about the connection.
+  static string ConnectionLine(string url) {
+   Uri uri;bool https=Uri.TryCreate(url??"",UriKind.Absolute,out uri)&&uri.Scheme=="https";
+   return https&&CertificateOverridden(uri.Host)?"Not secure: you went on despite this site's certificate"
+    :https?"Connection is secure. What you send here stays between you and this site.":"Not secure. Don't type passwords or card numbers here.";
   }
   // Kept for the self-test's offline checks: a load that fails shows the error page.
   void ShowLoadError(CefErrorCode code,string text) {var tab=Active;if(tab!=null)LoadFailed(tab,code,text,tab.Entry.Url);}

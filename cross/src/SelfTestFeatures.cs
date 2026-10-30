@@ -107,7 +107,18 @@ namespace Mica {
    Check("rested tab wakes when picked",web.View!=null,null);
    await Load(web,delegate {},20);
 
+   // A broken certificate stops the page and says why; Go anyway goes on to that host for the rest of the session.
    Show(first.Entry.Id);
+   foreach(var bad in new[]{new[]{"https://expired.badssl.com/","has expired"},new[]{"https://self-signed.badssl.com/","isn't from anyone"}}) {
+    string host=new Uri(bad[0]).Host;
+    await Load(first,delegate {Navigate(bad[0]);},20);await Task.Delay(300);
+    if(first.Error!=null&&ConnectionError(first.Error.Value)){Skip("broken certificate "+host,"couldn't reach it: "+first.Error);continue;}
+    bool stopped=first.Error!=null&&errorPanel.IsVisible&&errorTitle.Text=="This connection isn't private."&&errorText.Text.Contains(bad[1])&&errorCert.IsVisible&&(errorCert.Content as string)=="Go to "+host+" anyway";
+    Check("a broken certificate stops "+host+" and says why",stopped,"error="+first.Error+" panel="+errorPanel.IsVisible+" text="+errorText.Text+" button="+errorCert.IsVisible+" url="+first.Entry.Url);
+    if(!stopped)continue;
+    bool went=await Load(first,ContinueDespiteCertificate,20);
+    Check("Go anyway opens "+host+" and the site card says not secure",went&&first.Error==null&&first.LastStatus==200&&first.Entry.Url==bad[0]&&!errorPanel.IsVisible&&ConnectionLine(first.Entry.Url).StartsWith("Not secure: you went on"),"loaded="+went+" error="+first.Error+" status="+first.LastStatus+" url="+first.Entry.Url);
+   }
    bool failed=await Load(first,delegate {Navigate("https://mica-nowhere.invalid/");},20);
    Show(first.Entry.Id);
    Check("error page for a site that isn't there",first.Error!=null&&errorPanel.IsVisible&&!first.View.IsVisible,"error="+first.Error+" panel="+errorPanel.IsVisible);

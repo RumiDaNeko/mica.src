@@ -26,7 +26,7 @@ namespace Mica {
   public PageEntry Entry;public MicaView View;public Border Header;public TextBlock Label;public ContentControl Icon;public Button Mini;
   public int LastStatus;public bool Loading;public TaskCompletionSource<bool> Waiter;
   public string FaviconUrl;public IImage Favicon;public bool Muted;public double Zoom=1;
-  public Xilium.CefGlue.CefErrorCode? Error;public string ErrorText;
+  public Xilium.CefGlue.CefErrorCode? Error;public string ErrorText,CertUrl;
   public bool Playing;public DateTime AudibleAt;
  }
  // Mica's window, laid out like the Windows build (Shell.xaml): a sidebar with the wordmark, search, the space and
@@ -397,7 +397,7 @@ namespace Mica {
   void ShowAddress() {
    var t=Active;if(t==null)return;bool home=t.Entry.Url=="mica://home";
    address.Text=home?"A fresh start":Navigation.AddressLabel(t.Entry.Url);
-   Uri uri;bool secure=Uri.TryCreate(t.Entry.Url,UriKind.Absolute,out uri)&&uri.Scheme=="https";
+   Uri uri;bool secure=Uri.TryCreate(t.Entry.Url,UriKind.Absolute,out uri)&&uri.Scheme=="https"&&!CertificateOverridden(uri.Host);
    string kind=home||Navigation.IsInternal(t.Entry.Url)?Glyphs.Search:secure?Glyphs.Lock:Glyphs.Info;
    var current=siteGlyph.Content as Viewbox;if(current==null||(string)current.Tag!=kind)siteGlyph.Content=Glyph(kind,11,"muted");
    ToolTip.SetTip(siteGlyph,home||Navigation.IsInternal(t.Entry.Url)?null:secure?"Connection is secure":"Not secure");
@@ -424,6 +424,7 @@ namespace Mica {
    view.DownloadHandler=downloadHandler;
    // Chromium's own prompts, dialogs and bubbles never show (ChromiumUi.cs).
    view.PermissionHandler=new SitePermissions(this,()=>tabs.ContainsKey(tab.Entry.Id)&&tab.View==view);view.JSDialogHandler=new PageDialogs(this,tab);view.CommandHandler=ChromiumUi.CommandHandler;
+   view.RequestHandler=new Certificates(this,tab);
    view.LoadError+=delegate(object s,Xilium.CefGlue.Common.Events.LoadErrorEventArgs e) {Trace("error "+e.ErrorCode+" "+e.ErrorText+" "+e.FailedUrl);};
    view.AddressChanged+=delegate(object s,string a) {Trace("address "+a);};
    view.LoadEnd+=delegate(object s,Xilium.CefGlue.Common.Events.LoadEndEventArgs e) {Trace("end "+e.HttpStatusCode+" main="+e.Frame.IsMain);};
