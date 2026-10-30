@@ -93,9 +93,21 @@ jobs:
           verdict="$(spctl --assess --type execute -vv "$copy" 2>&1 || true)"; echo "Gatekeeper: $verdict"
           if echo "$verdict" | grep -qiE 'damaged|invalid signature|code has no resources|not signed at all'; then echo "::error::Gatekeeper sees a broken signature"; exit 1; fi
           [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$app/Contents/Info.plist")" = Mica ]
-          # A throwaway profile, as test.sh uses, and at most 5 minutes (perl's alarm: macOS has no timeout).
-          set +e; perl -e 'alarm shift; exec @ARGV' 300 "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt" --profile "$RUNNER_TEMP/dmg-profile"; code=$?; set -e
-          [ $code -eq 142 ] && echo "::error::The app from the image did not finish its self-test in 5 minutes"
+          # A throwaway profile, as test.sh uses, and at most 5 minutes. If it hangs, what it was doing is printed: a
+          # stack sample of the app and Chromium's log.
+          profile="$RUNNER_TEMP/dmg-profile"
+          "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt" --profile "$profile" & pid=$!
+          for i in $(seq 1 300); do kill -0 $pid 2>/dev/null || break; sleep 1; done
+          if kill -0 $pid 2>/dev/null; then
+            echo "::error::The app from the image did not finish its self-test in 5 minutes"
+            sample $pid 3 -file "$RUNNER_TEMP/mica.sample" >/dev/null 2>&1 || true
+            grep -E 'Thread_|^ +[0-9]+ ' "$RUNNER_TEMP/mica.sample" | head -150 || true
+            echo "--- engine.log"; grep -v 'angle_platform\|gl_display\|gl_initializer' "$profile/engine.log" 2>/dev/null | tail -40 || true
+            echo "--- results so far"; tail -n 5 "$RUNNER_TEMP/dmg-test.txt.partial" 2>/dev/null || true
+            kill -9 $pid; code=142
+          else
+            set +e; wait $pid; code=$?; set -e
+          fi
           tail -n 5 "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || echo "No result file: the app from the image exited early (code $code)."
           grep '^FAIL' "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || true
           exit $code
