@@ -29,6 +29,7 @@ jobs:
             target: macos
             arch: x64
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -92,7 +93,9 @@ jobs:
           verdict="$(spctl --assess --type execute -vv "$copy" 2>&1 || true)"; echo "Gatekeeper: $verdict"
           if echo "$verdict" | grep -qiE 'damaged|invalid signature|code has no resources|not signed at all'; then echo "::error::Gatekeeper sees a broken signature"; exit 1; fi
           [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$app/Contents/Info.plist")" = Mica ]
-          set +e; "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt"; code=$?; set -e
+          # A throwaway profile, as test.sh uses, and at most 5 minutes (perl's alarm: macOS has no timeout).
+          set +e; perl -e 'alarm shift; exec @ARGV' 300 "$app/Contents/MacOS/Mica" --self-test "$RUNNER_TEMP/dmg-test.txt" --profile "$RUNNER_TEMP/dmg-profile"; code=$?; set -e
+          [ $code -eq 142 ] && echo "::error::The app from the image did not finish its self-test in 5 minutes"
           tail -n 5 "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || echo "No result file: the app from the image exited early (code $code)."
           grep '^FAIL' "$RUNNER_TEMP/dmg-test.txt" 2>/dev/null || true
           exit $code
