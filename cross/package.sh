@@ -108,11 +108,16 @@ EOF
     # ad-hoc it is only "unverified", which Privacy & Security lets the user open.
     sign=(--force --timestamp=none --sign -); entitled=()
   fi
-  # Inside out: every Mach-O file (Chromium's framework and libraries, .NET's, the helper process), deepest first,
-  # then each framework, then the app. Nothing in the app changes after this.
+  # Inside out, deepest first, then each framework, then the app. Nothing in the app changes after this.
+  # .NET keeps its managed files (.dll, .json) beside the executable in Contents/MacOS, where macOS takes every file
+  # for code: each one needs a signature of its own (kept in the file's extended attributes), or the app's seal is
+  # invalid and Gatekeeper calls the app damaged. Inside a framework, its own seal covers what isn't code.
   find "$bundle/Contents" -type f | awk '{print length($0) " " $0}' | sort -rn | cut -d' ' -f2- | while IFS= read -r f; do
-    file -b "$f" | grep -q 'Mach-O' || continue
-    if file -b "$f" | grep -q 'executable'; then codesign "${sign[@]}" ${entitled[@]+"${entitled[@]}"} "$f"; else codesign "${sign[@]}" "$f"; fi
+    kind="$(file -b "$f")"
+    # The app's own executable is signed with the app, last.
+    [ "$f" = "$bundle/Contents/MacOS/Mica" ] && continue
+    case "$f" in *.framework/*) echo "$kind" | grep -q 'Mach-O' || continue ;; "$bundle/Contents/MacOS/"*) ;; *) echo "$kind" | grep -q 'Mach-O' || continue ;; esac
+    if echo "$kind" | grep -q 'Mach-O.*executable'; then codesign "${sign[@]}" ${entitled[@]+"${entitled[@]}"} "$f"; else codesign "${sign[@]}" "$f"; fi
   done
   find "$bundle/Contents" -type d \( -name '*.framework' -o -name '*.app' \) | awk '{print length($0) " " $0}' | sort -rn | cut -d' ' -f2- | while IFS= read -r d; do
     codesign "${sign[@]}" "$d"
