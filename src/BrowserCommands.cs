@@ -82,6 +82,7 @@ namespace Mica {
    if(state.Groups.Any(g=>!g.Collapsed))add("Fold all groups","","collapse rest",FoldAllGroups);
    add("Rest background tabs","","sleep memory free",delegate {SleepIdleTabs(true);});
    add("Task manager","Shift+Esc","memory processes",ShowTaskManager);
+   add("scrubnote: record page animations","Alt+Shift+S","animation timing frames scrub motion",ToggleScrubnote);
    add(state.Dark?"Light theme":"Dark theme","","mode appearance",ToggleTheme);
    add("Personalize","","colour color background",ShowPersonalize);
    add(sidebarHidden?"Show sidebar":"Hide sidebar","Ctrl+Shift+B","tabs panel",ToggleSidebar);

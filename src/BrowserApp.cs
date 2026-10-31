@@ -65,7 +65,7 @@ namespace Mica {
    window.StateChanged+=delegate {Find<Button>("MaxButton").Content=window.WindowState==WindowState.Maximized?"\uE923":"\uE922";Find<Button>("MaxButton").ToolTip=window.WindowState==WindowState.Maximized?"Restore window":"Maximize";};
   }
   void Maximize() {window.WindowState=window.WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;}
-  bool IsShortcut(Key key,ModifierKeys mods) {return (key==Key.F7&&mods==ModifierKeys.None)||((mods&ModifierKeys.Control)!=0&&new[]{Key.K,Key.L,Key.T,Key.W,Key.D,Key.R,Key.Tab,Key.H,Key.J,Key.N,Key.F,Key.P}.Contains(key))||((mods&(ModifierKeys.Control|ModifierKeys.Shift|ModifierKeys.Alt))==ModifierKeys.Control&&TabNumber(key)>0)||(key==Key.F9&&mods==ModifierKeys.None)||((mods&(ModifierKeys.Control|ModifierKeys.Shift))==(ModifierKeys.Control|ModifierKeys.Shift)&&(key==Key.B||key==Key.I||key==Key.Delete||key==Key.A||key==Key.S||key==Key.Space))||key==Key.F12||key==Key.F11||((mods&ModifierKeys.Shift)!=0&&key==Key.Escape)||key==Key.F5||((mods&ModifierKeys.Alt)!=0&&(key==Key.Left||key==Key.Right));}
+  bool IsShortcut(Key key,ModifierKeys mods) {return (key==Key.F7&&mods==ModifierKeys.None)||((mods&ModifierKeys.Control)!=0&&new[]{Key.K,Key.L,Key.T,Key.W,Key.D,Key.R,Key.Tab,Key.H,Key.J,Key.N,Key.F,Key.P}.Contains(key))||((mods&(ModifierKeys.Control|ModifierKeys.Shift|ModifierKeys.Alt))==ModifierKeys.Control&&TabNumber(key)>0)||(key==Key.F9&&mods==ModifierKeys.None)||((mods&(ModifierKeys.Control|ModifierKeys.Shift))==(ModifierKeys.Control|ModifierKeys.Shift)&&(key==Key.B||key==Key.I||key==Key.Delete||key==Key.A||key==Key.S||key==Key.Space))||key==Key.F12||key==Key.F11||((mods&ModifierKeys.Shift)!=0&&key==Key.Escape)||key==Key.F5||((mods&(ModifierKeys.Control|ModifierKeys.Shift|ModifierKeys.Alt))==(ModifierKeys.Shift|ModifierKeys.Alt)&&key==Key.S)||((mods&ModifierKeys.Alt)!=0&&(key==Key.Left||key==Key.Right));}
   // Ctrl+1…9 pick tabs 1–9 and Ctrl+0 the 10th, in sidebar order (pinned first).
   static int TabNumber(Key key) {if(key>=Key.D1&&key<=Key.D9)return key-Key.D1+1;if(key>=Key.NumPad1&&key<=Key.NumPad9)return key-Key.NumPad1+1;return key==Key.D0||key==Key.NumPad0?10:0;}
   internal System.Collections.Generic.List<string> keyLog;
@@ -88,6 +88,7 @@ namespace Mica {
    if(ctrl&&key==Key.N){LaunchBrowserWindow(false);return true;}
    if(ctrl&&shift&&key==Key.T){ReopenClosedTab();return true;}
    if(ctrl&&shift&&key==Key.X){TakeScreenshot("visible");return true;}
+   if(alt&&shift&&!ctrl&&key==Key.S){ToggleScrubnote();return true;}
    if(ctrl&&key==Key.T) {NewTab();return true;}
    if(IsSpotlight) {
     var results=Find<ListBox>("SearchResults");

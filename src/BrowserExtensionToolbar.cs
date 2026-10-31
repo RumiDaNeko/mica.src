@@ -66,7 +66,8 @@ namespace Mica {
    var body=PopupBody(extensionsPopup);MenuHeading(body,"EXTENSIONS");
    if(actions.Count==0){var empty=new TextBlock {Text="No extensions yet. Add one from the Chrome Web Store or a folder.",FontSize=11,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(12,2,12,10)};empty.SetResourceReference(TextBlock.ForegroundProperty,"Muted");body.Children.Add(empty);}
    foreach(var action in actions)ExtensionActionRow(body,action);
-   MenuDivider(body);MenuCommand(body,extensionsPopup,"\uE713","Manage extensions","",ShowExtensions);
+   MenuDivider(body);MenuCommand(body,extensionsPopup,"\uE916","scrubnote","Alt+Shift+S",ToggleScrubnote);
+   MenuCommand(body,extensionsPopup,"\uE713","Manage extensions","",ShowExtensions);
    var anchor=Find<Button>("ExtensionsButton");extensionsPopup.PlacementTarget=anchor;
    extensionsPopup.HorizontalOffset=anchor.ActualWidth-270;extensionsPopup.IsOpen=true;
   }

@@ -64,7 +64,7 @@ namespace Mica {
    ShortcutGroup(body,"FIND & NAVIGATE",new[,] {{"Spotlight search","Ctrl+K"},{"Edit address","Ctrl+L"},{"Back / forward","Alt+← / →"},{"Reload page","Ctrl+R"}});
    ShortcutGroup(body,"TABS & WINDOWS",new[,] {{"New tab","Ctrl+T"},{"Search tabs","Ctrl+Shift+A"},{"Close unpinned tab","Ctrl+W"},{"Next tab","Ctrl+Tab"},{"Go to tab 1–9 / 10th","Ctrl+1…9 / 0"},{"New window","Ctrl+N"},{"Private window","Ctrl+Shift+N"}});
    ShortcutGroup(body,"YOUR LIBRARY",new[,] {{"Bookmark page","Ctrl+D"},{"History","Ctrl+H"},{"Downloads","Ctrl+J"},{"Focus mode","Ctrl+Shift+B"}});
-   ShortcutGroup(body,"PAGE TOOLS",new[,] {{"Find in page","Ctrl+F"},{"Print / save PDF","Ctrl+P"},{"Developer tools","F12 / Ctrl+Shift+I"},{"Browser task manager","Shift+Esc"}});
+   ShortcutGroup(body,"PAGE TOOLS",new[,] {{"Find in page","Ctrl+F"},{"Print / save PDF","Ctrl+P"},{"Developer tools","F12 / Ctrl+Shift+I"},{"Browser task manager","Shift+Esc"},{"scrubnote (page animations)","Alt+Shift+S"}});
    var spotlight=DialogText("In Spotlight: ↑ ↓ to select · Enter to open · Esc to close",11,"Muted");spotlight.Margin=new Thickness(0,4,0,12);body.Children.Add(spotlight);
    var note=DialogText("Inactive tabs rest after 2 minutes and reload when reopened. Audio-playing tabs stay awake. Unsaved forms may be lost when a tab rests.",11,"Muted");note.LineHeight=18;body.Children.Add(note);
    var done=new Button {Content="Done",Padding=new Thickness(22,10,22,10),IsDefault=true};done.SetResourceReference(Button.BackgroundProperty,"Hover");done.Click+=delegate {dialog.Close();};actions.Children.Add(done);dialog.Closed+=delegate {shortcutsWindow=null;};dialog.Loaded+=delegate {done.Focus();};dialog.Show();

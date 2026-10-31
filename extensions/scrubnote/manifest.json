@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "scrubnote",
+  "version": "0.1.0",
+  "description": "Record a page's animations, scrub to the frame that feels off, comment on an element, and copy exact timings for your agent.",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_title": "scrubnote: toggle on this tab (Alt+Shift+S)",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
+  },
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Toggle scrubnote on this tab"
+    }
+  }
+}

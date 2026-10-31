@@ -1337,3 +1337,10 @@ re:(.+)'s security certificate has expired, or this PC's clock is wrong\. Someon
 re:The certificate (.+) sent belongs to a different address\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ mà $1 gửi về là của một địa chỉ khác. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.
 re:(.+)'s security certificate was withdrawn by whoever issued it\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ bảo mật của $1 đã bị bên cấp thu hồi. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.
 re:(.+)'s security certificate isn't from anyone Windows trusts\. Someone could be pretending to be this site to see what you send\. Go back unless you know why, like a device on your own network\.	Chứng chỉ bảo mật của $1 không do bên nào mà Windows tin cậy cấp. Có thể ai đó đang giả làm trang này để xem những gì bạn gửi. Hãy quay lại, trừ khi bạn biết lý do, ví dụ đây là thiết bị trong mạng nhà bạn.
+scrubnote works on web pages.	scrubnote chỉ chạy trên trang web.
+scrubnote is on. Alt+Shift+S closes it.	scrubnote đang bật. Nhấn Alt+Shift+S để đóng.
+scrubnote closed.	Đã đóng scrubnote.
+scrubnote: record page animations	scrubnote: ghi lại hiệu ứng động của trang
+scrubnote (page animations)	scrubnote (hiệu ứng động của trang)
+re:scrubnote couldn't run on this page: (.+)	scrubnote không chạy được trên trang này: $1
+re:scrubnote is missing: (.+)	Thiếu scrubnote: $1
