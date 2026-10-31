@@ -135,7 +135,7 @@ namespace Mica {
      new[]{"Reopen closed tab",ModShift+"T"},new[]{"Next / previous tab","Ctrl+Tab / Ctrl+Shift+Tab"},new[]{"Tab 1–8, last tab",Mod+"1–8, "+Mod+"9"},
      new[]{"Search tabs",ModShift+"A"},new[]{"Bookmark",Mod+"D"},new[]{"Find in page",Mod+"F"},new[]{"Zoom in / out / reset",Mod+"+ / − / 0"},
      new[]{"Reload",Mac?"⌘R":"F5"},new[]{"Back / forward",Mac?"⌘[ / ⌘]":"Alt+← / →"},new[]{"History",Mac?"⌘Y":"Ctrl+H"},new[]{"Downloads",Mac?"⌥⌘L":"Ctrl+J"},
-     new[]{"Print",Mod+"P"},new[]{"Hide sidebar",ModShift+"B"},new[]{"AI side panel",ModShift+"Space"},new[]{"Developer tools","F12"},new[]{"Full screen","F11"}};
+     new[]{"Print",Mod+"P"},new[]{"Hide sidebar",ModShift+"B"},new[]{"AI side panel",ModShift+"Space"},new[]{"Developer tools","F12"},new[]{"Full screen","F11"},new[]{"scrubnote (page animations)",ScrubnoteKey}};
     foreach(var k in keys) {
      var row=new Grid {Margin=new Thickness(12,5)};row.Children.Add(Muted(new TextBlock {Text=k[0],FontSize=12}));
      row.Children.Add(new TextBlock {Text=k[1],FontSize=12,HorizontalAlignment=HorizontalAlignment.Right});body.Children.Add(row);

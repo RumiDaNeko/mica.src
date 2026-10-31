@@ -1344,3 +1344,5 @@ scrubnote: record page animations	scrubnote: ghi lại hiệu ứng động củ
 scrubnote (page animations)	scrubnote (hiệu ứng động của trang)
 re:scrubnote couldn't run on this page: (.+)	scrubnote không chạy được trên trang này: $1
 re:scrubnote is missing: (.+)	Thiếu scrubnote: $1
+scrubnote is on. ⌥⇧S closes it.	scrubnote đang bật. Nhấn ⌥⇧S để đóng.
+scrubnote couldn't run on this page.	scrubnote không chạy được trên trang này.

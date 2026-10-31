@@ -162,6 +162,7 @@ namespace Mica {
    add("Search tabs",ModShift+"A","find tab",OpenTabSearch);
    add("Rest background tabs","","sleep memory free",delegate {RestIdleTabs(true);});
    add("Task manager","Shift+Esc","memory processes",ShowTaskManager);
+   add("scrubnote: record page animations",ScrubnoteKey,"animation timing frames scrub motion",delegate {_=ToggleScrubnote();});
    add("Extensions","","addons chrome web store",ShowExtensions);
    add("Personalize","","colour color frame",ShowPersonalize);
    add("New private window",ModShift+"N","incognito inprivate",NewPrivateWindow);
@@ -209,6 +210,7 @@ namespace Mica {
    if(shift&&!ctrl&&!alt&&key==Key.Escape)return true;
    if(alt&&!ctrl&&(key==Key.Left||key==Key.Right))return true;
    if(Mac&&ctrl&&!shift&&(key==Key.OemOpenBrackets||key==Key.OemCloseBrackets))return true;
+   if(alt&&shift&&!ctrl&&key==Key.S)return true;
    if(!ctrl)return false;
    if(shift)return key==Key.N||key==Key.T||key==Key.A||key==Key.B||key==Key.Space||key==Key.Delete||key==Key.Back||key==Key.I||key==Key.Tab||key==Key.J;
    return key==Key.K||key==Key.L||key==Key.T||key==Key.W||key==Key.D||key==Key.R||key==Key.Tab||key==Key.H||key==Key.J||key==Key.Y||key==Key.F||key==Key.P||key==Key.G
@@ -228,6 +230,7 @@ namespace Mica {
    if(ctrl&&shift&&key==Key.Space){ToggleAi();return true;}
    if(ctrl&&shift&&key==Key.B){ToggleSidebar();return true;}
    if(ctrl&&shift&&key==Key.T){ReopenClosedTab();return true;}
+   if(alt&&shift&&!ctrl&&key==Key.S){_=ToggleScrubnote();return true;}
    if(ctrl&&shift&&key==Key.J||(Mac&&ctrl&&alt&&key==Key.L)||(!Mac&&ctrl&&key==Key.J)){OpenLibraryPage("mica://downloads");return true;}
    if(ctrl&&(key==Key.K||key==Key.L)){OpenSpotlight(key==Key.L);return true;}
    if(ctrl&&(Mac?key==Key.Y:key==Key.H)){OpenLibraryPage("mica://history");return true;}
@@ -324,6 +327,7 @@ namespace Mica {
     MenuCommand(body,popup,Glyphs.Trash,"Clear browsing data",ModShift+(Mac?"⌫":"Del"),ShowClearData);
     MenuHeading(body,"TOOLS");
     MenuCommand(body,popup,Glyphs.Gear,"Task manager","Shift+Esc",ShowTaskManager);
+    MenuCommand(body,popup,Glyphs.Play,"scrubnote",ScrubnoteKey,delegate {_=ToggleScrubnote();});
     MenuCommand(body,popup,Glyphs.Chat,"AI side panel",ModShift+"Space",ToggleAi);
     MenuCommand(body,popup,Glyphs.Rest,"Rest background tabs","",delegate {RestIdleTabs(true);});
     MenuCommand(body,popup,Glyphs.Game,"Games","",delegate {Navigate("mica://games",true);});

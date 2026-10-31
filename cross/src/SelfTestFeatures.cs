@@ -69,6 +69,9 @@ namespace Mica {
    Check("reading mode opens over the page (the island says so)",reading=="true"&&lastStatus.StartsWith("Reading mode")&&islandMessage.Text==lastStatus,reading+" / "+lastStatus);
    ToggleReader();await Task.Delay(600);
    Check("reading mode closes",await EvalAsync(web.View,"Promise.resolve(String(!!document.getElementById('mica-reader')))",5)=="false",null);
+   await ToggleScrubnote();string scrubOpen=lastStatus;await ToggleScrubnote();string scrubClosed=lastStatus;
+   Check("scrubnote opens and closes on the page",scrubOpen.StartsWith("scrubnote is on")&&scrubClosed=="scrubnote closed."&&!names.Contains("scrubnote"),scrubOpen+" / "+scrubClosed);
+   Check("Alt+Shift+S is scrubnote's shortcut inside pages",IsShortcut(Key.S,KeyModifiers.Alt|KeyModifiers.Shift)&&!IsShortcut(Key.S,KeyModifiers.Shift),null);
    Check("the island is up, showing memory",island.IsOpen&&islandMemory.Text.Contains("MB"),"open="+island.IsOpen+" text="+islandMemory.Text+" state="+WindowState+" visible="+IsVisible+" full="+islandFullscreen+" inactive="+islandInactive);
    state.SiteMemory["example.com"]="never";
    Show(first.Entry.Id);RestIdleTabs(true);await Task.Delay(1500);
