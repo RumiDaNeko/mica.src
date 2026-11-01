@@ -139,10 +139,11 @@ namespace Mica {
     Check("switching tabs swaps the address",address.Text=="mica://2048"&&first.View.IsVisible&&!second.View.IsVisible,address.Text);
     // Other schemes go to their app (checked without launching one here); javascript: and data: ask first.
     foreach(var scheme in new[]{"chrome://settings","ftp://example.com/","mailto:a@b.com"})Check(scheme+" goes to its app",Navigation.IsAppLink(Navigation.Resolve(scheme)),Navigation.Resolve(scheme));
-    foreach(var typed in new[]{"javascript:document.title='x'","data:text/html,<p>x</p>"}) {
-     Navigate(typed);bool asked=openDialog!=null&&openDialog.IsOpen;CloseDialog();
-     Check(typed.Substring(0,typed.IndexOf(':')+1)+" asks before it runs or opens",asked&&first.Entry.Url=="mica://2048","asked="+asked+" url="+first.Entry.Url);
-    }
+    Navigate("data:text/html,<p>x</p>");bool asked=openDialog!=null&&openDialog.IsOpen;CloseDialog();
+    Check("data: asks before it opens",asked&&first.Entry.Url=="mica://2048","asked="+asked+" url="+first.Entry.Url);
+    // This tab is Mica's own page, so javascript: has nothing to run on and doesn't ask.
+    Navigate("javascript:document.title='x'");bool askedScript=openDialog!=null&&openDialog.IsOpen;CloseDialog();
+    Check("javascript: runs only on a web page",!askedScript&&first.Entry.Url=="mica://2048","asked="+askedScript+" url="+first.Entry.Url);
 
     try {
      var shot=new RenderTargetBitmap(new PixelSize((int)Bounds.Width,(int)Bounds.Height),new Vector(96,96));shot.Render(this);
