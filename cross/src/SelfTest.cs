@@ -137,10 +137,11 @@ namespace Mica {
     }
     Show(first.Entry.Id);
     Check("switching tabs swaps the address",address.Text=="mica://2048"&&first.View.IsVisible&&!second.View.IsVisible,address.Text);
-    // Files are allowed since Core.cs learned local files; Chrome's own pages and other schemes are not.
-    foreach(var scheme in new[]{"chrome://settings","ftp://example.com/"}) {
-     notice.IsVisible=false;string rejected=null;Navigate(scheme);if(notice.IsVisible)rejected=noticeText.Text;
-     Check("refuses "+scheme,rejected!=null&&first.Entry.Url=="mica://2048",rejected+" url="+first.Entry.Url);
+    // Other schemes go to their app (checked without launching one here); javascript: and data: ask first.
+    foreach(var scheme in new[]{"chrome://settings","ftp://example.com/","mailto:a@b.com"})Check(scheme+" goes to its app",Navigation.IsAppLink(Navigation.Resolve(scheme)),Navigation.Resolve(scheme));
+    foreach(var typed in new[]{"javascript:document.title='x'","data:text/html,<p>x</p>"}) {
+     Navigate(typed);bool asked=openDialog!=null&&openDialog.IsOpen;CloseDialog();
+     Check(typed.Substring(0,typed.IndexOf(':')+1)+" asks before it runs or opens",asked&&first.Entry.Url=="mica://2048","asked="+asked+" url="+first.Entry.Url);
     }
 
     try {
