@@ -196,6 +196,11 @@ namespace Mica {
    if(Regex.IsMatch(q,@"^([A-Za-z]:[\\/]|\\\\[^\\/]+[\\/][^\\/]+)")){try {var file=new Uri(System.IO.Path.GetFullPath(q)).AbsoluteUri;return IsLocalFile(file)?file:null;}catch(Exception){return null;}}
    return q.StartsWith("file:",StringComparison.OrdinalIgnoreCase)&&IsLocalFile(q)?new Uri(q).AbsoluteUri:null;
   }
+  // javascript:… typed in the address bar runs on the page you're on; data:… is a page made from the address itself.
+  public static bool IsScript(string value) { return value!=null&&value.StartsWith("javascript:",StringComparison.OrdinalIgnoreCase); }
+  public static bool IsDataPage(string value) { return value!=null&&value.StartsWith("data:",StringComparison.OrdinalIgnoreCase); }
+  // Any other scheme (mailto:, ftp://, an app's own): opened by the app registered for it, never in a tab.
+  public static bool IsAppLink(string value) { return value!=null&&!IsWeb(value)&&!IsLocalFile(value)&&!IsScript(value)&&!IsDataPage(value)&&!IsInternal(value)&&!IsSiteBlob(value)&&Regex.IsMatch(value,@"^[a-z][a-z0-9+.-]*:\S*$",RegexOptions.IgnoreCase); }
   public static bool IsSiteBlob(string value) { return value!=null&&value.StartsWith("blob:",StringComparison.OrdinalIgnoreCase)&&IsWeb(value.Substring(5)); }
   // "yt cats" with keywords {yt: ...%s}: the address with the rest of the words in it; null when the first word isn't a keyword.
   public static string ExpandKeyword(string input,Dictionary<string,string> keywords) {
@@ -208,7 +213,14 @@ namespace Mica {
    if(Regex.IsMatch(q,@"^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?([/?#].*)?$",RegexOptions.IgnoreCase))return new Uri("http://"+q).AbsoluteUri;
    if(!q.Any(char.IsWhiteSpace)&&Regex.IsMatch(q,@"^([\p{L}\d-]+\.)+[\p{L}\d-]+(:\d+)?([/?#].*)?$")) { Uri uri; if(Uri.TryCreate("https://"+q,UriKind.Absolute,out uri))return uri.AbsoluteUri; }
    var local=LocalFileAddress(q);if(local!=null)return local;
-   if(Regex.IsMatch(q,@"^[a-z][a-z0-9+.-]*:",RegexOptions.IgnoreCase)) { if(!IsWeb(q))throw new ArgumentException("Only web addresses and files on this PC can be opened."); return new Uri(q).AbsoluteUri; }
+   if(Regex.IsMatch(q,@"^[a-z][a-z0-9+.-]*:",RegexOptions.IgnoreCase)) {
+    if(IsWeb(q))return new Uri(q).AbsoluteUri;
+    // javascript: and data: go through as typed; Mica warns before running or showing them.
+    if(IsScript(q)||IsDataPage(q))return q;
+    if(Regex.IsMatch(q,@"^(https?|file|blob|mica):",RegexOptions.IgnoreCase))throw new ArgumentException("That address isn't complete.");
+    // mailto:, ftp://, zoommtg:… go to the app that opens them. "note: milk" has a space, so it's a search.
+    if(!q.Any(char.IsWhiteSpace))return q;
+   }
    return "https://www.google.com/search?q="+Uri.EscapeDataString(q);
   }
  }

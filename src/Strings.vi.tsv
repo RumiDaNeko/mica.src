@@ -1208,7 +1208,7 @@ re:Keep the name under (\d+) characters\.	Tên phải ngắn hơn $1 ký tự.
 re:There is already a space called (.+)\.	Đã có không gian tên $1.
 re:You can have up to (\d+) spaces\.	Bạn chỉ có thể có tối đa $1 không gian.
 re:Removed (.+)\. Its (\d+) tabs are in Personal now\.	Đã xoá $1. $2 tab của nó giờ nằm ở Personal.
-re:^Removed (.+)$	Đã xoá $1
+re:Removed (.+)	Đã xoá $1
 Games	Trò chơi
 Play 	Chơi 
 CLOSING ANIMATION	HIỆU ỨNG KHI ĐÓNG
@@ -1346,3 +1346,17 @@ re:scrubnote couldn't run on this page: (.+)	scrubnote không chạy được tr
 re:scrubnote is missing: (.+)	Thiếu scrubnote: $1
 scrubnote is on. ⌥⇧S closes it.	scrubnote đang bật. Nhấn ⌥⇧S để đóng.
 scrubnote couldn't run on this page.	scrubnote không chạy được trên trang này.
+Open a page made from its address?	Mở trang được tạo từ chính địa chỉ?
+A data: address carries the whole page in itself, so no real site stands behind it and it can look like any site, a sign-in page included. Never type a password into it.	Địa chỉ data: chứa cả trang trong chính nó, nên không có trang web thật nào đứng sau và nó có thể giả làm bất kỳ trang nào, kể cả trang đăng nhập. Đừng bao giờ nhập mật khẩu vào đó.
+Open page	Mở trang
+javascript: runs on a web page. Open one first.	javascript: chạy trên trang web. Hãy mở một trang trước.
+re:Run JavaScript on (.+)\?	Chạy JavaScript trên $1?
+re:It runs with your sign-in on (.+?) and can read or change anything there\. Scammers ask people to paste code like this to take over their accounts\. Run it only if you wrote it or trust where it came from\.	Mã này chạy với tài khoản bạn đang đăng nhập trên $1 và có thể đọc hoặc thay đổi mọi thứ ở đó. Kẻ lừa đảo hay bảo người khác dán mã kiểu này để chiếm tài khoản. Chỉ chạy nếu bạn tự viết hoặc tin nguồn của nó.
+Run it	Chạy
+re:Ran the JavaScript on (.+)\.	Đã chạy JavaScript trên $1.
+The JavaScript couldn't run on this page.	Không chạy được JavaScript trên trang này.
+re:Windows couldn't open (.+): links\.	Windows không mở được liên kết $1:.
+re:No app on this computer opens (.+): links\.	Không có app nào trên máy mở được liên kết $1:.
+No app on this computer opens that link.	Không có app nào trên máy mở được liên kết này.
+re:Opening (.+): in its app\.	Đang mở $1: bằng app của nó.
+That address isn't complete.	Địa chỉ này chưa đầy đủ.

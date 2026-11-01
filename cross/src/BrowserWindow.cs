@@ -476,11 +476,15 @@ namespace Mica {
   void Status(string text) {ShowIslandMessage(text);}
 
   // What you typed, through the same rules as the Windows address bar (Navigation.Resolve), site keywords included.
+  bool dataConfirmed;
   void Navigate(string input) {Navigate(input,false);}
   void Navigate(string input,bool newTab) {
    string url=Navigation.ExpandKeyword(input,state.SiteKeywords);
    if(url==null)try {url=Navigation.Resolve(input);}
    catch(ArgumentException e) {Notice(e.Message);return;}
+   if(Navigation.IsScript(url)){CloseSpotlight();RunTypedScript(url);return;}
+   if(Navigation.IsAppLink(url)){CloseSpotlight();OpenAppLink(url);return;}
+   if(Navigation.IsDataPage(url)&&!dataConfirmed){string page=url;CloseSpotlight();ConfirmTyped("Open a page made from its address?","A data: address carries the whole page in itself, so no real site stands behind it and it can look like any site, a sign-in page included. Never type a password into it.","Open page",delegate {dataConfirmed=true;try {Navigate(page,newTab);}finally {dataConfirmed=false;}});return;}
    if(Navigation.IsReading(url)){Notice("Saved articles aren't in this version yet.");return;}
    if(newTab||Active==null){var created=state.AddTab(url);RenderTabs();Show(created.Id);}
    var tab=Active;if(tab==null)return;

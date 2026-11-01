@@ -144,7 +144,7 @@ namespace Mica {
     case "open_url": {
      args.TryGetValue("url",out value);var url=value as string;if(string.IsNullOrWhiteSpace(url))throw new ArgumentException("Give a url.");
      bool newTab=!args.TryGetValue("new_tab",out value)||!(value is bool)||(bool)value;
-     string resolved=Navigation.Resolve(url);Navigate(resolved,newTab);window.Activate();return "Opened "+resolved+" in tab "+ShortId(state.ActiveId)+".";
+     string resolved=Navigation.Resolve(url);if(!(Navigation.IsWeb(resolved)||Navigation.IsLocalFile(resolved)||Navigation.IsInternal(resolved)))throw new ArgumentException("Only web pages, files on this PC and Mica pages can be opened.");Navigate(resolved,newTab);window.Activate();return "Opened "+resolved+" in tab "+ShortId(state.ActiveId)+".";
     }
     case "switch_tab": {var tab=TabFor(args);await Activate(tab.Id);window.Activate();return "Switched to "+(tab.Title??tab.Url)+".";}
     case "close_tab": {var tab=TabFor(args);string title=tab.Title??tab.Url;CloseTab(tab.Id);return "Closed "+title+".";}
