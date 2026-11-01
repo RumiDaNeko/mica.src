@@ -215,7 +215,8 @@ namespace Mica {
  public static class Spotlight {
   public static List<SearchHit> Search(BrowserState state,string query) {
    var q=(query??"").Trim(); var hits=new List<SearchHit>(); var seen=new HashSet<string>(StringComparer.Ordinal);
-   Add(hits,seen,state.Tabs.OrderByDescending(t=>t.LastUsed),q,"TAB");
+   // Only this space's tabs: another space's tabs stay out of sight (Ctrl+Shift+A still searches them all).
+   Add(hits,seen,state.Tabs.Where(t=>t.Space==state.Space).OrderByDescending(t=>t.LastUsed),q,"TAB");
    Add(hits,seen,state.Bookmarks,q,"BOOKMARK"); Add(hits,seen,state.History,q,"HISTORY");
    hits=hits.Take(7).ToList();
    // A site keyword ("yt cats") goes first: it's what you meant.
@@ -254,7 +255,7 @@ namespace Mica {
   }
   static void Add(List<SearchHit> hits,HashSet<string> seen,IEnumerable<PageEntry> entries,string q,string kind) {
    foreach(var e in entries) { if(e.Url=="mica://home"||(!Navigation.IsWeb(e.Url)&&!Navigation.IsLibrary(e.Url)))continue; if(q.Length>0&&((e.Title??"")+" "+e.Url).IndexOf(q,StringComparison.OrdinalIgnoreCase)<0)continue; if(!seen.Add(e.Url))continue;
-    hits.Add(new SearchHit { Kind=kind,Title=string.IsNullOrWhiteSpace(e.Title)?e.Url:e.Title,Detail=(kind=="TAB"?e.Space+" · ":"")+e.Url,Url=e.Url,TabId=kind=="TAB"?e.Id:null }); }
+    hits.Add(new SearchHit { Kind=kind,Title=string.IsNullOrWhiteSpace(e.Title)?e.Url:e.Title,Detail=e.Url,Url=e.Url,TabId=kind=="TAB"?e.Id:null }); }
   }
  }
  public static class StateStore {
