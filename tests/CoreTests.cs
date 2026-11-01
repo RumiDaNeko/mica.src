@@ -32,7 +32,8 @@ class CoreTests {
   Check("domain with port becomes HTTPS",delegate { Equal("https://example.com:8443/docs",Navigation.Resolve("example.com:8443/docs")); });
   Check("search encodes Vietnamese and punctuation",delegate { Equal("https://www.google.com/search?q="+Uri.EscapeDataString("cà phê & sách"),Navigation.Resolve("cà phê & sách")); });
   Check("empty input returns home",delegate { Equal("mica://home",Navigation.Resolve("  ")); });
-  foreach(var scheme in new[]{"javascript:alert(1)","file:///C:/secret", "data:text/html,test", "mailto:a@b.com", "ftp://example.com"}) { var input=scheme; Check("reject " + input,delegate { bool rejected=false; try { Navigation.Resolve(input); } catch(ArgumentException) { rejected=true; } Equal(true,rejected); }); }
+  foreach(var scheme in new[]{"javascript:alert(1)", "data:text/html,test", "mailto:a@b.com", "ftp://example.com"}) { var input=scheme; Check("reject " + input,delegate { bool rejected=false; try { Navigation.Resolve(input); } catch(ArgumentException) { rejected=true; } Equal(true,rejected); }); }
+  Check("open a file on this PC",delegate { Equal("file:///C:/secret",Navigation.Resolve("file:///C:/secret")); });
   Check("tab creation selects new tab",delegate { var s=new BrowserState(); var t=s.AddTab("https://example.com/"); Equal(t.Id,s.ActiveId); Equal("Personal",t.Space); });
   Check("closing last tab restores home",delegate { var s=new BrowserState(); var t=s.AddTab("https://example.com/"); s.CloseTab(t.Id); Equal(1,s.Tabs.Count); Equal("mica://home",s.Tabs[0].Url); Equal(s.Tabs[0].Id,s.ActiveId); });
   Check("history deduplicates and caps",delegate { var s=new BrowserState(); for(int i=0;i<510;i++) s.Visit("https://example.com/"+i,"Page "+i); s.Visit("https://example.com/509","Updated"); Equal(500,s.History.Count); Equal("Updated",s.History[0].Title); });
