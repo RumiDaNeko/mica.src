@@ -15,7 +15,7 @@ namespace Mica {
    if(tab==null||tab.View==null||!tab.View.IsBrowserInitialized||!Navigation.IsWeb(tab.Entry.Url)){Status("scrubnote works on web pages.");return;}
    if(scrubnoteScript==null)try {scrubnoteScript=File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"Extensions","scrubnote","scrubnote.js"));}catch(Exception e) when (e is IOException||e is UnauthorizedAccessException){Status("scrubnote is missing: "+e.Message);return;}
    tab.View.ExecuteJavaScript(scrubnoteScript,"",1);
-   string on=await EvalAsync(tab.View,"!!(document.getElementById('scrubnote-host')||{}).isConnected",3);
+   string on=await EvalAsync(tab.View,"!!(window.__scrubnote&&window.__scrubnote.open)",3);
    Status(on=="true"?"scrubnote is on. "+ScrubnoteKey+" closes it.":on=="false"?"scrubnote closed.":"scrubnote couldn't run on this page.");
   }
  }

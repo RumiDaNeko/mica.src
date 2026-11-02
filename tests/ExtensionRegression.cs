@@ -55,10 +55,10 @@ namespace Mica {
     log.Add("PASS redesigned manager shows user extension and filters by name and enabled state");
     using(var server=new RegressionServer()) {
      Navigate(server.Url+"ok",false);await WaitFor(delegate {NavigationProgress progress;return CurrentView()!=null&&CurrentView().CoreWebView2.DocumentTitle=="Regression OK"&&navigations.TryGetValue(state.ActiveId,out progress)&&!progress.IsLoading;},15000);
-     Func<Task<string>> scrubnoteOn=async delegate {return await CurrentView().CoreWebView2.ExecuteScriptAsync("!!(document.getElementById('scrubnote-host')||{}).isConnected");};
+     Func<Task<string>> scrubnoteOn=async delegate {return await CurrentView().CoreWebView2.ExecuteScriptAsync("!!(window.__scrubnote&&window.__scrubnote.open)");};
      ToggleScrubnote();await WaitFor(delegate {return Find<System.Windows.Controls.TextBlock>("StatusText").Text.StartsWith("scrubnote");},8000);string opened=await scrubnoteOn();
-     ToggleScrubnote();await Task.Delay(600);string closed=await scrubnoteOn();
-     Require(opened=="true"&&closed=="false","scrubnote on/off: "+opened+"/"+closed+" · "+Find<System.Windows.Controls.TextBlock>("StatusText").Text);
+     ToggleScrubnote();await Task.Delay(600);string closed=await scrubnoteOn();string left=await CurrentView().CoreWebView2.ExecuteScriptAsync("!!document.getElementById('scrubnote-host')");
+     Require(opened=="true"&&closed=="false"&&left=="false","scrubnote on/off: "+opened+"/"+closed+"/"+left+" · "+Find<System.Windows.Controls.TextBlock>("StatusText").Text);
      Require(!displayedExtensions.Any(e=>e.Name=="scrubnote"),"scrubnote is listed in Extensions");
      log.Add("PASS scrubnote opens and closes on the page and isn't listed in Extensions");
      await ReloadExtensionFixture(server.Url+"ok?installed");

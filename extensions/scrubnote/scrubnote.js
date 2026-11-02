@@ -145,6 +145,18 @@
     position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%); padding: 7px 12px; border-radius: 10px;
     background: #ec8686; color: #fff; font-size: 12.5px; display: none;
   }
+  /* Motion: the bar rises in from where it sits; panels grow out of the bar; leaving is quicker than arriving.
+     Each plays when its element is shown (display none -> block restarts a CSS animation). */
+  .bar { animation: sn-rise .26s cubic-bezier(.2,.9,.25,1) both; transform-origin: 50% 100%; }
+  .list, .toast { animation: sn-grow .18s cubic-bezier(.2,.9,.25,1) both; transform-origin: 50% 100%; }
+  .pop { animation: sn-fade .16s cubic-bezier(.2,.9,.25,1) both; transform-origin: 0 0; }
+  @keyframes sn-rise { from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(.94); } to { opacity: 1; transform: translateX(-50%); } }
+  @keyframes sn-grow { from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.97); } to { opacity: 1; transform: translateX(-50%); } }
+  @keyframes sn-fade { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .bar, .list, .toast, .pop { animation-name: sn-appear; }
+    @keyframes sn-appear { from { opacity: 0; } }
+  }
 </style>
 <div class="pins"></div>
 <div class="hl"><span></span></div>
@@ -1052,21 +1064,41 @@
     else clearInterval(pollTimer);
   }
 
+  let leaving = null;
   const api = {
     toggle() {
-      if (host.isConnected) {
+      if (host.isConnected && !leaving) {
         if (state.phase === 'recording') stopRecording();
         if (state.phase === 'review') exitReview();
         if (state.pausedAll) setPausedAll(false);
         if (state.speed !== 1) setSpeed(1);
         listen(false);
-        host.remove();
+        // Sink back down and fade, then leave the page. Toggling again meanwhile brings it straight back.
+        const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        leaving = ui.bar.animate(still
+          ? [{ opacity: 1 }, { opacity: 0 }]
+          : [{ opacity: 1, transform: 'translateX(-50%)' }, { opacity: 0, transform: 'translateX(-50%) translateY(10px) scale(.96)' }],
+          { duration: 150, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+        for (const el of [ui.list, ui.toast, ui.pop]) if (el.style.display === 'block') el.style.display = 'none';
+        const exit = leaving;
+        const done = () => { if (leaving === exit) { leaving = null; exit.cancel(); host.remove(); } };
+        // A timer too: a page drawn rarely (hidden, throttled) may finish the animation late.
+        exit.finished.then(done, () => {});
+        setTimeout(done, 200);
+      } else if (leaving) {
+        const exit = leaving;
+        leaving = null;
+        exit.cancel();
+        listen(true);
+        render();
       } else {
         document.documentElement.appendChild(host);
         listen(true);
         render();
       }
     },
+    // On screen and not on its way out.
+    get open() { return host.isConnected && !leaving; },
     get state() { return state; },
     seek: (t) => state.phase === 'review' && setTime(t),
     export: buildExport,

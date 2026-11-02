@@ -17,7 +17,7 @@ namespace Mica {
    try {
     var core=view.CoreWebView2;
     await core.ExecuteScriptAsync(scrubnoteScript+"\n;0");
-    string on=await core.ExecuteScriptAsync("!!(document.getElementById('scrubnote-host')||{}).isConnected");
+    string on=await core.ExecuteScriptAsync("!!(window.__scrubnote&&window.__scrubnote.open)");
     Status(on=="true"?"scrubnote is on. Alt+Shift+S closes it.":"scrubnote closed.");
    }catch(Exception e){Status("scrubnote couldn't run on this page: "+e.Message);}
   }
