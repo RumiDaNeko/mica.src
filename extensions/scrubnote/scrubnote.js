@@ -1025,7 +1025,8 @@
 
   const isEditable = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
   function onKey(e) {
-    if (!host.isConnected || isEditable(document.activeElement) || e.metaKey || e.ctrlKey || e.altKey) return;
+    // composedPath sees into our shadow root: document.activeElement is only the host while typing a comment.
+    if (!host.isConnected || isEditable(e.composedPath()[0]) || isEditable(document.activeElement) || e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();
     const review = state.phase === 'review';
     if (e.shiftKey && k === 'r') toggleRecord();
