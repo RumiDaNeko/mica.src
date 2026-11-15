@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -49,7 +50,12 @@ namespace Mica {
    foreach(string name in state.Spaces) {string space=name;var choice=ContextCommand(space,SpaceIcon(space),"",delegate {entry.Space=space;entry.Group=null;state.NormalizeGroups();if(state.ActiveId==entry.Id)SwitchSpace(state.Space);else RenderTabs();Save();});choice.IsChecked=entry.Space==space;choice.IsEnabled=entry.Space!=space;move.Items.Add(choice);}menu.Items.Add(move);
    menu.Items.Add(ContextSeparator());
    var reload=ContextCommand("Reload tab","\uE72C",entry.Id==state.ActiveId?"Ctrl+R":"",delegate {SelectTab(entry.Id);Reload();});reload.IsEnabled=Navigation.IsWeb(entry.Url);menu.Items.Add(reload);
-   menu.Items.Add(ContextSeparator());menu.Items.Add(ContextCommand("Close tab","\uE8BB",entry.Id==state.ActiveId&&!entry.Pinned?"Ctrl+W":"",delegate {CloseTab(entry.Id);}));return menu;
+   menu.Items.Add(ContextSeparator());menu.Items.Add(ContextCommand("Close tab","\uE8BB",entry.Id==state.ActiveId&&!entry.Pinned?"Ctrl+W":"",delegate {CloseTab(entry.Id);}));
+   var closable=ClosableInSpace();
+   var others=ContextCommand("Close other tabs","","",delegate {CloseOtherTabs(entry);});others.IsEnabled=closable.Any(t=>t.Id!=entry.Id);menu.Items.Add(others);
+   int at=closable.FindIndex(t=>t.Id==entry.Id);var below=ContextCommand("Close tabs below","","",delegate {CloseTabsBelow(entry);});below.IsEnabled=at>=0&&at<closable.Count-1;menu.Items.Add(below);
+   if(DuplicateCount()>0)menu.Items.Add(ContextCommand("Close duplicate tabs","","",CloseDuplicateTabs));
+   return menu;
   }
   void ShowWebContextMenu(PageEntry tab,WebView2 view,CoreWebView2ContextMenuRequestedEventArgs args) {
    if(!IsCurrent(tab.Id,view)||state.ActiveId!=tab.Id||IsSpotlight){args.Handled=true;return;}

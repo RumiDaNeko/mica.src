@@ -20,7 +20,11 @@ namespace Mica {
    add("New tab","Ctrl+T","open",NewTab);
    add("New window","Ctrl+N","open",delegate {LaunchBrowserWindow(false);});
    add("New private window","Ctrl+Shift+N","incognito inprivate",delegate {LaunchBrowserWindow(true);});
-   if(state.RecentlyClosed.Count>0)add("Reopen closed tab","Ctrl+Shift+T","undo restore "+state.RecentlyClosed[0].Title,ReopenClosedTab);
+   if(lastClosedBatch!=null)add("Bring back "+lastClosedBatch.Tabs.Count+" closed tabs","Ctrl+Shift+T","undo reopen restore clear",delegate {UndoCloseTabs();});
+   else if(state.RecentlyClosed.Count>0)add("Reopen closed tab","Ctrl+Shift+T","undo restore "+state.RecentlyClosed[0].Title,ReopenClosedTab);
+   if(ClosableInSpace().Count>0)add("Clear tabs in "+state.Space,"","close all tabs space session",ClearSpaceTabs);
+   if(tab!=null&&ClosableInSpace().Any(t=>t.Id!=tab.Id))add("Close other tabs","","all except this",delegate {CloseOtherTabs(tab);});
+   if(DuplicateCount()>0)add("Close duplicate tabs","","same dedupe twice",CloseDuplicateTabs);
    if(tab!=null&&tab.Url!="mica://home") {
     if(!tab.Pinned)add("Close tab","Ctrl+W","",delegate {CloseTab(tab.Id);});
     add(tab.Pinned?"Unpin tab":"Pin tab","","keep",delegate {tab.Pinned=!tab.Pinned;animateTabMoves=true;state.NormalizeGroups();RenderTabs();Save();});
@@ -113,7 +117,87 @@ namespace Mica {
    CloseSpotlight();window.Dispatcher.BeginInvoke(new Action(delegate {if(!closing)run();}));return true;
   }
 
+  // ---- Closing many tabs at once: one pass, one render, and one undo that puts every tab back in its place ----
+  sealed class ClosedBatch {public readonly List<PageEntry> Tabs=new List<PageEntry>();public readonly List<int> Places=new List<int>();public readonly List<TabGroup> Groups=new List<TabGroup>();public string ActiveId,AddedHome;}
+  ClosedBatch lastClosedBatch;
+  System.Windows.Threading.DispatcherTimer clearUndoTimer;
+  List<PageEntry> ClosableInSpace() {return state.Tabs.Where(t=>t.Space==state.Space&&!t.Pinned).ToList();}
+  internal int CloseTabs(IEnumerable<string> ids,string activate=null) {
+   var set=new HashSet<string>(ids);var batch=new ClosedBatch {ActiveId=state.ActiveId};
+   for(int i=0;i<state.Tabs.Count;i++){var t=state.Tabs[i];if(!set.Contains(t.Id))continue;batch.Tabs.Add(t);batch.Places.Add(i);var g=state.FindGroup(t.Group);if(g!=null&&!batch.Groups.Contains(g))batch.Groups.Add(g);}
+   if(batch.Tabs.Count==0)return 0;
+   var sites=new HashSet<Tuple<string,string>>();
+   foreach(var t in batch.Tabs){if(Navigation.IsWeb(t.Url))sites.Add(Tuple.Create(SiteFor(t.Url),t.Jar));SplitEnded(t.Id);snapshots.Remove(t.Id);if(!privateMode)state.RecordClosed(t);DisposeView(t.Id);}
+   foreach(var s in sites){var site=s;window.Dispatcher.BeginInvoke(new Action(delegate {LeftSite(site.Item1,site.Item2);}));}
+   state.Tabs.RemoveAll(t=>set.Contains(t.Id));state.NormalizeGroups();
+   // The space stays where you are: an emptied space gets a home tab instead of jumping to another space.
+   if(!state.Tabs.Any(t=>t.Space==state.Space))batch.AddedHome=state.AddTab("mica://home").Id;
+   else if(activate!=null&&state.Tabs.Any(t=>t.Id==activate))state.ActiveId=activate;
+   else if(set.Contains(state.ActiveId)) {
+    // The nearest tab that stays, below the one you were on first, as closing a single tab does.
+    int place=batch.Places[batch.Tabs.FindIndex(t=>t.Id==batch.ActiveId)],was=place-batch.Places.Count(p=>p<place);
+    var left=state.Tabs.Select((t,i)=>new {t,i}).Where(x=>x.t.Space==state.Space).ToList();
+    state.ActiveId=(left.FirstOrDefault(x=>x.i>=was&&!x.t.Pinned)??left.LastOrDefault(x=>x.i<was&&!x.t.Pinned)??left.Last()).t.Id;
+   }
+   lastClosedBatch=batch;animateTabMoves=true;
+   SelectTab(SplitOpen&&!InSplit(state.ActiveId)?splitPanes[0]:state.ActiveId);RefreshPersonalization();Save();
+   return batch.Tabs.Count;
+  }
+  internal bool UndoCloseTabs() {
+   var batch=lastClosedBatch;if(batch==null)return false;lastClosedBatch=null;ShowClearButton(false);
+   foreach(var g in batch.Groups)if(state.FindGroup(g.Id)==null)state.Groups.Add(g);
+   for(int i=0;i<batch.Tabs.Count;i++){var t=batch.Tabs[i];if(state.Tabs.Any(x=>x.Id==t.Id))continue;state.Tabs.Insert(Math.Min(batch.Places[i],state.Tabs.Count),t);state.RecentlyClosed.RemoveAll(c=>c.Url==t.Url);}
+   var home=batch.AddedHome==null?null:state.Tabs.FirstOrDefault(t=>t.Id==batch.AddedHome&&t.Url=="mica://home");
+   if(home!=null){DisposeView(home.Id);state.Tabs.Remove(home);}
+   state.NormalizeGroups();if(state.Tabs.Any(t=>t.Id==batch.ActiveId))state.ActiveId=batch.ActiveId;else if(home!=null)state.ActiveId=batch.Tabs[batch.Tabs.Count-1].Id;
+   animateTabMoves=true;SelectTab(state.ActiveId);MarkRestingTabs(false);Save();
+   Status("Brought back "+batch.Tabs.Count+(batch.Tabs.Count==1?" tab.":" tabs."));return true;
+  }
+  void ClosedMany(int n) {if(n==0)return;Status("Closed "+n+(n==1?" tab":" tabs")+". Ctrl+Shift+T brings them back.");ShowClearButton(true);}
+  // Clears this space: pinned tabs and other spaces stay. For a few seconds the button offers Undo.
+  internal void ClearSpaceTabs() {
+   var tabs=ClosableInSpace();if(tabs.Count==0){Status("No tabs to clear: pinned tabs stay.");return;}
+   ClosedMany(CloseTabs(tabs.Select(t=>t.Id)));
+  }
+  internal void CloseOtherTabs(PageEntry keep) {ClosedMany(CloseTabs(ClosableInSpace().Where(t=>t.Id!=keep.Id).Select(t=>t.Id),keep.Id));}
+  internal void CloseTabsBelow(PageEntry from) {
+   var tabs=ClosableInSpace();int at=tabs.FindIndex(t=>t.Id==from.Id);
+   ClosedMany(CloseTabs(tabs.Skip(at<0?tabs.Count:at+1).Select(t=>t.Id)));
+  }
+  // The same address open twice: keeps the one you're on (or a pinned one, or the first) and closes the rest.
+  internal void CloseDuplicateTabs() {
+   var close=new List<string>();
+   foreach(var same in state.Tabs.Where(t=>t.Space==state.Space&&(Navigation.IsWeb(t.Url)||t.Url=="mica://home")).GroupBy(t=>t.Url.TrimEnd('/'))) {
+    var keep=same.FirstOrDefault(t=>t.Id==state.ActiveId)??same.FirstOrDefault(t=>t.Pinned)??same.First();
+    close.AddRange(same.Where(t=>t!=keep&&!t.Pinned).Select(t=>t.Id));
+   }
+   if(close.Count==0){Status("No duplicate tabs here.");return;}
+   ClosedMany(CloseTabs(close));
+  }
+  int DuplicateCount() {return state.Tabs.Where(t=>t.Space==state.Space&&(Navigation.IsWeb(t.Url)||t.Url=="mica://home")).GroupBy(t=>t.Url.TrimEnd('/')).Sum(g=>g.Count(t=>!t.Pinned)-(g.Any(t=>t.Pinned)?0:1));}
+  void ShowClearButton(bool undo) {
+   var button=Find<System.Windows.Controls.Button>("ClearTabsButton");if(button==null)return;
+   button.Content=undo?"Undo":"Clear";button.Tag=undo?"undo":"clear";button.ToolTip=undo?"Bring the closed tabs back (Ctrl+Shift+T)":"Close every tab in this space. Pinned tabs stay.";
+   if(clearUndoTimer==null){clearUndoTimer=new System.Windows.Threading.DispatcherTimer {Interval=TimeSpan.FromSeconds(10)};clearUndoTimer.Tick+=delegate {clearUndoTimer.Stop();ShowClearButton(false);};}
+   clearUndoTimer.Stop();if(undo)clearUndoTimer.Start();
+  }
+  void InitializeClearButton() {
+   var button=Find<System.Windows.Controls.Button>("ClearTabsButton");if(button==null)return;
+   button.Click+=delegate {if((string)button.Tag=="undo")UndoCloseTabs();else ClearSpaceTabs();};
+   LazyMenu(button,delegate {
+    var menu=CreateContextMenu();
+    menu.Items.Add(ContextCommand("Clear tabs in "+state.Space,"","",ClearSpaceTabs));
+    var dupes=ContextCommand("Close duplicate tabs","","",CloseDuplicateTabs);dupes.IsEnabled=DuplicateCount()>0;menu.Items.Add(dupes);
+    if(state.Groups.Any(g=>!g.Collapsed))menu.Items.Add(ContextCommand("Fold all groups","","",FoldAllGroups));
+    menu.Items.Add(ContextCommand("Rest background tabs","","",delegate {SleepIdleTabs(true);}));
+    if(!privateMode)menu.Items.Add(ContextCommand("Save this session…","","",SaveSession));
+    if(lastClosedBatch!=null){menu.Items.Add(ContextSeparator());menu.Items.Add(ContextCommand("Bring back "+lastClosedBatch.Tabs.Count+" closed tabs","","Ctrl+Shift+T",delegate {UndoCloseTabs();}));}
+    return menu;
+   });
+  }
+
   internal void ReopenClosedTab() {
+   if(UndoCloseTabs())return;
    if(state.RecentlyClosed.Count==0){Status("No closed tabs to bring back.");return;}
    var last=state.RecentlyClosed[0];state.RecentlyClosed.RemoveAt(0);Navigate(last.Url,true);
   }

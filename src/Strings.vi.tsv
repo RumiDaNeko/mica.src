@@ -1360,3 +1360,15 @@ re:No app on this computer opens (.+): links\.	Không có app nào trên máy m�
 No app on this computer opens that link.	Không có app nào trên máy mở được liên kết này.
 re:Opening (.+): in its app\.	Đang mở $1: bằng app của nó.
 That address isn't complete.	Địa chỉ này chưa đầy đủ.
+Close other tabs	Đóng các tab khác
+Close tabs below	Đóng các tab bên dưới
+Close duplicate tabs	Đóng tab trùng lặp
+No duplicate tabs here.	Không có tab trùng lặp ở đây.
+No tabs to clear: pinned tabs stay.	Không có tab nào để dọn: tab đã ghim được giữ lại.
+Close every tab in this space. Pinned tabs stay.	Đóng mọi tab trong không gian này. Tab đã ghim được giữ lại.
+Bring the closed tabs back (Ctrl+Shift+T)	Mở lại các tab vừa đóng (Ctrl+Shift+T)
+Clear tabs	Dọn tab
+re:Clear tabs in (.+)	Dọn tab trong $1
+re:Closed (\d+) tabs?\. Ctrl\+Shift\+T brings them back\.	Đã đóng $1 tab. Ctrl+Shift+T để mở lại.
+re:Brought back (\d+) tabs?\.	Đã mở lại $1 tab.
+re:Bring back (\d+) closed tabs	Mở lại $1 tab vừa đóng

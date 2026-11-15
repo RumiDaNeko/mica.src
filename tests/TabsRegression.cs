@@ -92,6 +92,33 @@ namespace Mica {
      if(views.ContainsKey(tab("bravo").Id))DisposeView(tab("bravo").Id); // Opening the group earlier woke it.
      WarmSoon(tab("bravo").Id,true);WarmSoon(tab("bravo").Id,false);await Task.Delay(400);
      RegressionCheck("passing over a tab doesn't warm it",delegate {Require(!views.ContainsKey(tab("bravo").Id),"bravo warmed");});}
+    // Closing many at once, and one undo that puts them all back in place.
+    {state.ActiveId=tab("echo").Id;var twin=new PageEntry {Id=Guid.NewGuid().ToString("N"),Url="https://charlie.test",Title="charlie",Space=state.Space};state.Tabs.Add(twin);RenderTabs();
+     RegressionCheck("duplicates are counted",delegate {Require(DuplicateCount()==1,DuplicateCount().ToString());});
+     CloseDuplicateTabs();await Task.Delay(300);
+     RegressionCheck("closing duplicates keeps the first and closes the copy",delegate {Require(order()=="*alpha,echo,delta,charlie,bravo"&&!state.Tabs.Contains(twin),order());});
+     CloseTabsBelow(tab("delta"));await Task.Delay(300);
+     RegressionCheck("close tabs below closes only what's under it",delegate {Require(order()=="*alpha,echo,delta",order());});
+     ReopenClosedTab();await Task.Delay(300);
+     RegressionCheck("Ctrl+Shift+T brings the whole batch back in place",delegate {Require(order()=="*alpha,echo,delta,charlie,bravo",order());});
+     CloseOtherTabs(tab("delta"));await Task.Delay(300);
+     RegressionCheck("close other tabs keeps this one and the pinned ones",delegate {Require(order()=="*alpha,delta"&&state.ActiveId==tab("delta").Id,order());});
+     UndoCloseTabs();await Task.Delay(300);
+     Find<Button>("ClearTabsButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));await Task.Delay(300);
+     RegressionCheck("Clear empties the space but keeps pinned tabs",delegate {Require(order()=="*alpha"&&state.ActiveId==tab("alpha").Id,order());});
+     RegressionCheck("after Clear the button offers Undo",delegate {Require((string)Find<Button>("ClearTabsButton").Tag=="undo",(string)Find<Button>("ClearTabsButton").Tag);});
+     Find<Button>("ClearTabsButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));await Task.Delay(300);
+     RegressionCheck("Undo puts every tab back",delegate {Require(order()=="*alpha,echo,delta,charlie,bravo"&&(string)Find<Button>("ClearTabsButton").Tag=="clear",order());});
+     tab("alpha").Pinned=false;state.NormalizeGroups();var other=state.AddTab("https://other.test/");other.Space="Work";state.ActiveId=tab("echo").Id;RenderTabs();string before=order();
+     ClearSpaceTabs();await Task.Delay(300);
+     RegressionCheck("clearing a whole space leaves a home tab there and other spaces alone",delegate {Require(order()=="home"&&state.Tabs.Contains(other),order());});
+     ReopenClosedTab();await Task.Delay(300);
+     RegressionCheck("undo removes that home tab again",delegate {Require(order()==before&&state.ActiveId==tab("echo").Id,order());});
+     state.AddTab("mica://home");state.AddTab("mica://home");state.ActiveId=tab("echo").Id;RenderTabs();CloseDuplicateTabs();await Task.Delay(300);
+     RegressionCheck("spare empty New tabs count as duplicates",delegate {Require(state.Tabs.Count(t=>t.Space==state.Space&&t.Url=="mica://home")==1,order());});
+     CloseTab(state.Tabs.First(t=>t.Space==state.Space&&t.Url=="mica://home").Id);await Task.Delay(200);
+     CloseTab(tab("bravo").Id);await Task.Delay(200);ReopenClosedTab();await Task.Delay(300);
+     RegressionCheck("after closing one tab, Ctrl+Shift+T reopens that tab, not the old batch",delegate {Require(state.Tabs.Count(t=>t.Url.Contains("bravo"))==1&&state.Tabs.Count(t=>t.Space==state.Space)==5,order());});}
    }catch(Exception e){log.Add("ERROR "+e);regressionFailures++;}
    log.Add(regressionFailures==0?"ALL PASS":regressionFailures+" FAILURE(S)");
    File.WriteAllLines(Path.Combine(dir,"result.txt"),log);window.Close();
