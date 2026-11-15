@@ -16,6 +16,9 @@ namespace Mica {
    if(success)return NavigationResult.Ready;
    if(error=="OperationCanceled"||error=="ValidAuthenticationCredentialsRequired"||error=="ValidProxyAuthenticationRequired")return NavigationResult.Stopped;
    if(error=="ConnectionAborted"&&httpStatus>=200&&httpStatus<300)return NavigationResult.Stopped;
+   // The engine counts 4xx/5xx answers as failures, but the site sent a page (a Cloudflare check, its own
+   // "not found"), so that page shows instead of Mica's error. A bad certificate is never let through this way.
+   if(httpStatus>=400&&!(error??"").StartsWith("Certificate",StringComparison.Ordinal))return NavigationResult.Ready;
    return NavigationResult.Failed;
   }
  }

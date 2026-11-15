@@ -20,6 +20,13 @@ namespace Mica {
    try {await WaitFor(()=>siteBubble!=null&&siteBubble.IsOpen,ms);}catch(Exception){return null;}
    await Task.Delay(150);return siteBubble;
   }
+  // Picks a saved login the way you would now: click into the field, then the account in Mica's dropdown.
+  async Task<bool> PickFromLoginMenu(CoreWebView2 core,string fieldScript,int row=0) {
+   if(loginMenu!=null&&loginMenu.IsOpen)HideLoginMenu(loginMenuView);
+   await core.ExecuteScriptAsync("(function(f){if(f){f.blur();f.focus();}})("+fieldScript+")");
+   try {await WaitFor(()=>loginMenu!=null&&loginMenu.IsOpen&&loginMenuActions.Count>row,5000);}catch(Exception){return false;}
+   await Task.Delay(PromptArmDelay+100);loginMenuActions[row]();return true;
+  }
   void DismissSignInOffer() {if(siteBubble!=null&&siteBubble.IsOpen&&siteBubble.Tag is Action)((Action)siteBubble.Tag)();}
   void Choose(Popup bubble,string value) {var button=LogicalDescendants<Button>(bubble.Child).First(b=>(b.Tag as string)==value);button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));}
   async Task SubmitLogin(CoreWebView2 core,string user,string password) {
@@ -88,10 +95,11 @@ namespace Mica {
     fillLog=new List<string>();
     sessionVault=null;sessionMaster=null;
     core=CurrentView().CoreWebView2;core.Navigate("https://login.test/");await WaitForPage();
-    // The page never gets the password from its own message; you pick the login in Mica's bubble.
-    var offer=await WaitForBubble(8000);string unpicked=await core.ExecuteScriptAsync("u.value+'/'+p.value");
-    RegressionCheck("a saved login waits for you to pick it",delegate {Require(offer!=null&&!unpicked.Contains("pw-"),unpicked+(offer==null?", no bubble":""));});
-    if(offer!=null)Choose(offer,"0");
+    // The page never gets the password from its own message; you pick the login in Mica's dropdown.
+    // A login form puts nothing on the island, so an ignored offer can't hold it.
+    var offer=await WaitForBubble(2500);string unpicked=await core.ExecuteScriptAsync("u.value+'/'+p.value");
+    RegressionCheck("a saved login waits for you to pick it, without an island prompt",delegate {Require(offer==null&&!unpicked.Contains("pw-"),unpicked+(offer!=null?", island prompt shown":""));});
+    bool menuPicked=await PickFromLoginMenu(core,"u");log.Add("picked from dropdown: "+menuPicked);
     string filled="";for(int i=0;i<40;i++){await Task.Delay(150);filled=await core.ExecuteScriptAsync("u.value+'/'+p.value");if(filled.Contains("pw-"))break;}
     if(sessionVault==null){var sw=System.Diagnostics.Stopwatch.StartNew();bool opened=await OpenAutofillVault();log.Add("direct open: "+opened+" in "+sw.ElapsedMilliseconds+" ms; page script "+await core.ExecuteScriptAsync("typeof window.__micaUsePasskey"));}
     log.Add("fill calls: "+string.Join(" ; ",fillLog));
@@ -133,12 +141,12 @@ namespace Mica {
     log.Add("google-style sign-in offered: "+offered);
     RegressionCheck("a Google-style two-step sign-in offers to save, with the email",delegate {Require(offered=="someone@gmail.com",offered);});
     if(bubble!=null){Choose(bubble,"save");await WaitFor(()=>SavedLogins("https://sso.test").Any(),5000).ContinueWith(t=>{});}
-    core.Navigate("https://sso.test/signin");await WaitForPage();var pick=await WaitForBubble(6000);if(pick!=null)Choose(pick,"0");await Task.Delay(800);
+    core.Navigate("https://sso.test/signin");await WaitForPage();await Task.Delay(500);await PickFromLoginMenu(core,"document.getElementById('identifierId')");await Task.Delay(800);
     string step1=await core.ExecuteScriptAsync("document.getElementById('identifierId').value");
     RegressionCheck("the email step fills once you pick the login",delegate {Require(step1=="\"someone@gmail.com\"",step1);});
     // 5b. A one-time code above the password is never taken for the username, nor filled with it.
     core.Navigate("https://sso.test/otp");await WaitForPage();await Task.Delay(500);
-    var otpPick=await WaitForBubble(3000);if(otpPick!=null)Choose(otpPick,"0");await Task.Delay(600);
+    await PickFromLoginMenu(core,"document.getElementById('pw')");await Task.Delay(600);
     string codeBox=await core.ExecuteScriptAsync("document.getElementById('code').value");
     await core.ExecuteScriptAsync("document.getElementById('code').value='';document.getElementById('pw').value='';document.getElementById('code').focus()");await type("123456");
     await core.ExecuteScriptAsync("document.getElementById('pw').focus()");await type("otp-step-pass");await next();

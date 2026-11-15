@@ -8,9 +8,19 @@ const fail = (status, code) => Object.assign(new Error(code), {status, code});
 const encoded = (value, length) => typeof value === 'string' && /^[A-Za-z0-9+/]+={0,2}$/.test(value) && Buffer.from(value, 'base64').toString('base64') === value && (length ? Buffer.from(value, 'base64').length === length : Buffer.from(value, 'base64').length > 0 && Buffer.from(value, 'base64').length % 16 === 0);
 // Plain, non-secret browser preferences: only the toggles Mica syncs (BrowserSettingsSync.SettingsSnapshot), as booleans.
 // Secrets stay in the encrypted vault.
-const SettingKeys = ['dark', 'ambientYoutube', 'strictTracking'];
+// Each synced preference and the only values Mica writes for it; anything else is refused.
+const bool = v => typeof v === 'boolean';
+const int = (lo, hi) => v => Number.isInteger(v) && v >= lo && v <= hi;
+const SettingKeys = {
+  dark: bool, ambientYoutube: bool, strictTracking: bool, treeTabs: bool, readerSerif: bool,
+  textScale: v => v === 1 || v === 1.15 || v === 1.3,
+  readerSize: v => v === 0 || int(13, 28)(v),
+  homeGlass: int(-1, 100),
+  frameColor: v => v === '' || (typeof v === 'string' && /^#[0-9A-Fa-f]{6}$/.test(v)),
+  closeEffect: v => typeof v === 'string' && /^[a-z]{0,16}$/.test(v),
+};
 export function validSettings(s) {
-  return object(s) && Object.entries(s).every(([k,v])=>SettingKeys.includes(k) && typeof v==='boolean');
+  return object(s) && Object.entries(s).every(([k,v])=>Object.hasOwn(SettingKeys,k) && SettingKeys[k](v));
 }
 // Send tab to device: each Mica install names itself; a sent tab waits for that device to pick it up.
 export const deviceId = v => typeof v==='string' && /^[A-Za-z0-9_-]{16,43}$/.test(v);

@@ -1372,3 +1372,5 @@ re:Clear tabs in (.+)	Dọn tab trong $1
 re:Closed (\d+) tabs?\. Ctrl\+Shift\+T brings them back\.	Đã đóng $1 tab. Ctrl+Shift+T để mở lại.
 re:Brought back (\d+) tabs?\.	Đã mở lại $1 tab.
 re:Bring back (\d+) closed tabs	Mở lại $1 tab vừa đóng
+Signed in. Your settings now sync with your other PCs.	Đã đăng nhập. Cài đặt của bạn giờ được đồng bộ với các máy khác.
+Couldn't reach the sync service. Try again.	Không kết nối được dịch vụ đồng bộ. Hãy thử lại.

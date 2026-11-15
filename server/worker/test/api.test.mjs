@@ -72,6 +72,10 @@ test('settings sync: per-user, newest write wins, validated',async t=>{
     {settings:{inbox:true},updatedAt:4000},{settings:{dark:1},updatedAt:4000},{settings:{strictTracking:'false'},updatedAt:4000},{settings:[true],updatedAt:4000}])
     assert.equal((await f.request('/v1/settings','PUT',bad,a)).status,400);
   assert.equal((await f.request('/v1/settings','PUT',{settings:{dark:true,ambientYoutube:true,strictTracking:false},updatedAt:5000},a)).status,200);
+  const look={dark:true,textScale:1.3,treeTabs:true,readerSize:22,readerSerif:false,frameColor:'#336699',homeGlass:-1,closeEffect:''};
+  assert.deepEqual((await f.request('/v1/settings','PUT',{settings:look,updatedAt:6000},a)).body,{settings:look,updatedAt:6000});
+  for (const bad of [{textScale:2},{readerSize:12},{readerSize:22.5},{homeGlass:101},{frameColor:'red'},{frameColor:'#33669'},{closeEffect:'Boom!'},{treeTabs:'true'},{toString:true}])
+    assert.equal((await f.request('/v1/settings','PUT',{settings:bad,updatedAt:7000},a)).status,400,JSON.stringify(bad));
 });
 test('hardening: security headers, extra envelope fields, per-IP poll and per-account write limits',async t=>{
   const f=await fixture(t),a=await f.login('100'),b=await f.login('200');

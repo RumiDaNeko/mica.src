@@ -164,16 +164,13 @@ if(document.readyState==='loading')addEventListener('DOMContentLoaded',watch);el
    try {string result=await core.ExecuteScriptAsync(FillScript(origin,entry.Username,entry.Password,force));if(fillLog!=null)fillLog.Add(DateTime.Now.ToString("ss.fff")+" fill result "+result);if(result=="\"filled\"")Status("Filled your saved password for "+new Uri(origin).Host+".");}catch(Exception){}
   }
 
+  // A login form appeared: get the saved logins ready, so the dropdown under the field (BrowserLoginMenu) opens
+  // at once when you click into it. Nothing shows on the island: an offer you ignored used to sit there and
+  // keep every other prompt out.
   async void OfferFill(Func<bool> live,WebView2 view,string origin,bool quiet) {
-   if(fillLog!=null)fillLog.Add(DateTime.Now.ToString("ss.fff")+" offer fill "+origin+" quiet="+quiet);
-   Func<bool> alive=()=>!closing&&live()&&(quiet||view.IsVisible);
+   if(fillLog!=null)fillLog.Add(DateTime.Now.ToString("ss.fff")+" login form "+origin+" quiet="+quiet);
    if(sessionVault==null)await OpenAutofillVault();
-   var saved=SavedLogins(origin);if(fillLog!=null)fillLog.Add(DateTime.Now.ToString("ss.fff")+" opened="+(sessionVault!=null)+" saved="+saved.Count+" alive="+alive());if(saved.Count==0)return;
-   // Never filled straight from the page's message: its script could send one and read the password.
-   // You pick the login in Mica's own bubble, which a page can't click.
-   var choices=saved.Take(3).Select((e,i)=>new[]{string.IsNullOrEmpty(e.Username)?"(no username)":e.Username,i.ToString(),i==0?"primary":""}).ToArray();
-   ShowChoiceBubble(Find<Button>("AddressButton"),"",saved.Count==1?"Sign in with your saved login":"Sign in with a saved login",new Uri(origin).Host,saved.Count>3?"Showing 3 of "+saved.Count+". Open Passwords for the rest.":null,null,choices,alive,
-    delegate(string choice) {int index;if(choice!=null&&int.TryParse(choice,out index))FillLogin(view,origin,saved[index]);});
+   if(fillLog!=null)fillLog.Add(DateTime.Now.ToString("ss.fff")+" opened="+(sessionVault!=null)+" saved="+SavedLogins(origin).Count+" alive="+(!closing&&live()));
   }
 
   // Unlocks for page use: Windows Hello when it is set up, otherwise the master password.

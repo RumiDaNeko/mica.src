@@ -6,7 +6,6 @@ using Microsoft.Web.WebView2.Core;
 
 namespace Mica {
  partial class BrowserApp {
-  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
   static string ForegroundOwner() {uint pid;GetWindowThreadProcessId(GetForegroundWindow(),out pid);try {var p=System.Diagnostics.Process.GetProcessById((int)pid);return p.ProcessName+" "+pid+(pid==(uint)System.Diagnostics.Process.GetCurrentProcess().Id?" (this test)":"");}catch(Exception){return pid.ToString();}}
   async Task RunMemoryTest() {
    var log=regressionLog;string dir=Path.Combine(profile,"memory");Directory.CreateDirectory(dir);

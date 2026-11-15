@@ -86,7 +86,7 @@ namespace Mica {
    label.Children.Add(new TextBlock {Text="",FontFamily=new FontFamily("Segoe MDL2 Assets"),FontSize=13,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(0,0,8,0)});
    label.Children.Add(new TextBlock {Text=account!=null?"Passwords":"Sign in with Discord",FontWeight=FontWeights.SemiBold,VerticalAlignment=VerticalAlignment.Center});
    var passwords=new Button {Content=label,Padding=new Thickness(14,8,14,8),Margin=new Thickness(12,8,12,10),HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Center,Tag="account-passwords"};
-   passwords.SetResourceReference(Button.BackgroundProperty,"Hover");passwords.Click+=delegate {accountPopup.IsOpen=false;ShowVault();};body.Children.Add(passwords);
+   passwords.SetResourceReference(Button.BackgroundProperty,"Hover");passwords.Click+=delegate {accountPopup.IsOpen=false;if(account==null&&!privateMode)SignInFromAccountCard();else ShowVault();};body.Children.Add(passwords);
    MenuDivider(body);MenuHeading(body,"SWITCH PROFILE");
    foreach(var item in LoadProfiles()) {
     var entry=item;bool here=current!=null&&entry.Id==current.Id;

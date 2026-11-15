@@ -53,7 +53,8 @@ namespace Mica {
   string FinishHttpsUpgrade(string id,CoreWebView2NavigationCompletedEventArgs e) {
    HttpsUpgrade pending;if(!httpsUpgrades.TryGetValue(id,out pending)||!pending.Started||pending.Id!=e.NavigationId)return null;
    httpsUpgrades.Remove(id);
-   return e.IsSuccess||e.WebErrorStatus==CoreWebView2WebErrorStatus.OperationCanceled?null:pending.Http;
+   // A 4xx/5xx answer over HTTPS is still the site answering: no falling back to http://.
+   return e.IsSuccess||e.WebErrorStatus==CoreWebView2WebErrorStatus.OperationCanceled||e.HttpStatusCode>=400&&!IsCertificateError(e.WebErrorStatus)?null:pending.Http;
   }
   void ShowInsecureOffer(string url) {
    var uri=new Uri(url);

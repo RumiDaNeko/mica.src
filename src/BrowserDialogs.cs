@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -35,8 +36,37 @@ namespace Mica {
    Grid.SetRow(scroll,1);layout.Children.Add(scroll);
    actions=new StackPanel {Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,18,0,0)};Grid.SetRow(actions,2);layout.Children.Add(actions);
    dialog.PreviewKeyDown+=delegate(object sender,KeyEventArgs e){if(e.Key==Key.Escape){dialog.Close();e.Handled=true;}};
-   dialog.Loaded+=delegate {AnimateArrival(card);};return dialog;
+   dialog.Loaded+=delegate {AnimateArrival(card);};AddDialogBackdrop(dialog,owner);return dialog;
   }
+  // Behind a dialog on a Mica window: the window frosted over, and a click on it closes the dialog.
+  // The glass is a small blurred picture of the window taken once (PrintWindow also catches the web
+  // page, which WPF can't draw over), shown in a borderless window between the browser and the dialog.
+  internal static readonly System.Collections.Generic.HashSet<Window> stayOnOutsideClick=new System.Collections.Generic.HashSet<Window>();
+  void AddDialogBackdrop(Window dialog,Window owner) {
+   if(owner==null||owner!=window||smoke&&!Environment.GetCommandLineArgs().Contains("--backdrop-test"))return;
+   Window glass=null;
+   dialog.SourceInitialized+=delegate {
+    if(closing||!owner.IsVisible||owner.WindowState==WindowState.Minimized)return;
+    var handle=new System.Windows.Interop.WindowInteropHelper(owner).Handle;var source=PresentationSource.FromVisual(owner);
+    BackdropNative.Box box;if(handle==IntPtr.Zero||source==null||!BackdropNative.GetWindowRect(handle,out box))return;
+    var toDip=source.CompositionTarget.TransformFromDevice;var topLeft=toDip.Transform(new Point(box.Left,box.Top));var size=toDip.Transform(new Point(box.Right-box.Left,box.Bottom-box.Top));
+    var tint=new System.Windows.Shapes.Rectangle();tint.SetResourceReference(System.Windows.Shapes.Shape.FillProperty,"Canvas");tint.Opacity=state.Dark?0.45:0.35;
+    var layers=new Grid {ClipToBounds=true};
+    var picture=BackdropNative.Snapshot(handle,box.Right-box.Left,box.Bottom-box.Top,8);
+    // Blurred at an eighth of the size and stretched back: soft glass for a few hundred kilobytes.
+    if(picture!=null)layers.Children.Add(new System.Windows.Controls.Image {Source=picture,Stretch=Stretch.Fill,Margin=new Thickness(-12),Effect=new System.Windows.Media.Effects.BlurEffect {Radius=10,RenderingBias=System.Windows.Media.Effects.RenderingBias.Performance}});
+    else tint.Opacity=0.6;
+    layers.Children.Add(tint);
+    glass=new Window {Owner=owner,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,Background=Brushes.Transparent,ShowInTaskbar=false,ShowActivated=false,
+     WindowStartupLocation=WindowStartupLocation.Manual,Left=topLeft.X,Top=topLeft.Y,Width=size.X,Height=size.Y,Content=layers,Resources=window.Resources,Tag="dialog-backdrop",Opacity=0};
+    glass.MouseLeftButtonDown+=delegate(object sender,MouseButtonEventArgs e) {e.Handled=true;if(!stayOnOutsideClick.Contains(dialog))dialog.Close();};
+    glass.Show();
+    if(SystemParameters.ClientAreaAnimation)glass.BeginAnimation(UIElement.OpacityProperty,new System.Windows.Media.Animation.DoubleAnimation(0,1,TimeSpan.FromMilliseconds(140)));else glass.Opacity=1;
+    dialogBackdrop=glass;
+   };
+   dialog.Closed+=delegate {stayOnOutsideClick.Remove(dialog);if(glass!=null){var g=glass;glass=null;if(dialogBackdrop==g)dialogBackdrop=null;g.Close();}};
+  }
+  internal Window dialogBackdrop;
   static string DialogGlyph(string title) {
    switch(title) {
     case "Keyboard shortcuts":return "\uE765";case "Clear browsing data":return "\uE74D";case "Site permissions":return "\uE72E";
@@ -73,6 +103,33 @@ namespace Mica {
    StackPanel body,actions;var dialog=CreateMicaDialog(owner,title,520,310,out body,out actions);var detail=DialogText(message,13,"Muted");detail.LineHeight=22;body.Children.Add(detail);
    var cancel=new Button {Content="Cancel",Name="CancelAction",IsDefault=true,Padding=new Thickness(18,10,18,10),Margin=new Thickness(0,0,8,0)};cancel.Click+=delegate {dialog.DialogResult=false;};actions.Children.Add(cancel);
    var accept=new Button {Content=acceptLabel,Name="ConfirmAction",Padding=new Thickness(18,10,18,10)};accept.SetResourceReference(Button.BackgroundProperty,"Hover");accept.Click+=delegate {dialog.DialogResult=true;};actions.Children.Add(accept);dialog.Loaded+=delegate {cancel.Focus();};return dialog.ShowDialog()==true;
+  }
+ }
+}
+namespace Mica {
+ static class BackdropNative {
+  [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] internal struct Box {public int Left,Top,Right,Bottom;}
+  [System.Runtime.InteropServices.DllImport("user32.dll")] internal static extern bool GetWindowRect(IntPtr window,out Box box);
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool PrintWindow(IntPtr window,IntPtr dc,uint flags);
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr window);
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern int ReleaseDC(IntPtr window,IntPtr dc);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern IntPtr CreateCompatibleDC(IntPtr dc);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern IntPtr CreateCompatibleBitmap(IntPtr dc,int width,int height);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern IntPtr SelectObject(IntPtr dc,IntPtr thing);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr thing);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern bool DeleteDC(IntPtr dc);
+  // The window as it looks now, web page included (PW_RENDERFULLCONTENT), shrunk by `shrink` and copied
+  // out so the full-size capture can go straight away. Null if Windows won't draw it.
+  internal static System.Windows.Media.Imaging.BitmapSource Snapshot(IntPtr window,int width,int height,int shrink) {
+   if(width<=0||height<=0||width>16384||height>16384)return null;
+   IntPtr screen=GetDC(IntPtr.Zero),memory=IntPtr.Zero,bitmap=IntPtr.Zero,old=IntPtr.Zero;
+   try {
+    memory=CreateCompatibleDC(screen);bitmap=CreateCompatibleBitmap(screen,width,height);if(memory==IntPtr.Zero||bitmap==IntPtr.Zero)return null;
+    old=SelectObject(memory,bitmap);bool drawn=PrintWindow(window,memory,2);SelectObject(memory,old);old=IntPtr.Zero;if(!drawn)return null;
+    var full=System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap,IntPtr.Zero,System.Windows.Int32Rect.Empty,System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+    var small=new System.Windows.Media.Imaging.WriteableBitmap(new System.Windows.Media.Imaging.TransformedBitmap(full,new System.Windows.Media.ScaleTransform(1.0/shrink,1.0/shrink)));small.Freeze();return small;
+   }catch(Exception){return null;}
+   finally {if(bitmap!=IntPtr.Zero)DeleteObject(bitmap);if(memory!=IntPtr.Zero)DeleteDC(memory);ReleaseDC(IntPtr.Zero,screen);}
   }
  }
 }

@@ -26,6 +26,9 @@ class CoreTests {
   Check("actual aborted connection remains an error",delegate {var n=new NavigationProgress();n.Begin(1);Equal(NavigationResult.Failed,n.Complete(1,false,0,"ConnectionAborted"));});
   Check("old aborted navigation cannot overwrite new one",delegate {var n=new NavigationProgress();n.Begin(1);n.Begin(2);Equal(NavigationResult.Ignore,n.Complete(1,false,0,"ConnectionAborted"));Equal(true,n.IsLoading);Equal(NavigationResult.Ready,n.Complete(2,true,200,"Unknown"));});
   Check("cancellation retains page without fake error",delegate {var n=new NavigationProgress();n.Begin(1);Equal(NavigationResult.Stopped,n.Complete(1,false,0,"OperationCanceled"));});
+  Check("a site's own 403/503 page (Cloudflare check) shows instead of Mica's error",delegate {var n=new NavigationProgress();n.Begin(1);Equal(NavigationResult.Ready,n.Complete(1,false,403,"Unknown"));n.Begin(2);Equal(NavigationResult.Ready,n.Complete(2,false,503,"Unknown"));n.Begin(3);Equal(NavigationResult.Ready,n.Complete(3,false,404,"Unknown"));});
+  Check("no answer from the server is still an error",delegate {var n=new NavigationProgress();n.Begin(1);Equal(NavigationResult.Failed,n.Complete(1,false,0,"HostNameNotResolved"));n.Begin(2);Equal(NavigationResult.Failed,n.Complete(2,false,0,"Unknown"));});
+  Check("a bad certificate with an HTTP error status is still an error",delegate {var n=new NavigationProgress();n.Begin(1);Equal(NavigationResult.Failed,n.Complete(1,false,403,"CertificateIsInvalid"));});
   Check("certificate failure is never hidden by HTTP status",delegate {var n=new NavigationProgress();n.Begin(1);Equal(NavigationResult.Failed,n.Complete(1,false,200,"CertificateIsInvalid"));});
   Check("domain becomes HTTPS",delegate { Equal("https://example.com/docs",Navigation.Resolve(" example.com/docs ")); });
   Check("localhost preserves port",delegate { Equal("http://localhost:3000/",Navigation.Resolve("localhost:3000")); });

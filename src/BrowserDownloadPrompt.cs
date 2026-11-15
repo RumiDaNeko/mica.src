@@ -70,7 +70,8 @@ namespace Mica {
   void TakeKeyboardFromPage(Popup popup) {var handle=PopupHandle(popup);if(handle!=IntPtr.Zero&&GetFocus()!=handle)SetFocus(handle);}
   void ShowChoiceBubble(FrameworkElement anchor,string icon,string title,string subject,string detail,string warning,string[][] choices,Func<bool> alive,Action<string> done,FrameworkElement extra=null) {
    window.Dispatcher.BeginInvoke(new Action(delegate {
-    siteBubbleQueue.Enqueue(delegate {
+    Action build=null;
+    siteBubbleQueue.Enqueue(build=delegate {
      if(closing||!alive()){done(null);NextSiteBubble();return;}
      var card=new Border {Width=360,CornerRadius=new CornerRadius(14),BorderThickness=new Thickness(1),Padding=new Thickness(16,14,14,14),Margin=new Thickness(14,4,14,22),Resources=window.Resources};card.SetResourceReference(Border.BackgroundProperty,"Panel");card.SetResourceReference(Border.BorderBrushProperty,"Line");
      card.Effect=new System.Windows.Media.Effects.DropShadowEffect {BlurRadius=28,ShadowDepth=6,Opacity=0.18,Color=Color.FromRgb(0x25,0x20,0x32)};
@@ -99,15 +100,16 @@ namespace Mica {
       window.Dispatcher.BeginInvoke(new Action(delegate {field.Focus();System.Windows.Input.Keyboard.Focus(field);}),System.Windows.Threading.DispatcherPriority.ApplicationIdle);
      };
      bool finished=false;
-     Action<string> finish=delegate(string value) {if(finished)return;finished=true;siteBubble=null;if(typed){var page=CurrentView();if(page!=null)page.Focus();}done(value);CloseIslandPopup(popup,NextSiteBubble);};
+     Action<string> finish=delegate(string value) {if(finished)return;finished=true;siteBubble=null;siteBubbleYield=null;if(typed){var page=CurrentView();if(page!=null)page.Focus();}done(value);CloseIslandPopup(popup,NextSiteBubble);};
      foreach(var choice in choices) {var value=choice[1];bool quiet=choices.Length>=3&&place++==0,side=quiet&&!many;var button=new Button {Content=choice[0],Padding=new Thickness(quiet?10:14,7,quiet?10:14,7),Margin=side?new Thickness(-10,0,0,0):new Thickness(6,0,0,6),FontSize=12,Tag=value,FlowDirection=FlowDirection.LeftToRight};if(quiet){button.SetResourceReference(Control.ForegroundProperty,"Muted");if(choice.Length>3)button.ToolTip=choice[3];}if(side)aside.Children.Add(button);else if(quiet)buttons.Children.Add(button);if(!quiet){if(choice[2]=="primary")button.SetResourceReference(Button.BackgroundProperty,"Hover");buttons.Children.Insert(0,button);}button.Click+=delegate {finish(value);};}
      var dismiss=new Button {Content="",FontFamily=new FontFamily("Segoe MDL2 Assets"),FontSize=9,Width=24,Height=24,Padding=new Thickness(0),HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Top,Margin=new Thickness(0,-6,-6,0),ToolTip="Cancel"};dismiss.SetResourceReference(Control.ForegroundProperty,"Muted");dismiss.Click+=delegate {finish(null);};Grid.SetColumn(dismiss,1);grid.Children.Add(dismiss);
      popup.KeyDown+=delegate(object sender,System.Windows.Input.KeyEventArgs k) {if(k.Key==System.Windows.Input.Key.Escape){finish(null);k.Handled=true;}};
      siteBubble=popup;popup.Tag=(Action)delegate {finish(null);};
+     siteBubbleYield=YieldWhenIdle(card,popup,build,()=>finished||typed,delegate {finished=true;});
      WatchSiteBubble();KeepWithWindow(popup);
      popup.IsOpen=true;
     });
-    if(siteBubble==null&&siteBubbleQueue.Count==1)NextSiteBubble();
+    if(siteBubble==null&&siteBubbleQueue.Count==1)NextSiteBubble();else LetWaitingBubbleIn();
    }));
   }
  }

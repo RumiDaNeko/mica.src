@@ -138,7 +138,8 @@ namespace Mica {
   }
   void AskSiteBubble(FrameworkElement anchor,string icon,string title,string subject,string acceptLabel,string declineLabel,bool offerRemember,Func<bool> alive,Action<bool,bool> done) {
    window.Dispatcher.BeginInvoke(new Action(delegate {
-    siteBubbleQueue.Enqueue(delegate {
+    Action build=null;
+    siteBubbleQueue.Enqueue(build=delegate {
      if(closing||!alive()){done(false,false);NextSiteBubble();return;}
      var card=new Border {Width=340,CornerRadius=new CornerRadius(14),BorderThickness=new Thickness(1),Padding=new Thickness(16,14,14,14),Margin=new Thickness(14,4,14,22),Resources=window.Resources};card.SetResourceReference(Border.BackgroundProperty,"Panel");card.SetResourceReference(Border.BorderBrushProperty,"Line");
      card.Effect=new System.Windows.Media.Effects.DropShadowEffect {BlurRadius=28,ShadowDepth=6,Opacity=0.18,Color=Color.FromRgb(0x25,0x20,0x32)};
@@ -152,7 +153,7 @@ namespace Mica {
      var buttons=new StackPanel {Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,12,0,0)};stack.Children.Add(buttons);
      var popup=IslandPopup(card);
      bool finished=false;
-     Action<bool,bool> finish=delegate(bool accepted,bool keep) {if(finished)return;finished=true;siteBubble=null;done(accepted,keep);CloseIslandPopup(popup,NextSiteBubble);};
+     Action<bool,bool> finish=delegate(bool accepted,bool keep) {if(finished)return;finished=true;siteBubble=null;siteBubbleYield=null;done(accepted,keep);CloseIslandPopup(popup,NextSiteBubble);};
      // Block sits in the corner, where a page can lure a click; Allow is the one you have to aim for.
      var accept=new Button {Content=acceptLabel,Padding=new Thickness(14,7,14,7),Margin=new Thickness(0,0,6,0),FontSize=12};accept.SetResourceReference(Button.BackgroundProperty,"Hover");accept.Click+=delegate {finish(true,offerRemember&&remember.IsChecked==true);};buttons.Children.Add(accept);
      var decline=new Button {Content=declineLabel,Padding=new Thickness(14,7,14,7),FontSize=12};decline.Click+=delegate {finish(false,offerRemember&&remember.IsChecked==true);};buttons.Children.Add(decline);
@@ -160,13 +161,37 @@ namespace Mica {
      var dismiss=new Button {Content="",FontFamily=new FontFamily("Segoe MDL2 Assets"),FontSize=9,Width=24,Height=24,Padding=new Thickness(0),HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Top,Margin=new Thickness(0,-6,-6,0),ToolTip="Dismiss"};dismiss.SetResourceReference(Control.ForegroundProperty,"Muted");dismiss.Click+=delegate {finish(false,false);};Grid.SetColumn(dismiss,1);grid.Children.Add(dismiss);
      popup.KeyDown+=delegate(object sender,System.Windows.Input.KeyEventArgs k) {if(k.Key==System.Windows.Input.Key.Escape){finish(false,false);k.Handled=true;}};
      siteBubble=popup;popup.Tag=(Action)delegate {finish(false,false);};
+     siteBubbleYield=YieldWhenIdle(card,popup,build,()=>finished,delegate {finished=true;});
      WatchSiteBubble();KeepWithWindow(popup);
      popup.IsOpen=true;
     });
-    if(siteBubble==null&&siteBubbleQueue.Count==1)NextSiteBubble();
+    if(siteBubble==null&&siteBubbleQueue.Count==1)NextSiteBubble();else LetWaitingBubbleIn();
    }));
   }
-  void NextSiteBubble() {if(siteBubble!=null||siteBubbleQueue.Count==0)return;siteBubbleQueue.Dequeue()();}
+  // A prompt that arrives while another sits untouched on the island takes its place; the one it replaces
+  // isn't answered, it waits and comes back next. Only new prompts step in, so two ignored ones don't swap
+  // back and forth, and a prompt you're pointing at, typing in or only just saw stays put.
+  Func<bool> siteBubbleYield;System.Windows.Threading.DispatcherTimer siteBubbleYieldTimer;
+  readonly HashSet<Action> yieldedBubbles=new HashSet<Action>();
+  const int BubbleIdleMs=2000;
+  Func<bool> YieldWhenIdle(FrameworkElement card,Popup popup,Action build,Func<bool> busy,Action markDone) {
+   var shown=DateTime.UtcNow;
+   return delegate {
+    if(busy()||card.IsMouseOver||card.IsKeyboardFocusWithin||(DateTime.UtcNow-shown).TotalMilliseconds<BubbleIdleMs)return false;
+    markDone();siteBubble=null;siteBubbleYield=null;yieldedBubbles.Add(build);siteBubbleQueue.Enqueue(build);CloseIslandPopup(popup,NextSiteBubble);return true;
+   };
+  }
+  bool FreshBubbleWaiting {get {return siteBubbleQueue.Any(b=>!yieldedBubbles.Contains(b));}}
+  void LetWaitingBubbleIn() {
+   if(siteBubble==null||!FreshBubbleWaiting)return;
+   if(siteBubbleYield!=null&&siteBubbleYield())return;
+   if(siteBubbleYieldTimer==null) {
+    siteBubbleYieldTimer=new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.Background,window.Dispatcher) {Interval=TimeSpan.FromMilliseconds(400)};
+    siteBubbleYieldTimer.Tick+=delegate {if(closing||siteBubble==null||!FreshBubbleWaiting||siteBubbleYield!=null&&siteBubbleYield())siteBubbleYieldTimer.Stop();};
+   }
+   siteBubbleYieldTimer.Start();
+  }
+  void NextSiteBubble() {if(siteBubble!=null||siteBubbleQueue.Count==0)return;var next=siteBubbleQueue.Dequeue();yieldedBubbles.RemoveWhere(b=>!siteBubbleQueue.Contains(b));next();}
   Window sitePermissionsWindow;
   CoreWebView2Profile AnyProfile() {var current=CurrentView();if(current!=null&&current.CoreWebView2!=null)return current.CoreWebView2.Profile;var any=views.Values.FirstOrDefault(v=>v.CoreWebView2!=null);return any==null?null:any.CoreWebView2.Profile;}
   async void ShowSitePermissions() {

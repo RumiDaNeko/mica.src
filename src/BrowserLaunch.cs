@@ -72,7 +72,7 @@ namespace Mica {
     var window=(Window)XamlReader.Load(stream);var browser=new BrowserApp(window,folder,testing,isPrivate,initial,Browsers.Count==0);
     string url=LaunchUrl(args);
     if(url!=null)window.Loaded+=delegate {browser.OpenExternalUrl(url);};
-    if(testing&&(args.Contains("--avatar-test")||args.Contains("--popups-test")||args.Contains("--resize-test")||args.Contains("--vault-test")||args.Contains("--home-test")||args.Contains("--motw-test")||args.Contains("--extwin-test")||args.Contains("--keys-test")||args.Contains("--motion-test")||args.Contains("--sandbox-test")||args.Contains("--devtools-test")||args.Contains("--protection-test")||args.Contains("--notice-test")||args.Contains("--alert-test")||args.Contains("--navprobe-test")||args.Contains("--fullscreen-test")||args.Contains("--tetris-test")||args.Contains("--autofill-test")||args.Contains("--totp-test")||args.Contains("--navhistory-test")||args.Contains("--claudeext-test")||args.Contains("--chatgptext-test")||args.Contains("--aipanel-test")||args.Contains("--import-test")||args.Contains("--memory-test")||args.Contains("--gallery-test")||args.Contains("--updates-test")||args.Contains("--personalize-test")||args.Contains("--tabs-test")||args.Contains("--features-test")||args.Contains("--more-test")||args.Contains("--perf-test")||args.Contains("--manytabs-test"))){window.WindowStartupLocation=WindowStartupLocation.Manual;window.Left=-6000;window.Top=-6000;window.ShowInTaskbar=false;}
+    if(testing&&(args.Contains("--avatar-test")||args.Contains("--popups-test")||args.Contains("--resize-test")||args.Contains("--vault-test")||args.Contains("--home-test")||args.Contains("--motw-test")||args.Contains("--extwin-test")||args.Contains("--keys-test")||args.Contains("--motion-test")||args.Contains("--sandbox-test")||args.Contains("--devtools-test")||args.Contains("--protection-test")||args.Contains("--notice-test")||args.Contains("--alert-test")||args.Contains("--navprobe-test")||args.Contains("--fullscreen-test")||args.Contains("--tetris-test")||args.Contains("--autofill-test")||args.Contains("--totp-test")||args.Contains("--navhistory-test")||args.Contains("--claudeext-test")||args.Contains("--chatgptext-test")||args.Contains("--aipanel-test")||args.Contains("--import-test")||args.Contains("--memory-test")||args.Contains("--gallery-test")||args.Contains("--updates-test")||args.Contains("--personalize-test")||args.Contains("--tabs-test")||args.Contains("--features-test")||args.Contains("--more-test")||args.Contains("--perf-test")||args.Contains("--manytabs-test")||args.Contains("--discord-sync-test")||args.Contains("--islandqueue-test")||args.Contains("--backdrop-test")||Environment.GetCommandLineArgs().Contains("--discord-sync-test"))){window.WindowStartupLocation=WindowStartupLocation.Manual;window.Left=-6000;window.Top=-6000;window.ShowInTaskbar=false;}
     window.Show();return browser;
    }
   }
@@ -109,8 +109,8 @@ namespace Mica {
      var args=new JavaScriptSerializer().Deserialize<string[]>(line);if(args==null)continue;
      Application.Current.Dispatcher.BeginInvoke(new Action(delegate {
       if(stopping)return;
-      if(args.Contains("--private")||args.Contains("--new-window"))OpenWindow(args);
-      else {var browser=Browsers.FirstOrDefault(b=>b.CanShareProfile(NormalProfile));if(browser==null)OpenWindow(args);else browser.HandleLaunch(LaunchUrl(args));}
+      if(args.Contains("--private")||args.Contains("--new-window"))OpenWindow(args).BringToFront();
+      else {var browser=Browsers.FirstOrDefault(b=>b.CanShareProfile(NormalProfile));if(browser==null)OpenWindow(args).BringToFront();else browser.HandleLaunch(LaunchUrl(args));}
      }));
     }
    }catch(UnauthorizedAccessException){Thread.Sleep(5000);} // Another account holds the name; links from other apps can't reach Mica until it's gone.
@@ -150,10 +150,28 @@ namespace Mica {
    };
   }
   [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr window);
+  [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+  [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
+  [DllImport("user32.dll")] static extern bool AttachThreadInput(uint attach,uint to,bool on);
+  [DllImport("user32.dll")] static extern bool BringWindowToTop(IntPtr window);
   internal void HandleLaunch(string url) {
-   if(window.WindowState==WindowState.Minimized)window.WindowState=WindowState.Normal;
-   window.Activate();SetForegroundWindow(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+   // Open the link first, so the window that comes forward already shows it.
    if(url!=null)OpenExternalUrl(url);
+   BringToFront();
+  }
+  // A link opened from another app should land in front of that app. Windows often refuses a plain
+  // SetForegroundWindow (the permission the clicked app passed on can lapse while Mica starts the tab);
+  // then Mica borrows the foreground window's input queue for the call, and failing that at least rises
+  // above other windows instead of only flashing on the taskbar.
+  internal void BringToFront() {
+   if(window.WindowState==WindowState.Minimized)window.WindowState=WindowState.Normal;
+   window.Show();window.Activate();
+   var handle=new System.Windows.Interop.WindowInteropHelper(window).Handle;if(handle==IntPtr.Zero)return;
+   if(SetForegroundWindow(handle)&&GetForegroundWindow()==handle)return;
+   uint ignored;IntPtr front=GetForegroundWindow();uint frontThread=front==IntPtr.Zero?0:GetWindowThreadProcessId(front,out ignored),me=GetCurrentThreadId();
+   bool attached=frontThread!=0&&frontThread!=me&&AttachThreadInput(me,frontThread,true);
+   try {BringWindowToTop(handle);SetForegroundWindow(handle);}finally {if(attached)AttachThreadInput(me,frontThread,false);}
+   if(GetForegroundWindow()!=handle&&!window.Topmost){window.Topmost=true;window.Topmost=false;}
   }
   void LaunchBrowserWindow(bool privateWindow) {Program.OpenWindow(privateWindow?new[]{"--private"}:new[]{"--new-window"},smoke,smoke?profile:null);}
   BrowserState SnapshotForSave() {
