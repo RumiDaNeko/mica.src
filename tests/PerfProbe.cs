@@ -17,6 +17,56 @@ namespace Mica {
   struct ProbeRect {public int Left,Top,Right,Bottom;}
   int PageWindowLeft() {var view=CurrentView();ProbeRect r;return view!=null&&ProbeWindowRect(((System.Windows.Interop.HwndHost)view).Handle,out r)?r.Left:int.MinValue;}
   static void Mark(string step){if(marks==null)return;marks.Add(step+" "+markClock.Elapsed.TotalMilliseconds.ToString("0.0"));markClock.Restart();}
+  // A window holding 300 tabs (a few live, the rest resting): what the tab-list work, a tab switch, opening
+  // a tab and the 15-second memory tick cost on the UI thread. Writes perf\manytabs.txt.
+  async Task RunManyTabsProbe() {
+   var log=regressionLog;string dir=Path.Combine(profile,"perf");Directory.CreateDirectory(dir);
+   window.WindowState=WindowState.Normal;window.Width=1920;window.Height=1032;window.Left=-6000;window.Top=-6000;asyncSaveForTest=true;
+   try {
+    var rnd=new Random(7);
+    for(int i=0;i<300;i++){var t=state.AddTab("https://example.org/page-"+i+"?q="+rnd.Next());t.Title="Page number "+i+" · a fairly long title for the row";t.LastUsed=DateTime.UtcNow.AddMinutes(-10-i);}
+    for(int g=0;g<6;g++){var group=state.CreateGroup(state.Tabs[20+g*10]);for(int k=1;k<6;k++)state.MoveTab(state.Tabs[21+g*10+k].Id,state.Tabs[20+g*10].Id,true,false,group.Id);}
+    var homes=new List<PageEntry>();for(int i=0;i<4;i++)homes.Add(state.AddTab("mica://home"));
+    var w0=Stopwatch.StartNew();RenderTabs();window.UpdateLayout();log.Add("first RenderTabs+layout, "+state.Tabs.Count+" tabs: "+w0.ElapsedMilliseconds+" ms");
+    await Activate(homes[0].Id);await Task.Delay(1500);
+    Func<string,int,Action,string> time=delegate(string name,int n,Action run) {run();window.UpdateLayout();var w=Stopwatch.StartNew();for(int i=0;i<n;i++){run();window.UpdateLayout();}return name+" "+(w.Elapsed.TotalMilliseconds/n).ToString("0.0")+" ms";};
+    {
+     var w=Stopwatch.StartNew();foreach(var t in state.Tabs)RowLook(t,state.FindGroup(t.Group));double looks=w.Elapsed.TotalMilliseconds;
+     int built=rowCache.Count;w.Restart();RenderTabs();double render=w.Elapsed.TotalMilliseconds;w.Restart();window.UpdateLayout();double layout=w.Elapsed.TotalMilliseconds;
+     log.Add("RenderTabs parts: RowLook×"+state.Tabs.Count+" "+looks.ToString("0.0")+" ms, RenderTabs alone "+render.ToString("0.0")+" ms, layout after "+layout.ToString("0.0")+" ms; rail visible "+Find<FrameworkElement>("CompactRail").IsVisible);
+    }
+    string a=homes[0].Id,b=homes[1].Id;bool flip=false;
+    log.Add("steps (incl. layout): "+string.Join(", ",new[]{
+     time("RenderTabs",5,RenderTabs),time("MarkRestingTabs",5,delegate {MarkRestingTabs(false);}),time("MarkRestingTabs animated",5,delegate {MarkRestingTabs(true);}),
+     time("RefreshActiveTab",5,delegate {flip=!flip;state.ActivateTab(flip?b:a,DateTime.UtcNow);RefreshActiveTab(flip?a:b);}),
+     time("RefreshTabRow",5,delegate {RefreshTabRow(state.Tabs[150].Id);}),time("Save",5,Save),time("UpdateNavigation",5,UpdateNavigation),
+     time("BalanceMemory",5,delegate {BalanceMemory(false);}),time("SleepIdleTabs",5,delegate {SleepIdleTabs(false);}),
+     time("Spotlight.Search ''",5,delegate {Spotlight.Search(state,"");}),time("Spotlight.Search 'page'",5,delegate {Spotlight.Search(state,"page 2");}),
+     time("ScrollActiveTabIntoView",5,ScrollActiveTabIntoView)}));
+    for(int k=0;k<4;k++){var w=Stopwatch.StartNew();var switching=Activate(homes[k%2==0?1:0].Id);long sync=w.ElapsedMilliseconds;await switching;window.UpdateLayout();log.Add("Activate home tab: "+sync+" ms sync, "+w.ElapsedMilliseconds+" ms with layout");await Task.Delay(300);}
+    for(int k=0;k<4;k++){var w=Stopwatch.StartNew();Navigate("mica://home",true);window.UpdateLayout();log.Add("open new tab: "+w.ElapsedMilliseconds+" ms");await Task.Delay(300);}
+    for(int k=0;k<3;k++){var w=Stopwatch.StartNew();CloseTab(state.ActiveId);window.UpdateLayout();log.Add("close tab: "+w.ElapsedMilliseconds+" ms");await Task.Delay(300);}
+    // Long UI-thread jobs while idle and through one sidebar toggle (the 15-second tick lands in here).
+    var slow=new Dictionary<string,Tuple<int,double,double>>();var running=new Dictionary<System.Windows.Threading.DispatcherOperation,Stopwatch>();
+    var methodField=typeof(System.Windows.Threading.DispatcherOperation).GetField("_method",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+    System.Windows.Threading.DispatcherHookEventHandler started=delegate(object s,System.Windows.Threading.DispatcherHookEventArgs h) {if(h.Operation!=null)running[h.Operation]=Stopwatch.StartNew();};
+    System.Windows.Threading.DispatcherHookEventHandler finished=delegate(object s,System.Windows.Threading.DispatcherHookEventArgs h) {
+     Stopwatch w;if(h.Operation==null||!running.TryGetValue(h.Operation,out w))return;running.Remove(h.Operation);double ms=w.Elapsed.TotalMilliseconds;if(ms<4)return;
+     var method=methodField==null?null:methodField.GetValue(h.Operation) as Delegate;string name=h.Operation.Priority+" "+(method==null?"?":method.Method.DeclaringType.Name+"."+method.Method.Name);
+     Tuple<int,double,double> seen;slow.TryGetValue(name,out seen);slow[name]=Tuple.Create((seen==null?0:seen.Item1)+1,(seen==null?0:seen.Item2)+ms,Math.Max(seen==null?0:seen.Item3,ms));
+    };
+    window.Dispatcher.Hooks.OperationStarted+=started;window.Dispatcher.Hooks.OperationCompleted+=finished;
+    Action<string> report=delegate(string when) {log.Add("slow UI work "+when+": "+string.Join("; ",slow.OrderByDescending(p=>p.Value.Item2).Take(8).Select(p=>p.Key+" ×"+p.Value.Item1+" "+p.Value.Item2.ToString("0")+" ms (worst "+p.Value.Item3.ToString("0")+")")));slow.Clear();};
+    await Task.Delay(3000);report("idle 3 s");
+    for(int k=0;k<3;k++){foreach(var way in new[]{"hide","show"}){var w=Stopwatch.StartNew();ToggleSidebar();double sync=w.Elapsed.TotalMilliseconds;w.Restart();window.UpdateLayout();double first=w.Elapsed.TotalMilliseconds;await Task.Delay(600);log.Add("sidebar "+way+" #"+k+": toggle "+sync.ToString("0")+" ms, first layout "+first.ToString("0")+" ms");report("sidebar "+way+" #"+k);}}
+    {var w=Stopwatch.StartNew();var scroller=Find<System.Windows.Controls.ScrollViewer>("ExpandedTabScroller");for(int k=0;k<20;k++){scroller.ScrollToVerticalOffset(k*200);window.UpdateLayout();await Task.Delay(16);}log.Add("scroll 20 steps: "+w.ElapsedMilliseconds+" ms");report("scrolling");}
+    {var w=Stopwatch.StartNew();RefreshTabRow(state.Tabs[100].Id);window.UpdateLayout();await Task.Delay(100);report("one row retitled");}
+    await Task.Delay(16000);
+    window.Dispatcher.Hooks.OperationStarted-=started;window.Dispatcher.Hooks.OperationCompleted-=finished;
+    log.Add("slow UI work over 16 s idle: "+string.Join("; ",slow.OrderByDescending(p=>p.Value.Item2).Take(8).Select(p=>p.Key+" ×"+p.Value.Item1+" "+p.Value.Item2.ToString("0")+" ms (worst "+p.Value.Item3.ToString("0")+")")));
+   }catch(Exception e){log.Add("ERROR "+e);}
+   File.WriteAllLines(Path.Combine(dir,"manytabs.txt"),log);window.Close();
+  }
   async Task RunPerfProbe() {
    var log=regressionLog;string dir=Path.Combine(profile,"perf");Directory.CreateDirectory(dir);
    window.WindowState=WindowState.Normal;window.Width=1920;window.Height=1032;window.Left=-6000;window.Top=-6000;

@@ -232,7 +232,13 @@ namespace Mica {
   void WatchSidebarScroll() {
    foreach(var name in new[]{"ExpandedTabScroller"}) {
     var scroller=Find<ScrollViewer>(name);
-    scroller.ScrollChanged+=delegate {var wanted=scroller.ExtentHeight-scroller.ViewportHeight>4?ScrollBarVisibility.Auto:ScrollBarVisibility.Hidden;if(scroller.VerticalScrollBarVisibility!=wanted)scroller.VerticalScrollBarVisibility=wanted;};
+    scroller.ScrollChanged+=delegate {
+     var wanted=scroller.ExtentHeight-scroller.ViewportHeight>4?ScrollBarVisibility.Auto:ScrollBarVisibility.Hidden;if(scroller.VerticalScrollBarVisibility!=wanted)scroller.VerticalScrollBarVisibility=wanted;
+     // The list takes the viewport's width as its own. A scroll bar set to Auto measures its content twice,
+     // without the bar and then with it, so any change to the sidebar re-measured every tab row twice (about
+     // 200 ms with 300 tabs); with a set width the rows keep their measure.
+     var content=scroller.Content as FrameworkElement;if(content!=null&&scroller.ViewportWidth>0&&Math.Abs(content.Width-scroller.ViewportWidth)>0.5)content.Width=scroller.ViewportWidth;
+    };
    }
   }
   // Right-click the home page: change its background without opening the menu.

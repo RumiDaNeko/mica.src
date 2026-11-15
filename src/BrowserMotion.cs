@@ -148,7 +148,15 @@ namespace Mica {
     if(transition!=sidebarTransition)return;
     host.Width=double.NaN;host.HorizontalAlignment=HorizontalAlignment.Stretch;
     sidebar.Width=double.NaN;sidebar.ClearValue(FrameworkElement.HorizontalAlignmentProperty);toolbar.Width=double.NaN;toolbar.ClearValue(FrameworkElement.HorizontalAlignmentProperty);
-    foreach(UIElement child in sidebar.Children)if(child!=Find<Grid>("BrandBar")){child.Visibility=(child==rail?sidebarHidden:!sidebarHidden)?Visibility.Visible:Visibility.Collapsed;var panel=child as FrameworkElement;if(panel!=null){panel.Width=double.NaN;panel.ClearValue(FrameworkElement.HorizontalAlignmentProperty);}}
+    // The two tab lists are hidden, not collapsed, and keep their own width: a collapsed list of hundreds of
+    // tabs is measured again row by row when it comes back (most of a second for 300 tabs).
+    foreach(UIElement child in sidebar.Children)if(child!=Find<Grid>("BrandBar")){
+     bool shown=child==rail?sidebarHidden:!sidebarHidden;var panel=child as FrameworkElement;bool list=child==rail||child==Find<ScrollViewer>("ExpandedTabScroller");
+     child.Visibility=shown?Visibility.Visible:list?Visibility.Hidden:Visibility.Collapsed;
+     if(panel==null)continue;
+     if(shown||!list){panel.Width=double.NaN;panel.ClearValue(FrameworkElement.HorizontalAlignmentProperty);}
+     else {panel.Width=child==rail?RailWidth:FullWidth;panel.HorizontalAlignment=HorizontalAlignment.Left;}
+    }
     wordmark.Visibility=sidebarHidden?Visibility.Collapsed:Visibility.Visible;
    });
   }

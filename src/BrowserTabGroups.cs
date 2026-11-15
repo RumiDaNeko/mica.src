@@ -22,33 +22,69 @@ namespace Mica {
    if(tabDrag!=null&&tabDrag.Active){tabsDirty=true;return;}
    var before=animateTabMoves?TabRowPositions():null;animateTabMoves=false;if(before!=null&&dropFrom!=null)before[dropFrom.Item1]=dropFrom.Item2;
    var focused=Keyboard.FocusedElement as Button;string focusId=focused==null?null:focused.Tag as string;Button restore=null;
-   var pinned=Find<StackPanel>("PinnedTabs");var normal=Find<StackPanel>("TabItems");var mini=Find<StackPanel>("MiniTabs");pinned.Children.Clear();normal.Children.Clear();mini.Children.Clear();
+   var pinned=Find<StackPanel>("PinnedTabs");var normal=Find<StackPanel>("TabItems");var mini=Find<StackPanel>("MiniTabs");
    state.NormalizeGroups();
    var visible=state.Tabs.Where(t=>t.Space==state.Space).OrderByDescending(t=>t.Pinned).ToList();Find<TextBlock>("SpaceName").Text=state.Space;Find<Button>("MiniSpace").ToolTip=state.Space+" · Choose a space";RollText(Find<TextBlock>("TabCount"),visible.Count.ToString("00"));
-   StackPanel members=null;string currentGroup=null;
+   var groupSizes=visible.Where(t=>t.Group!=null).GroupBy(t=>t.Group).ToDictionary(g=>g.Key,g=>g.Count());
+   var wantPinned=new List<UIElement>();var wantNormal=new List<UIElement>();var wantMini=new List<UIElement>();var wantMembers=new List<Tuple<StackPanel,List<UIElement>>>();
+   List<UIElement> members=null;string currentGroup=null;
    foreach(var tab in visible) {
     var entry=tab;var group=tab.Pinned?null:state.FindGroup(tab.Group);
     if(group==null){currentGroup=null;members=null;}
     else if(group.Id!=currentGroup) {
-     currentGroup=group.Id;int count=visible.Count(t=>t.Group==group.Id);var header=GroupHeader(group,count);normal.Children.Add(header);
+     currentGroup=group.Id;int count;groupSizes.TryGetValue(group.Id,out count);var header=GroupHeader(group,count);wantNormal.Add(header);
      if(focusId=="group:"+group.Id)restore=header;
-     members=new StackPanel {Margin=new Thickness(8,0,0,0)};var lane=new Grid();lane.Children.Add(new Border {Width=3,CornerRadius=new CornerRadius(1.5),Background=new SolidColorBrush(ParseColor(group.Color)),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,3,0,3),Tag="group-rail"});lane.Children.Add(members);
-     var body=new Border {Margin=new Thickness(9,0,0,4),Child=lane,Tag="group-body:"+group.Id};
-     normal.Children.Add(body);
+     StackPanel lane;wantNormal.Add(CachedGroupBody(group,out lane));members=new List<UIElement>();wantMembers.Add(Tuple.Create(lane,members));
     }
     bool folded=group!=null&&group.Collapsed&&tab.Id!=state.ActiveId;
     Button button;var grid=CachedTabRow(entry,group,out button);
-    if(!folded)(tab.Pinned?pinned:members??normal).Children.Add(grid);
-    var small=CachedMiniTab(entry,group);mini.Children.Add(small);
+    if(!folded)(tab.Pinned?wantPinned:members??wantNormal).Add(grid);
+    var small=CachedMiniTab(entry,group);wantMini.Add(small);
     if(tab.Id==focusId)restore=sidebarHidden?small:button;
     if(renderedTabs.Add(tab.Id)){if(!folded)AnimateArrival(grid);AnimateArrival(small);}
    }
-   renderedTabs.RemoveWhere(id=>!state.Tabs.Any(t=>t.Id==id));
-   foreach(var gone in rowCache.Keys.Concat(miniCache.Keys).Where(id=>!state.Tabs.Any(t=>t.Id==id)).Distinct().ToList()){rowCache.Remove(gone);miniCache.Remove(gone);}
+   if(!visible.Any(t=>t.Pinned)){if(pinnedHint==null)pinnedHint=new TextBlock {Text="Drag a tab here, or right-click it, to keep it",FontSize=10,Margin=new Thickness(10,2,0,1),Tag="pinned-empty",TextWrapping=TextWrapping.Wrap};pinnedHint.Foreground=SideBrush("Muted");wantPinned.Add(pinnedHint);}
+   // Only what changed moves: with hundreds of tabs, clearing and refilling the panels made WPF lay out
+   // every row again (most of a second for 300 tabs).
+   foreach(var lane in wantMembers)SyncChildren(lane.Item1,lane.Item2);
+   SyncChildren(pinned,wantPinned);SyncChildren(normal,wantNormal);SyncChildren(mini,wantMini);
+   var ids=new HashSet<string>(state.Tabs.Select(t=>t.Id));
+   renderedTabs.IntersectWith(ids);
+   foreach(var gone in rowCache.Keys.Concat(miniCache.Keys).Where(id=>!ids.Contains(id)).Distinct().ToList()){rowCache.Remove(gone);miniCache.Remove(gone);}
+   foreach(var gone in groupBodies.Keys.Where(id=>state.FindGroup(id)==null).ToList())groupBodies.Remove(gone);
    if(restore!=null)restore.Focus();
-   if(!visible.Any(t=>t.Pinned))pinned.Children.Add(new TextBlock {Text="Drag a tab here, or right-click it, to keep it",FontSize=10,Foreground=SideBrush("Muted"),Margin=new Thickness(10,2,0,1),Tag="pinned-empty",TextWrapping=TextWrapping.Wrap});
    MarkRestingTabs(false);
    if(before!=null)SlideTabRows(before);
+  }
+  TextBlock pinnedHint;
+  // A group's body (its coloured rail and the lane its tabs sit in) is kept like the rows are, so its
+  // tabs stay put between renders. A fold leaves an animated height behind; that is cleared on reuse.
+  readonly Dictionary<string,Tuple<string,Border,StackPanel>> groupBodies=new Dictionary<string,Tuple<string,Border,StackPanel>>();
+  Border CachedGroupBody(TabGroup group,out StackPanel lane) {
+   Tuple<string,Border,StackPanel> kept;
+   if(groupBodies.TryGetValue(group.Id,out kept)&&kept.Item1==group.Color) {
+    kept.Item2.BeginAnimation(FrameworkElement.HeightProperty,null);kept.Item2.ClearValue(FrameworkElement.HeightProperty);kept.Item2.ClipToBounds=false;
+    lane=kept.Item3;return kept.Item2;
+   }
+   lane=new StackPanel {Margin=new Thickness(8,0,0,0)};var grid=new Grid();grid.Children.Add(new Border {Width=3,CornerRadius=new CornerRadius(1.5),Background=new SolidColorBrush(ParseColor(group.Color)),HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0,3,0,3),Tag="group-rail"});grid.Children.Add(lane);
+   var body=new Border {Margin=new Thickness(9,0,0,4),Child=grid,Tag="group-body:"+group.Id};
+   if(kept!=null)Detach(kept.Item2);
+   groupBodies[group.Id]=Tuple.Create(group.Color,body,lane);return body;
+  }
+  // Makes a panel hold exactly these children, in order, touching as few as it can: gone ones are taken
+  // out, new ones put in, and a moved one is lifted out once rather than every row after it shifting.
+  static void SyncChildren(Panel panel,List<UIElement> want) {
+   var keep=new HashSet<UIElement>(want);
+   for(int i=panel.Children.Count-1;i>=0;i--)if(!keep.Contains(panel.Children[i]))panel.Children.RemoveAt(i);
+   for(int i=0;i<want.Count;i++) {
+    var element=want[i];var children=panel.Children;
+    if(i<children.Count&&children[i]==element)continue;
+    // The wanted one sits just after: the child here is one that moved further down, so it's lifted out instead.
+    if(i+1<children.Count&&children[i+1]==element){children.RemoveAt(i);i--;continue;}
+    var fe=element as FrameworkElement;var parent=fe==null?null:fe.Parent as Panel;if(parent!=null)parent.Children.Remove(element);
+    children.Insert(Math.Min(i,children.Count),element);
+   }
+   while(panel.Children.Count>want.Count)panel.Children.RemoveAt(panel.Children.Count-1);
   }
   // Rows are kept between renders and reused while nothing they show has changed, so redrawing the list
   // (a tab opened, closed or moved) builds only the rows that differ.
@@ -63,12 +99,12 @@ namespace Mica {
   static void Detach(FrameworkElement element) {var parent=element.Parent as Panel;if(parent!=null)parent.Children.Remove(element);}
   Grid CachedTabRow(PageEntry tab,TabGroup group,out Button button) {
    string look=RowLook(tab,group);Tuple<string,Grid,Button> kept;
-   if(rowCache.TryGetValue(tab.Id,out kept)&&kept.Item1==look){Detach(kept.Item2);button=kept.Item3;return kept.Item2;}
+   if(rowCache.TryGetValue(tab.Id,out kept)&&kept.Item1==look){button=kept.Item3;return kept.Item2;}
    var row=TabRow(tab,out button);rowCache[tab.Id]=Tuple.Create(look,row,button);return row;
   }
   Button CachedMiniTab(PageEntry tab,TabGroup group) {
    string look=RowLook(tab,group);Tuple<string,Button> kept;
-   if(miniCache.TryGetValue(tab.Id,out kept)&&kept.Item1==look){Detach(kept.Item2);return kept.Item2;}
+   if(miniCache.TryGetValue(tab.Id,out kept)&&kept.Item1==look)return kept.Item2;
    var small=MiniTab(tab,group);miniCache[tab.Id]=Tuple.Create(look,small);return small;
   }
   Button MiniTab(PageEntry entry,TabGroup group) {
@@ -111,19 +147,22 @@ namespace Mica {
   bool IsResting(PageEntry tab) {return Navigation.IsWeb(tab.Url)&&tab.Id!=state.ActiveId&&!views.ContainsKey(tab.Id);}
   void MarkRestingTabs(bool animate) {
    if(window==null)return;
+   var byId=new Dictionary<string,PageEntry>();foreach(var t in state.Tabs)byId[t.Id]=t;PageEntry tab;
    foreach(var element in TabListElements()) {
-    var tag=(string)element.Tag;if(!tag.StartsWith("tab:"))continue;var tab=state.Tabs.FirstOrDefault(t=>"tab:"+t.Id==tag);var row=element as Grid;
+    var tag=(string)element.Tag;if(!tag.StartsWith("tab:"))continue;byId.TryGetValue(tag.Substring(4),out tab);var row=element as Grid;
     if(tab==null||row==null||row.Children.Count==0)continue;var select=row.Children[0] as Button;if(select!=null&&select.Content is UIElement)FadeResting((UIElement)select.Content,IsResting(tab),animate);
    }
-   foreach(var small in Find<StackPanel>("MiniTabs").Children.OfType<Button>()) {var tab=state.Tabs.FirstOrDefault(t=>t.Id==(small.Tag as string));if(tab!=null&&small.Content is UIElement)FadeResting((UIElement)small.Content,IsResting(tab),animate);}
+   foreach(var small in Find<StackPanel>("MiniTabs").Children.OfType<Button>()) {byId.TryGetValue(small.Tag as string??"",out tab);if(tab!=null&&small.Content is UIElement)FadeResting((UIElement)small.Content,IsResting(tab),animate);}
   }
   // Dark mode fades the whole row; on a light sidebar fading reads as washed out, so the title turns to
   // the muted ink and only the icon dims: a grey tint.
   void FadeResting(UIElement content,bool resting,bool animate) {
    bool light=!state.Dark;var parts=content as Panel;
    Action<UIElement,double> fade=delegate(UIElement target,double to) {if(Math.Abs(target.Opacity-to)<0.01)return;if(animate&&SystemParameters.ClientAreaAnimation)Tween(target,UIElement.OpacityProperty,to,220,null);else {target.BeginAnimation(UIElement.OpacityProperty,null);target.Opacity=to;}};
+   // One target per element: setting 1 and then the light-mode dim restarted two fades on every resting
+   // icon each time this ran (the 15-second tick), hundreds of animations with many tabs.
+   if(parts==null){fade(content,resting?(light?LightRestingOpacity:RestingOpacity):1);return;}
    fade(content,resting&&!light?RestingOpacity:1);
-   if(parts==null){if(light)fade(content,resting?LightRestingOpacity:1);return;}
    foreach(UIElement part in parts.Children) {
     var title=part as TextBlock;
     if(title!=null&&Grid.GetColumn(title)==1)title.SetResourceReference(TextBlock.ForegroundProperty,resting&&light?"Muted":"Ink");
