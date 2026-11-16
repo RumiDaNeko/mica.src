@@ -42,15 +42,33 @@ namespace Mica {
      if(!core.IsSuspended&&!view.IsVisible){if(core==targetWatcher)ReplaceTargetWatcher(view);FreezeTab(tab.Id,core);}
     }catch(Exception){} // The engine may be restarting; the next tick tries again.
    }
-   foreach(var gone in hiddenSince.Keys.Where(id=>!views.ContainsKey(id)).ToList())hiddenSince.Remove(gone);typedInput.RemoveWhere(id=>!views.ContainsKey(id));
+   foreach(var gone in hiddenSince.Keys.Where(id=>!views.ContainsKey(id)).ToList())hiddenSince.Remove(gone);typedInput.RemoveWhere(id=>!views.ContainsKey(id));liveTabs.RemoveWhere(id=>!views.ContainsKey(id));
    var compress=CompressIdleMemory(false,away);
   }
-  // Before a tab freezes, note whether you've typed into it, so the memory budget never drops unsaved text.
-  const string TypedInputScript="(()=>{for(const e of document.querySelectorAll('input,textarea')){if(/^(hidden|checkbox|radio|submit|button|reset|image|file|range|color)$/.test(e.type))continue;if(e.value!==e.defaultValue)return true;}const a=document.activeElement;return !!(a&&a.isContentEditable);})()";
+  // Pages that keep themselves up to date while hidden (a CI run, a chat, a dashboard) hold a live connection
+  // (WebSocket, EventSource, a SharedWorker as GitHub uses) or ask their server again and again. Freezing them
+  // stops the updates and their sockets die, so they come back stale; they stay running at low memory instead.
+  internal const string LiveScript="(()=>{if(window.__micaLive)return;const s={open:0,asked:[]};Object.defineProperty(window,'__micaLive',{value:s});"+
+   "const watch=(name,closed)=>{const O=window[name];if(!O)return;window[name]=new Proxy(O,{construct(t,a,n){const o=Reflect.construct(t,a,n);s.open++;let gone=false;const done=()=>{if(!gone){gone=true;s.open--;}};"+
+   "if(closed!==null){o.addEventListener('close',done);o.addEventListener('error',()=>{if(o.readyState===closed)done();});}return o;}});};"+
+   "watch('WebSocket',3);watch('EventSource',2);watch('SharedWorker',null);"+
+   "const note=()=>{if(document.hidden){s.asked.push(Date.now());if(s.asked.length>6)s.asked.shift();}};"+
+   "if(window.fetch)window.fetch=new Proxy(window.fetch,{apply(t,self,a){note();return Reflect.apply(t,self,a);}});"+
+   "const X=XMLHttpRequest.prototype;X.send=new Proxy(X.send,{apply(t,self,a){note();return Reflect.apply(t,self,a);}});})();";
+  // Before a tab freezes: whether you've typed into it (so the memory budget never drops unsaved text) and whether it's live.
+  const string FreezeProbeScript="(()=>{let typed=false;for(const e of document.querySelectorAll('input,textarea')){if(/^(hidden|checkbox|radio|submit|button|reset|image|file|range|color)$/.test(e.type))continue;if(e.value!==e.defaultValue){typed=true;break;}}"+
+   "const a=document.activeElement;if(a&&a.isContentEditable)typed=true;const s=window.__micaLive;const now=Date.now();"+
+   "const live=!!s&&(s.open>0||s.asked.filter(t=>now-t<45000).length>=2);return {typed,live};})()";
   readonly HashSet<string> typedInput=new HashSet<string>();
+  internal readonly HashSet<string> liveTabs=new HashSet<string>();
   async void FreezeTab(string id,CoreWebView2 core) {
-   try {if(await core.ExecuteScriptAsync(TypedInputScript)=="true")typedInput.Add(id);else typedInput.Remove(id);}catch(Exception){}
-   try {if(id!=state.ActiveId)await core.TrySuspendAsync();}catch(Exception){}
+   bool live=false;
+   try {
+    string probe=await core.ExecuteScriptAsync(FreezeProbeScript);
+    if(probe.Contains("\"typed\":true"))typedInput.Add(id);else typedInput.Remove(id);
+    live=probe.Contains("\"live\":true");if(live)liveTabs.Add(id);else liveTabs.Remove(id);
+   }catch(Exception){}
+   try {if(!live&&id!=state.ActiveId)await core.TrySuspendAsync();}catch(Exception){}
   }
 
   // Above this much private memory the background tabs you used longest ago rest (they reload, from a
@@ -78,7 +96,7 @@ namespace Mica {
   }
   bool BudgetCanRest(PageEntry tab,DateTime now) {
    WebView2 view;DateTime since;NavigationProgress progress;
-   if(tab.Id==state.ActiveId||InSplit(tab.Id)||!views.TryGetValue(tab.Id,out view)||typedInput.Contains(tab.Id)||SiteMemoryMode(tab)=="never")return false;
+   if(tab.Id==state.ActiveId||InSplit(tab.Id)||!views.TryGetValue(tab.Id,out view)||typedInput.Contains(tab.Id)||SiteMemoryMode(tab)=="never"||liveTabs.Contains(tab.Id)&&!LowOnMemory())return false;
    if(!hiddenSince.TryGetValue(tab.Id,out since)||now-since<BudgetSpare)return false;
    return !RecentlyAudible(tab.Id,view)&&!HasDownloads(view)&&!(navigations.TryGetValue(tab.Id,out progress)&&progress.IsLoading);
   }

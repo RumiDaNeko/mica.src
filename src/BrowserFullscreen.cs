@@ -56,7 +56,7 @@ for(const name of ['fullscreenchange','webkitfullscreenchange'])addEventListener
 for(const key of ['requestFullscreen','webkitRequestFullscreen']){const original=Element.prototype[key];if(!original)continue;const wrapped=function(){const result=original.apply(this,arguments);return result&&result.then?result.then(()=>settle()):result;};Object.defineProperty(wrapped,'toString',{value:()=>original.toString()});Object.defineProperty(Element.prototype,key,{value:wrapped,writable:true,configurable:true});}
 })();";
   void WatchFullscreen(string id,WebView2 view) {
-   AddPageScript(view.CoreWebView2,FullscreenShim);AddPageScript(view.CoreWebView2,ScrollbarScript);
+   AddPageScript(view.CoreWebView2,FullscreenShim);AddPageScript(view.CoreWebView2,ScrollbarScript);AddPageScript(view.CoreWebView2,LiveScript);
    view.CoreWebView2.ContainsFullScreenElementChanged+=delegate {
     if(!IsCurrent(id,view)||state.ActiveId!=id)return;
     pageFullscreen=view.CoreWebView2.ContainsFullScreenElement;ApplyFullscreen();

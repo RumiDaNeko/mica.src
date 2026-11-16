@@ -283,7 +283,7 @@ namespace Mica {
   // Ctrl+Shift+A: Spotlight searching only tabs (both spaces, open and resting), recently closed ones and history.
   void OpenTabSearch() {OpenSpotlight(false);tabSearch=true;RefreshSearch();}
   void SleepIdleTabs(bool all) {
-   int count=0;foreach(var tab in state.Tabs.ToArray()) {WebView2 view;if(!views.TryGetValue(tab.Id,out view)||HasDownloads(view))continue;NavigationProgress progress;if(navigations.TryGetValue(tab.Id,out progress)&&progress.IsLoading)continue;bool audio=RecentlyAudible(tab.Id,view);if(SiteMemoryMode(tab)=="never"||StateStore.InExtensionGroup(tab)||!TabLifecycle.ShouldSleep(tab,tab.Id==state.ActiveId||InSplit(tab.Id),audio,DateTime.UtcNow,all,RestAfterFor(tab,LowOnMemory())))continue;DisposeView(tab.Id);count++;}
+   int count=0;foreach(var tab in state.Tabs.ToArray()) {WebView2 view;if(!views.TryGetValue(tab.Id,out view)||HasDownloads(view))continue;NavigationProgress progress;if(navigations.TryGetValue(tab.Id,out progress)&&progress.IsLoading)continue;bool audio=RecentlyAudible(tab.Id,view);if(SiteMemoryMode(tab)=="never"||!all&&liveTabs.Contains(tab.Id)||StateStore.InExtensionGroup(tab)||!TabLifecycle.ShouldSleep(tab,tab.Id==state.ActiveId||InSplit(tab.Id),audio,DateTime.UtcNow,all,RestAfterFor(tab,LowOnMemory())))continue;DisposeView(tab.Id);count++;}
    if(count>0){RenderTabs();UpdateMemory();Status(count+" background tab(s) put to rest. They reload when reopened.");}
    MarkRestingTabs(true);
   }

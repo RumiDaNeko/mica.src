@@ -53,6 +53,17 @@ namespace Mica {
     RegressionCheck("a frozen tab comes back instantly, without reloading",delegate {Require(!core(ids[0]).IsSuspended&&core(ids[0]).MemoryUsageTargetLevel==CoreWebView2MemoryUsageTargetLevel.Normal&&alive=="\"Tetris\"",core(ids[0]).IsSuspended+" "+alive);});
     audibleAt[ids[1]]=DateTime.UtcNow;await core(ids[1]).ExecuteScriptAsync("1").ContinueWith(t=>{});BalanceMemory(true);await Task.Delay(500);
     RegressionCheck("a hidden tab that plays audio stays fully awake, so the next video can start",delegate {Require(!core(ids[1]).IsSuspended&&core(ids[1]).MemoryUsageTargetLevel==CoreWebView2MemoryUsageTargetLevel.Normal,core(ids[1]).IsSuspended+"/"+core(ids[1]).MemoryUsageTargetLevel);});
+    // A page that keeps itself up to date (a socket open, like a CI run's) stays running when hidden.
+    {Navigate(Navigation.Tetris,true);await WaitForPage();await Task.Delay(500);string live=state.ActiveId;var c=LiveCore(views[live]);
+     string socket=await c.ExecuteScriptAsync("(()=>{const before=window.__micaLive.open;const w=new WebSocket('ws://127.0.0.1:9');const during=window.__micaLive.open;return new Promise(r=>w.addEventListener('close',()=>setTimeout(()=>r(before+','+during+','+window.__micaLive.open),0)));})()");
+     await Task.Delay(1500);socket=await c.ExecuteScriptAsync("window.__micaLive?String(window.__micaLive.open):'none'");
+     RegressionCheck("pages count their live connections, and a closed socket stops counting",delegate {Require(socket=="\"0\"",socket);});
+     await c.ExecuteScriptAsync("window.__micaLive.open++");
+     await Activate(ids[2]);await Task.Delay(AsideHideMs+300);BalanceMemory(true);await Task.Delay(2500);
+     RegressionCheck("a hidden page with a live connection isn't frozen, only trimmed",delegate {Require(!c.IsSuspended&&c.MemoryUsageTargetLevel==CoreWebView2MemoryUsageTargetLevel.Low&&liveTabs.Contains(live),c.IsSuspended+"/"+c.MemoryUsageTargetLevel+" live "+liveTabs.Contains(live));});
+     await c.ExecuteScriptAsync("window.__micaLive.open=0");BalanceMemory(true);await Task.Delay(2500);
+     RegressionCheck("once it goes quiet, it freezes like any other",delegate {Require(c.IsSuspended&&!liveTabs.Contains(live),c.IsSuspended+" live "+liveTabs.Contains(live));});
+     CloseTab(live);await Activate(ids[0]);await Task.Delay(400);}
     // Resting: a snapshot covers the reload, then goes away.
     await Activate(ids[2]);await Task.Delay(400);await Activate(ids[0]);await Task.Delay(400);
     RegressionCheck("leaving a tab keeps a snapshot of it",delegate {Require(snapshots.ContainsKey(ids[2]),"no snapshot");});
