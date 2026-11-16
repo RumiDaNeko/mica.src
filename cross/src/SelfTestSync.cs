@@ -54,7 +54,7 @@ namespace Mica {
    string page=Path.Combine(profile,"launched.html");File.WriteAllText(page,"<title>Launched</title>");
    int tabsBefore=state.Tabs.Count,frontBefore=broughtToFront;
    bool handed=launchSocket!=null&&Launch.Forward(profile,new[]{page});
-   await WaitUntil(()=>broughtToFront>frontBefore,5000);
+   await WaitUntil(()=>broughtToFront>frontBefore,15000); // Slow from a disk image on an Intel runner.
    var opened=Active;
    Check("a link from another app opens in a new tab and brings Mica to the front",handed&&broughtToFront>frontBefore&&state.Tabs.Count==tabsBefore+1&&opened!=null&&(opened.Entry.Url??"").StartsWith("file:",StringComparison.Ordinal)&&opened.Entry.Url.EndsWith("launched.html",StringComparison.Ordinal),
     "handed="+handed+" front="+broughtToFront+" tabs="+tabsBefore+"->"+state.Tabs.Count+" url="+(opened==null?"":opened.Entry.Url));
