@@ -93,9 +93,11 @@ namespace Mica {
    BringToFront();
   }
   void OpenExternal(string url) {
-   if(Navigation.IsWeb(url)||Navigation.IsLocalFile(url)){Navigate(url,true);return;}
-   string file=null;try {if(File.Exists(url))file=Navigation.LocalFileAddress(Path.GetFullPath(url));} catch(Exception) {}
-   if(file!=null)Navigate(file,true);
+   // A plain path first: on Linux and macOS "/home/a.html" also parses as an absolute URI, and handed
+   // over as it is, the address bar would search for it.
+   string file=null;try {if(!Navigation.IsWeb(url)&&File.Exists(url))file=new Uri(Path.GetFullPath(url)).AbsoluteUri;} catch(Exception) {}
+   if(file!=null){Navigate(file,true);return;}
+   if(Navigation.IsWeb(url)||Navigation.IsLocalFile(url))Navigate(url,true);
   }
   // A link opened from another app lands in front of that app: restored if minimized, then raised. Where the
   // window manager won't let it take focus, it still rises above the other windows.
