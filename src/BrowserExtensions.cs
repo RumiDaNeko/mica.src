@@ -113,7 +113,7 @@ namespace Mica {
   void ShowExtensions() {
    if(privateMode){Status("Extensions are disabled in private windows.");return;}
    if(activeExtensionsWindow!=null){activeExtensionsWindow.Activate();return;}
-   var dialog=new Window {Owner=window,Title="Extensions — Mica",Width=780,Height=720,MinWidth=690,MinHeight=590,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,ShowInTaskbar=false,WindowStartupLocation=WindowStartupLocation.CenterOwner,Background=Brushes.Transparent,Foreground=Brush("Ink"),FontFamily=window.FontFamily,FontSize=13,Resources=window.Resources};KeepOwnerInFront(dialog);
+   var dialog=new Window {Owner=window,Title="Extensions — Mica",Width=780,Height=720,MinWidth=690,MinHeight=590,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,ShowInTaskbar=false,WindowStartupLocation=WindowStartupLocation.CenterOwner,Foreground=Brush("Ink"),FontFamily=window.FontFamily,FontSize=13,Resources=window.Resources};BackdropNative.SeeThrough(dialog);KeepOwnerInFront(dialog);
    extensionsWindow=dialog;activeExtensionsWindow=dialog;extensionFilter="All";
    foreach(var key in new[]{"Ink","Muted","Canvas","Panel","Line","Hover","Accent"})dialog.Resources[key]=Brush(key);
    dialog.Resources[typeof(Button)]=window.Resources[typeof(Button)];

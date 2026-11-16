@@ -21,7 +21,7 @@ namespace Mica {
    };
   }
   Window CreateMicaDialog(Window owner,string title,double width,double height,out StackPanel body,out StackPanel actions) {
-   double grow=UiScale;var dialog=new Window {Owner=owner,Title=title,Width=Math.Min(width*grow+24,SystemParameters.WorkArea.Width-16),Height=Math.Min(height*grow+26,SystemParameters.WorkArea.Height-16),WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,Background=Brushes.Transparent,ShowInTaskbar=false,WindowStartupLocation=WindowStartupLocation.CenterOwner,FontFamily=window.FontFamily,FontSize=13,Resources=window.Resources};
+   double grow=UiScale;var dialog=new Window {Owner=owner,Title=title,Width=Math.Min(width*grow+24,SystemParameters.WorkArea.Width-16),Height=Math.Min(height*grow+26,SystemParameters.WorkArea.Height-16),WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,ShowInTaskbar=false,WindowStartupLocation=WindowStartupLocation.CenterOwner,FontFamily=window.FontFamily,FontSize=13,Resources=window.Resources};BackdropNative.SeeThrough(dialog);
    dialog.SetResourceReference(Window.ForegroundProperty,"Ink");KeepOwnerInFront(dialog);
    // Short dialogs end where their content ends; long ones scroll inside the old size.
    dialog.MaxHeight=dialog.Height;dialog.SizeToContent=SizeToContent.Height;
@@ -52,21 +52,31 @@ namespace Mica {
     var toDip=source.CompositionTarget.TransformFromDevice;var topLeft=toDip.Transform(new Point(box.Left,box.Top));var size=toDip.Transform(new Point(box.Right-box.Left,box.Bottom-box.Top));
     var tint=new System.Windows.Shapes.Rectangle();tint.SetResourceReference(System.Windows.Shapes.Shape.FillProperty,"Canvas");tint.Opacity=state.Dark?0.45:0.35;
     var layers=new Grid {ClipToBounds=true};
-    var picture=BackdropNative.Snapshot(handle,box.Right-box.Left,box.Bottom-box.Top,8);
-    // Blurred at an eighth of the size and stretched back: soft glass for a few hundred kilobytes.
-    if(picture!=null)layers.Children.Add(new System.Windows.Controls.Image {Source=picture,Stretch=Stretch.Fill,Margin=new Thickness(-12),Effect=new System.Windows.Media.Effects.BlurEffect {Radius=10,RenderingBias=System.Windows.Media.Effects.RenderingBias.Performance}});
+    var picture=BlurredOnce(BackdropNative.Capture(handle,box,8),10);
+    // Blurred at an eighth of the size, once, and stretched back: soft glass for a few hundred kilobytes
+    // that costs nothing per frame.
+    if(picture!=null)layers.Children.Add(new System.Windows.Controls.Image {Source=picture,Stretch=Stretch.Fill,Margin=new Thickness(-12)});
     else tint.Opacity=0.6;
     layers.Children.Add(tint);
-    glass=new Window {Owner=owner,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,Background=Brushes.Transparent,ShowInTaskbar=false,ShowActivated=false,
-     WindowStartupLocation=WindowStartupLocation.Manual,Left=topLeft.X,Top=topLeft.Y,Width=size.X,Height=size.Y,Content=layers,Resources=window.Resources,Tag="dialog-backdrop",Opacity=0};
+    glass=new Window {Owner=owner,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,ShowInTaskbar=false,ShowActivated=false,
+     WindowStartupLocation=WindowStartupLocation.Manual,Left=topLeft.X,Top=topLeft.Y,Width=size.X,Height=size.Y,Content=layers,Resources=window.Resources,Tag="dialog-backdrop"};
+    BackdropNative.SeeThrough(glass);layers.Opacity=0;
     glass.MouseLeftButtonDown+=delegate(object sender,MouseButtonEventArgs e) {e.Handled=true;if(!stayOnOutsideClick.Contains(dialog))dialog.Close();};
     glass.Show();
-    if(SystemParameters.ClientAreaAnimation)glass.BeginAnimation(UIElement.OpacityProperty,new System.Windows.Media.Animation.DoubleAnimation(0,1,TimeSpan.FromMilliseconds(140)));else glass.Opacity=1;
+    if(SystemParameters.ClientAreaAnimation)layers.BeginAnimation(UIElement.OpacityProperty,new System.Windows.Media.Animation.DoubleAnimation(0,1,TimeSpan.FromMilliseconds(140)));else layers.Opacity=1;
     dialogBackdrop=glass;
    };
+   // The dialog's see-through margin around its card catches clicks now; there it counts as outside too.
+   dialog.MouseLeftButtonDown+=delegate(object sender,MouseButtonEventArgs e) {var card=dialog.Content as UIElement;if(glass==null||card==null||card.IsMouseOver||stayOnOutsideClick.Contains(dialog))return;e.Handled=true;dialog.Close();};
    dialog.Closed+=delegate {stayOnOutsideClick.Remove(dialog);if(glass!=null){var g=glass;glass=null;if(dialogBackdrop==g)dialogBackdrop=null;g.Close();}};
   }
   internal Window dialogBackdrop;
+  static System.Windows.Media.Imaging.BitmapSource BlurredOnce(System.Windows.Media.Imaging.BitmapSource picture,double radius) {
+   if(picture==null)return null;int width=picture.PixelWidth,height=picture.PixelHeight;
+   var image=new System.Windows.Controls.Image {Source=picture,Width=width,Height=height,Stretch=Stretch.Fill,Effect=new System.Windows.Media.Effects.BlurEffect {Radius=radius,RenderingBias=System.Windows.Media.Effects.RenderingBias.Performance}};
+   image.Measure(new Size(width,height));image.Arrange(new Rect(0,0,width,height));
+   var baked=new System.Windows.Media.Imaging.RenderTargetBitmap(width,height,96,96,PixelFormats.Pbgra32);baked.Render(image);baked.Freeze();return baked;
+  }
   static string DialogGlyph(string title) {
    switch(title) {
     case "Keyboard shortcuts":return "\uE765";case "Clear browsing data":return "\uE74D";case "Site permissions":return "\uE72E";
@@ -118,18 +128,51 @@ namespace Mica {
   [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern IntPtr SelectObject(IntPtr dc,IntPtr thing);
   [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr thing);
   [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern bool DeleteDC(IntPtr dc);
-  // The window as it looks now, web page included (PW_RENDERFULLCONTENT), shrunk by `shrink` and copied
-  // out so the full-size capture can go straight away. Null if Windows won't draw it.
-  internal static System.Windows.Media.Imaging.BitmapSource Snapshot(IntPtr window,int width,int height,int shrink) {
-   if(width<=0||height<=0||width>16384||height>16384)return null;
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+  [System.Runtime.InteropServices.DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern bool StretchBlt(IntPtr dc,int x,int y,int width,int height,IntPtr source,int sx,int sy,int sw,int sh,uint operation);
+  [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern int SetStretchBltMode(IntPtr dc,int mode);
+  // Copying the window off the screen takes a few milliseconds; PrintWindow with the web page in it takes
+  // 60 to 110. The screen copy is only right while the window is in front and wholly on screen.
+  static bool InFrontOnScreen(IntPtr window,Box box) {
+   if(GetForegroundWindow()!=window)return false;
+   int x=GetSystemMetrics(76),y=GetSystemMetrics(77),width=GetSystemMetrics(78),height=GetSystemMetrics(79);
+   return box.Left>=x&&box.Top>=y&&box.Right<=x+width&&box.Bottom<=y+height;
+  }
+  // The window as it looks now, web page included, shrunk by the given factor. Null if Windows won't draw it.
+  internal static System.Windows.Media.Imaging.BitmapSource Capture(IntPtr window,Box box,int shrink) {
+   int width=box.Right-box.Left,height=box.Bottom-box.Top;if(width<=0||height<=0||width>16384||height>16384)return null;
+   int small=Math.Max(1,width/shrink),low=Math.Max(1,height/shrink);
    IntPtr screen=GetDC(IntPtr.Zero),memory=IntPtr.Zero,bitmap=IntPtr.Zero,old=IntPtr.Zero;
    try {
-    memory=CreateCompatibleDC(screen);bitmap=CreateCompatibleBitmap(screen,width,height);if(memory==IntPtr.Zero||bitmap==IntPtr.Zero)return null;
-    old=SelectObject(memory,bitmap);bool drawn=PrintWindow(window,memory,2);SelectObject(memory,old);old=IntPtr.Zero;if(!drawn)return null;
-    var full=System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap,IntPtr.Zero,System.Windows.Int32Rect.Empty,System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
-    var small=new System.Windows.Media.Imaging.WriteableBitmap(new System.Windows.Media.Imaging.TransformedBitmap(full,new System.Windows.Media.ScaleTransform(1.0/shrink,1.0/shrink)));small.Freeze();return small;
+    memory=CreateCompatibleDC(screen);if(memory==IntPtr.Zero)return null;
+    System.Windows.Media.Imaging.BitmapSource picture;
+    if(InFrontOnScreen(window,box)) {
+     bitmap=CreateCompatibleBitmap(screen,small,low);if(bitmap==IntPtr.Zero)return null;old=SelectObject(memory,bitmap);
+     SetStretchBltMode(memory,4);bool drawn=StretchBlt(memory,0,0,small,low,screen,box.Left,box.Top,width,height,0x00CC0020);SelectObject(memory,old);old=IntPtr.Zero;if(!drawn)return null;
+     picture=System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap,IntPtr.Zero,System.Windows.Int32Rect.Empty,System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+    } else {
+     bitmap=CreateCompatibleBitmap(screen,width,height);if(bitmap==IntPtr.Zero)return null;
+     old=SelectObject(memory,bitmap);bool drawn=PrintWindow(window,memory,2);SelectObject(memory,old);old=IntPtr.Zero;if(!drawn)return null;
+     picture=System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap,IntPtr.Zero,System.Windows.Int32Rect.Empty,System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+     if(shrink>1)picture=new System.Windows.Media.Imaging.WriteableBitmap(new System.Windows.Media.Imaging.TransformedBitmap(picture,new System.Windows.Media.ScaleTransform((double)small/width,(double)low/height)));
+    }
+    picture.Freeze();return picture;
    }catch(Exception){return null;}
    finally {if(bitmap!=IntPtr.Zero)DeleteObject(bitmap);if(memory!=IntPtr.Zero)DeleteDC(memory);ReleaseDC(IntPtr.Zero,screen);}
+  }
+  [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] struct Margins {public int Left,Right,Top,Bottom;}
+  [System.Runtime.InteropServices.DllImport("dwmapi.dll")] static extern int DwmExtendFrameIntoClientArea(IntPtr window,ref Margins margins);
+  // See-through without AllowsTransparency: the desktop compositor blends the window's alpha on the GPU.
+  // A layered window (AllowsTransparency) is read back to the CPU and copied out on every frame, which is
+  // what made window-sized animations stutter.
+  internal static void SeeThrough(System.Windows.Window window) {
+   window.AllowsTransparency=false;window.Background=System.Windows.Media.Brushes.Transparent;
+   window.SourceInitialized+=delegate {
+    var handle=new System.Windows.Interop.WindowInteropHelper(window).Handle;var source=System.Windows.Interop.HwndSource.FromHwnd(handle);
+    if(source!=null)source.CompositionTarget.BackgroundColor=System.Windows.Media.Colors.Transparent;
+    var all=new Margins {Left=-1,Right=-1,Top=-1,Bottom=-1};try {DwmExtendFrameIntoClientArea(handle,ref all);}catch(Exception){}
+   };
   }
  }
 }

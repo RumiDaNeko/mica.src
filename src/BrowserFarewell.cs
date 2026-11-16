@@ -14,10 +14,7 @@ namespace Mica {
   // Closing a window: a picture of it shrinks into a dot, the dot pops into a burst of stars, and they fade away.
   // The real window closes at once; the animation plays in a borderless see-through window on top of where it was.
   const double FarewellShrink=340,FarewellLength=820;
-  [StructLayout(LayoutKind.Sequential)] struct WindowRect {public int Left,Top,Right,Bottom;}
-  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd,out WindowRect rect);
   [DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr handle);
-  [DllImport("user32.dll",EntryPoint="PrintWindow")] static extern bool CaptureWindow(IntPtr hwnd,IntPtr hdc,uint flags);
   [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr hwnd,int attribute,ref int value,int size);
   // Windows' own close fade would play over ours; with it off, the window is gone the moment the picture takes its place.
   static void NoWindowsTransition(IntPtr hwnd) {int on=1;try {DwmSetWindowAttribute(hwnd,3,ref on,4);}catch(Exception){}}
@@ -30,31 +27,25 @@ namespace Mica {
   }
   void PlayFarewell() {
    try {
-    var handle=new WindowInteropHelper(window).Handle;WindowRect r;
-    if(handle==IntPtr.Zero||!GetWindowRect(handle,out r)||r.Right-r.Left<16||r.Bottom-r.Top<16)return;
-    // The window as Windows composes it, not the visual tree: the page is drawn by the engine in its own window.
-    // PrintWindow's full-content mode includes that and works even if another window covers Mica.
-    BitmapSource shot;
-    using(var bitmap=new System.Drawing.Bitmap(r.Right-r.Left,r.Bottom-r.Top))using(var g=System.Drawing.Graphics.FromImage(bitmap)) {
-     var dc=g.GetHdc();bool printed;try {printed=CaptureWindow(handle,dc,2);}finally {g.ReleaseHdc(dc);}
-     if(!printed)g.CopyFromScreen(r.Left,r.Top,0,0,bitmap.Size);
-     var hbitmap=bitmap.GetHbitmap();
-     try {shot=Imaging.CreateBitmapSourceFromHBitmap(hbitmap,IntPtr.Zero,Int32Rect.Empty,BitmapSizeOptions.FromEmptyOptions());}finally {DeleteObject(hbitmap);}
-    }
-    shot.Freeze();farewellShot=shot;
+    var captureClock=Stopwatch.StartNew();var handle=new WindowInteropHelper(window).Handle;BackdropNative.Box r;
+    if(handle==IntPtr.Zero||!BackdropNative.GetWindowRect(handle,out r)||r.Right-r.Left<16||r.Bottom-r.Top<16)return;
+    // The window as Windows composes it, web page included: copied off the screen while it's in front,
+    // otherwise drawn by PrintWindow, which works even if another window covers Mica.
+    var shot=BackdropNative.Capture(handle,r,1);if(shot==null)return;
+    farewellShot=shot;long tShot=captureClock.ElapsedMilliseconds;
     var source=PresentationSource.FromVisual(window);var toDip=source!=null?source.CompositionTarget.TransformFromDevice:Matrix.Identity;
     var topLeft=toDip.Transform(new Point(r.Left,r.Top));var size=(Vector)toDip.Transform(new Point(r.Right-r.Left,r.Bottom-r.Top));
     var accent=window.Resources["Accent"] as SolidColorBrush;
     Action<double> seek;double length;var scene=FarewellScene(CloseEffect(),shot,new Size(size.X,size.Y),accent!=null?accent.Color:Color.FromRgb(0x71,0x60,0x8C),out seek,out length);
     // On top for its short life, so nothing that comes forward as Mica leaves can hide it.
-    var overlay=new Window {WindowStyle=WindowStyle.None,AllowsTransparency=true,Background=Brushes.Transparent,ShowInTaskbar=false,ShowActivated=false,ResizeMode=ResizeMode.NoResize,Topmost=true,
+    long tScene=captureClock.ElapsedMilliseconds;var overlay=new Window {WindowStyle=WindowStyle.None,ShowInTaskbar=false,ShowActivated=false,ResizeMode=ResizeMode.NoResize,Topmost=true,
      Left=topLeft.X,Top=topLeft.Y,Width=size.X,Height=size.Y,Content=scene,Title="Mica"};
-    overlay.SourceInitialized+=delegate {NoWindowsTransition(new WindowInteropHelper(overlay).Handle);};
+    BackdropNative.SeeThrough(overlay);overlay.SourceInitialized+=delegate {NoWindowsTransition(new WindowInteropHelper(overlay).Handle);};
     NoWindowsTransition(handle);
     seek(0);overlay.Show();farewellOverlay=overlay;farewellNote="playing";
-    var clock=Stopwatch.StartNew();bool done=false;EventHandler frame=null;
-    Action finish=delegate {if(done)return;done=true;System.Windows.Media.CompositionTarget.Rendering-=frame;overlay.Close();farewellNote="finished after "+clock.ElapsedMilliseconds+" ms";};
-    frame=delegate {double t=clock.Elapsed.TotalMilliseconds;seek(Math.Min(t,length));if(t>=length)finish();};
+    long captured=captureClock.ElapsedMilliseconds;var clock=Stopwatch.StartNew();bool done=false;EventHandler frame=null;int frames=0;double last=0,worst=0;
+    Action finish=delegate {if(done)return;done=true;System.Windows.Media.CompositionTarget.Rendering-=frame;overlay.Close();farewellNote="finished after "+clock.ElapsedMilliseconds+" ms; set-up "+captured+" ms (picture "+tShot+", scene "+(tScene-tShot)+", window "+(captured-tScene)+"), "+frames+" frames, worst gap "+worst.ToString("0")+" ms";};
+    frame=delegate {double t=clock.Elapsed.TotalMilliseconds;frames++;worst=Math.Max(worst,t-last);last=t;seek(Math.Min(t,length));if(t>=length)finish();};
     System.Windows.Media.CompositionTarget.Rendering+=frame;
     // Never leave the picture behind, whatever happens to the frame clock.
     var guard=new System.Windows.Threading.DispatcherTimer {Interval=TimeSpan.FromMilliseconds(length+900)};guard.Tick+=delegate {guard.Stop();finish();};guard.Start();
@@ -75,6 +66,8 @@ namespace Mica {
    if(effect=="dissolve"){length=720;return DissolveScene(shot,size,out seek);}
    length=FarewellLength;return FarewellScene(shot,size,accent,out seek);
   }
+  // A frozen, cached brush per piece: the pieces only move, so their pictures are drawn once, not every frame.
+  static ImageBrush PieceOf(BitmapSource shot,Rect part) {var brush=new ImageBrush(shot) {Viewbox=part,Stretch=Stretch.Fill};RenderOptions.SetCachingHint(brush,CachingHint.Cache);brush.Freeze();return brush;}
   static double Clamp01(double x) {return x<0?0:x>1?1:x;}
   // A little Mica window for the preview in Personalize: a sidebar of tabs and a page, in the current colours.
   BitmapSource ClosePreviewPicture(Size size) {
@@ -110,7 +103,7 @@ namespace Mica {
    var root=new Grid {Width=w,Height=h,IsHitTestVisible=false};var layer=new Canvas {Width=w,Height=h};root.Children.Add(layer);
    var random=new Random(11);var pieces=new List<Tuple<UIElement,TranslateTransform,RotateTransform,ScaleTransform,double[]>>();
    for(int y=0;y<rows;y++)for(int x=0;x<cols;x++) {
-    var piece=new Border {Width=pw+0.5,Height=ph+0.5,Background=new ImageBrush(shot) {Viewbox=new Rect((double)x/cols,(double)y/rows,1.0/cols,1.0/rows),Stretch=Stretch.Fill},RenderTransformOrigin=new Point(0.5,0.5)};
+    var piece=new Border {Width=pw+0.5,Height=ph+0.5,Background=PieceOf(shot,new Rect((double)x/cols,(double)y/rows,1.0/cols,1.0/rows)),RenderTransformOrigin=new Point(0.5,0.5)};
     var move=new TranslateTransform(x*pw,y*ph);var turn=new RotateTransform(0);var scale=new ScaleTransform(1,1);var group=new TransformGroup();group.Children.Add(scale);group.Children.Add(turn);group.Children.Add(move);piece.RenderTransform=group;layer.Children.Add(piece);
     double dx=(x+0.5)*pw-w/2,dy=(y+0.5)*ph-h/2,len=Math.Max(1,Math.Sqrt(dx*dx+dy*dy)),push=0.25+random.NextDouble()*0.35;
     pieces.Add(Tuple.Create((UIElement)piece,move,turn,scale,new[]{x*pw,y*ph,dx/len*w*push,dy/len*h*push-h*0.15,(random.NextDouble()-0.5)*220,random.NextDouble()*90}));
@@ -147,7 +140,7 @@ namespace Mica {
    var root=new Grid {Width=w,Height=h,IsHitTestVisible=false};var layer=new Canvas {Width=w,Height=h,ClipToBounds=false};root.Children.Add(layer);
    var pieces=new List<Tuple<UIElement,TranslateTransform,double>>();
    for(int i=0;i<strips;i++) {
-    var strip=new Border {Width=sw+0.6,Height=h,Background=new ImageBrush(shot) {Viewbox=new Rect((double)i/strips,0,1.0/strips,1),Stretch=Stretch.Fill}};
+    var strip=new Border {Width=sw+0.6,Height=h,Background=PieceOf(shot,new Rect((double)i/strips,0,1.0/strips,1))};
     var move=new TranslateTransform(i*sw,0);strip.RenderTransform=move;layer.Children.Add(strip);
     // A ripple from the middle outwards, with a little jitter so it doesn't look mechanical.
     double delay=Math.Abs(i-(strips-1)/2.0)/(strips/2.0)*260+random.NextDouble()*90;pieces.Add(Tuple.Create((UIElement)strip,move,delay));
@@ -157,11 +150,11 @@ namespace Mica {
   }
   // The picture breaks into small tiles that wink out in a scattered order.
   static Grid DissolveScene(BitmapSource shot,Size size,out Action<double> seek) {
-   double w=size.Width,h=size.Height;int cols=Math.Max(8,(int)Math.Round(w/40)),rows=Math.Max(6,(int)Math.Round(h/40));double pw=w/cols,ph=h/rows;var random=new Random(3);
+   double w=size.Width,h=size.Height;int cols=Math.Max(8,(int)Math.Round(w/72)),rows=Math.Max(6,(int)Math.Round(h/72));double pw=w/cols,ph=h/rows;var random=new Random(3);
    var root=new Grid {Width=w,Height=h,IsHitTestVisible=false};var layer=new Canvas {Width=w,Height=h};root.Children.Add(layer);
    var pieces=new List<Tuple<UIElement,ScaleTransform,double>>();
    for(int y=0;y<rows;y++)for(int x=0;x<cols;x++) {
-    var tile=new Border {Width=pw+0.5,Height=ph+0.5,Background=new ImageBrush(shot) {Viewbox=new Rect((double)x/cols,(double)y/rows,1.0/cols,1.0/rows),Stretch=Stretch.Fill},RenderTransformOrigin=new Point(0.5,0.5)};
+    var tile=new Border {Width=pw+0.5,Height=ph+0.5,Background=PieceOf(shot,new Rect((double)x/cols,(double)y/rows,1.0/cols,1.0/rows)),RenderTransformOrigin=new Point(0.5,0.5)};
     var scale=new ScaleTransform(1,1);tile.RenderTransform=scale;Canvas.SetLeft(tile,x*pw);Canvas.SetTop(tile,y*ph);layer.Children.Add(tile);
     pieces.Add(Tuple.Create((UIElement)tile,scale,random.NextDouble()*480));
    }

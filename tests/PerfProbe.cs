@@ -19,6 +19,23 @@ namespace Mica {
   static void Mark(string step){if(marks==null)return;marks.Add(step+" "+markClock.Elapsed.TotalMilliseconds.ToString("0.0"));markClock.Restart();}
   // A window holding 300 tabs (a few live, the rest resting): what the tab-list work, a tab switch, opening
   // a tab and the 15-second memory tick cost on the UI thread. Writes perf\manytabs.txt.
+  // The close animation: how long it takes to start and how smooth it runs, alone and with the window's own teardown.
+  async Task RunFarewellProbe() {
+   var log=regressionLog;string dir=Path.Combine(profile,"farewell");Directory.CreateDirectory(dir);
+   window.WindowState=WindowState.Normal;window.Width=1920;window.Height=1032;window.Left=-6000;window.Top=-6000;
+   try {
+    for(int i=0;i<300;i++){var t=state.AddTab("https://example.org/page-"+i);t.Title="Page "+i;}
+    var homes=new List<PageEntry>();for(int i=0;i<3;i++){homes.Add(state.AddTab("mica://home"));await Activate(homes[i].Id);await Task.Delay(400);}
+    RenderTabs();await Task.Delay(1000);
+    foreach(var effect in new[]{"stars","fade","shatter","dissolve","melt"}) {
+     state.CloseEffect=effect;farewellNote=null;PlayFarewell();await Task.Delay(1800);log.Add(effect+": "+farewellNote);
+    }
+    state.CloseEffect="stars";farewellNote=null;PlayFarewell();
+    var w=Stopwatch.StartNew();Save();foreach(var view in views.Values.ToList())view.Dispose();views.Clear();log.Add("teardown on the UI thread: "+w.ElapsedMilliseconds+" ms");
+    await Task.Delay(1800);log.Add("stars with teardown: "+farewellNote);
+   }catch(Exception e){log.Add("ERROR "+e);regressionFailures++;}
+   File.WriteAllLines(Path.Combine(dir,"result.txt"),log);Environment.Exit(0);
+  }
   async Task RunManyTabsProbe() {
    var log=regressionLog;string dir=Path.Combine(profile,"perf");Directory.CreateDirectory(dir);
    window.WindowState=WindowState.Normal;window.Width=1920;window.Height=1032;window.Left=-6000;window.Top=-6000;asyncSaveForTest=true;
