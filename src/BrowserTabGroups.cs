@@ -138,6 +138,9 @@ namespace Mica {
    if(tabsDirty||animateTabMoves||tabDrag!=null&&tabDrag.Active||folds(leaving)||folds(state.ActiveId)){RenderTabs();return;}
    var rows=TabListElements().OfType<Grid>().ToList();var minis=Find<StackPanel>("MiniTabs").Children.OfType<Button>().ToList();
    if(!rows.Any(r=>(string)r.Tag=="tab:"+state.ActiveId)||!minis.Any(b=>(string)b.Tag==state.ActiveId)){RenderTabs();return;}
+   // A tab was closed (or opened) on the way here: the list must lose (or gain) its row, not only move the highlight.
+   var here=new HashSet<string>(state.Tabs.Where(t=>t.Space==state.Space).Select(t=>t.Id));
+   if(minis.Count!=here.Count||minis.Any(b=>!here.Contains(b.Tag as string))||rows.Any(r=>{var tag=r.Tag as string;return tag!=null&&tag.StartsWith("tab:")&&!here.Contains(tag.Substring(4));})){RenderTabs();return;}
    foreach(var row in rows) {var select=row.Children.Count>0?row.Children[0] as Button:null;if(select==null)continue;string id=select.Tag as string;if(id==state.ActiveId)select.Background=SideBrush("Panel");else if(id==leaving)select.ClearValue(Control.BackgroundProperty);}
    foreach(var small in minis){string id=small.Tag as string;if(id==state.ActiveId)small.Background=SideBrush("Panel");else if(id==leaving)small.Background=Brushes.Transparent;}
    MarkRestingTabs(false);

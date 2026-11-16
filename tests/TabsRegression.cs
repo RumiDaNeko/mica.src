@@ -118,7 +118,14 @@ namespace Mica {
      RegressionCheck("spare empty New tabs count as duplicates",delegate {Require(state.Tabs.Count(t=>t.Space==state.Space&&t.Url=="mica://home")==1,order());});
      CloseTab(state.Tabs.First(t=>t.Space==state.Space&&t.Url=="mica://home").Id);await Task.Delay(200);
      CloseTab(tab("bravo").Id);await Task.Delay(200);ReopenClosedTab();await Task.Delay(300);
-     RegressionCheck("after closing one tab, Ctrl+Shift+T reopens that tab, not the old batch",delegate {Require(state.Tabs.Count(t=>t.Url.Contains("bravo"))==1&&state.Tabs.Count(t=>t.Space==state.Space)==5,order());});}
+     RegressionCheck("after closing one tab, Ctrl+Shift+T reopens that tab, not the old batch",delegate {Require(state.Tabs.Count(t=>t.Url.Contains("bravo"))==1&&state.Tabs.Count(t=>t.Space==state.Space)==5,order());});
+     // A closed tab's row goes from the sidebar (and the mini strip) whether it was the active tab or not.
+     Func<string> rowsShown=delegate {return string.Join(",",TabListElements().Select(e=>e.Tag as string).Where(t=>t!=null&&t.StartsWith("tab:")).Select(t=>t.Substring(4)).OrderBy(x=>x))+" | "+string.Join(",",Find<StackPanel>("MiniTabs").Children.OfType<Button>().Select(b=>b.Tag as string).OrderBy(x=>x));};
+     Func<string> rowsWanted=delegate {var ids=string.Join(",",state.Tabs.Where(t=>t.Space==state.Space&&!(state.FindGroup(t.Group)!=null&&state.FindGroup(t.Group).Collapsed&&t.Id!=state.ActiveId)).Select(t=>t.Id).OrderBy(x=>x));return ids+" | "+string.Join(",",state.Tabs.Where(t=>t.Space==state.Space).Select(t=>t.Id).OrderBy(x=>x));};
+     SelectTab(tab("echo").Id);await Task.Delay(300);CloseTab(tab("echo").Id);await Task.Delay(300);
+     RegressionCheck("closing the active tab leaves no ghost row behind",delegate {Require(rowsShown()==rowsWanted(),"shown "+rowsShown()+" / wanted "+rowsWanted());});
+     var bystander=state.Tabs.First(t=>t.Space==state.Space&&t.Id!=state.ActiveId&&!t.Pinned);CloseTab(bystander.Id);await Task.Delay(300);
+     RegressionCheck("closing a background tab leaves no ghost row behind",delegate {Require(rowsShown()==rowsWanted(),"shown "+rowsShown()+" / wanted "+rowsWanted());});}
    }catch(Exception e){log.Add("ERROR "+e);regressionFailures++;}
    log.Add(regressionFailures==0?"ALL PASS":regressionFailures+" FAILURE(S)");
    File.WriteAllLines(Path.Combine(dir,"result.txt"),log);window.Close();
