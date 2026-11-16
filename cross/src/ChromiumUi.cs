@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text.Json.Nodes;
 using Avalonia;
@@ -109,7 +110,8 @@ namespace Mica {
   // The card: as on Windows (AskSiteBubble), 340 wide, radius 14, an icon tile, who's asking, what, and the two
   // choices. Block sits in the corner where a page can lure a click; clicks in its first 700 ms are ignored.
   void AskSite(string glyph,string title,string subject,string acceptLabel,string declineLabel,Func<bool> alive,Action<bool?> done) {
-   sitePromptQueue.Enqueue(delegate {
+   Action build=null;
+   sitePromptQueue.Enqueue(build=delegate {
     if(!alive()){done(null);NextSitePrompt();return;}
     var grid=new Grid {ColumnDefinitions=new ColumnDefinitions("44,*")};
     var badge=Res(new Border {Width=32,Height=32,CornerRadius=new CornerRadius(10),VerticalAlignment=VerticalAlignment.Top,HorizontalAlignment=HorizontalAlignment.Left,Child=Glyph(glyph,15,"accent")},Border.BackgroundProperty,"Hover");grid.Children.Add(badge);
@@ -125,7 +127,7 @@ namespace Mica {
     var armed=DateTime.UtcNow.AddMilliseconds(700);bool finished=false;
     Action<bool?> finish=delegate(bool? choice) {
      if(finished)return;finished=true;popup.IsOpen=false;root.Children.Remove(popup);
-     if(sitePrompt==popup){sitePrompt=null;sitePromptText=null;}
+     if(sitePrompt==popup){sitePrompt=null;sitePromptText=null;sitePromptYield=null;}
      islandCard.Opacity=1;done(choice);NextSitePrompt();
     };
     accept.Click+=delegate {if(DateTime.UtcNow>=armed)finish(true);};
@@ -138,12 +140,32 @@ namespace Mica {
     card.Transitions=new Avalonia.Animation.Transitions {new Avalonia.Animation.DoubleTransition {Property=OpacityProperty,Duration=TimeSpan.FromMilliseconds(160)},new Avalonia.Animation.TransformOperationsTransition {Property=RenderTransformProperty,Duration=TimeSpan.FromMilliseconds(220),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}};
     popup.Opened+=delegate {card.Opacity=1;card.RenderTransform=Avalonia.Media.Transformation.TransformOperations.Parse("scale(1) translateY(0px)");};
     root.Children.Add(popup);sitePrompt=popup;sitePromptText=title+" "+subject;islandCard.Opacity=0;popup.IsOpen=true;
+    // A newer prompt may take its place once it has sat untouched for 2 s; it comes back afterwards, unanswered.
+    var shown=DateTime.UtcNow;
+    sitePromptYield=delegate {
+     if(finished||card.IsPointerOver||card.IsKeyboardFocusWithin||(DateTime.UtcNow-shown).TotalMilliseconds<PromptIdleMs)return false;
+     finished=true;popup.IsOpen=false;root.Children.Remove(popup);sitePrompt=null;sitePromptText=null;sitePromptYield=null;
+     yieldedPrompts.Add(build);sitePromptQueue.Enqueue(build);islandCard.Opacity=1;NextSitePrompt();return true;
+    };
     // The page can give up on it (navigating away), or the tab can go: then it goes too.
     DispatcherTimer watch=null;watch=new DispatcherTimer(TimeSpan.FromMilliseconds(500),DispatcherPriority.Background,delegate {if(finished){watch.Stop();return;}if(!alive()){watch.Stop();finish(null);}});watch.Start();
    });
-   if(sitePrompt==null&&sitePromptQueue.Count==1)NextSitePrompt();
+   if(sitePrompt==null&&sitePromptQueue.Count==1)NextSitePrompt();else LetWaitingPromptIn();
   }
-  void NextSitePrompt() {if(sitePrompt!=null||sitePromptQueue.Count==0)return;sitePromptQueue.Dequeue()();}
+  // A prompt that arrives while another sits untouched takes its place (BrowserPermissions.cs LetWaitingBubbleIn).
+  // Only new prompts step in, so two ignored ones never swap back and forth, and one you point at, type in or only
+  // just saw stays put.
+  const int PromptIdleMs=2000;
+  Func<bool> sitePromptYield;DispatcherTimer sitePromptYieldTimer;
+  readonly HashSet<Action> yieldedPrompts=new HashSet<Action>();
+  bool FreshPromptWaiting {get {return sitePromptQueue.Any(p=>!yieldedPrompts.Contains(p));}}
+  void LetWaitingPromptIn() {
+   if(sitePrompt==null||!FreshPromptWaiting)return;
+   if(sitePromptYield!=null&&sitePromptYield())return;
+   if(sitePromptYieldTimer==null)sitePromptYieldTimer=new DispatcherTimer(TimeSpan.FromMilliseconds(400),DispatcherPriority.Background,delegate {if(sitePrompt==null||!FreshPromptWaiting||sitePromptYield!=null&&sitePromptYield())sitePromptYieldTimer.Stop();});
+   sitePromptYieldTimer.Start();
+  }
+  void NextSitePrompt() {if(sitePrompt!=null||sitePromptQueue.Count==0)return;var next=sitePromptQueue.Dequeue();yieldedPrompts.RemoveWhere(p=>!sitePromptQueue.Contains(p));next();}
   // The self-test answers the card as a click would (after its 700 ms).
   internal void AnswerSitePrompt(bool allow) {
    if(sitePrompt==null)return;var card=(Border)sitePrompt.Child;

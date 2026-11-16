@@ -224,6 +224,7 @@ namespace Mica {
    Content=root;
    AddHandler(KeyDownEvent,OnKey,Avalonia.Interactivity.RoutingStrategies.Tunnel);
    Closing+=delegate {Save();SaveDownloads();};
+   StartSettingsSync();StartLaunchListener();
    LoadDownloads();
    UpdateHomeSites();UpdateLibrary();
    ApplyTheme();ApplyTextScale();RenderTabs();Show(state.ActiveId);
@@ -504,6 +505,6 @@ namespace Mica {
    theme.Content=Glyph(state.Dark?Glyphs.Sun:Glyphs.Moon,15,null);miniTheme.Content=Glyph(state.Dark?Glyphs.Sun:Glyphs.Moon,15,null);
    PaintTabs();
   }
-  void Save() {if(Program.Private)return;try {StateStore.Save(statePath,state);} catch(IOException) {} catch(UnauthorizedAccessException) {}}
+  void Save() {if(Program.Private)return;try {StateStore.Save(statePath,state);} catch(IOException) {} catch(UnauthorizedAccessException) {}NoteSettingsChange();}
  }
 }

@@ -46,17 +46,28 @@ namespace Mica {
   // ── The card: a banner in the profile's colour, the avatar ring, who you are, and the profiles.
   void ShowAccount(Control anchor) {
    var popup=MenuCard(anchor,290,PlacementMode.Top,delegate(StackPanel body,Popup card) {
-    var current=CurrentProfile;
+    var current=CurrentProfile;var account=ReadAccount();
     var accent=this.FindResource("Accent") as ISolidColorBrush;Color tint=current!=null&&!string.IsNullOrEmpty(current.Color)?Color.Parse(current.Color):accent!=null?accent.Color:Colors.SlateBlue;
+    // Signed in: Discord's own colour for the banner, as on Windows.
+    if(account!=null&&account.accent_color.HasValue&&account.accent_color>=0&&account.accent_color<=0xFFFFFF){int c=account.accent_color.Value;tint=Color.FromRgb((byte)(c>>16),(byte)(c>>8),(byte)c);}
     const double tall=58;
     var header=new Grid();
     header.Children.Add(new Border {Height=tall,CornerRadius=new CornerRadius(9,9,4,4),VerticalAlignment=VerticalAlignment.Top,Background=new LinearGradientBrush {StartPoint=new RelativePoint(0,0,RelativeUnit.Relative),EndPoint=new RelativePoint(1,0,RelativeUnit.Relative),GradientStops={new GradientStop(tint,0),new GradientStop(Color.FromArgb(0xCC,tint.R,tint.G,tint.B),1)}}});
     var picture=Res(new Border {Width=62,Height=62,CornerRadius=new CornerRadius(31),Child=Glyph(Glyphs.Person,24,null)},Border.BackgroundProperty,"Hover");
     header.Children.Add(Res(new Border {Width=72,Height=72,CornerRadius=new CornerRadius(36),Margin=new Thickness(10,tall-36,0,0),HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Top,Padding=new Thickness(5),Child=picture},Border.BackgroundProperty,"Panel"));
     var names=new StackPanel {Margin=new Thickness(12,tall+42,12,4)};
-    var who=DialogText("Not signed in",17,"Ink");who.FontWeight=FontWeight.SemiBold;who.TextWrapping=TextWrapping.NoWrap;who.TextTrimming=TextTrimming.CharacterEllipsis;names.Children.Add(who);
-    var detail=DialogText((current==null?"Private window":current.Name+" profile")+" · This device",11,"Muted");detail.Margin=new Thickness(0,2,0,0);names.Children.Add(detail);
+    var who=DialogText(account!=null?account.username:"Not signed in",17,"Ink");who.FontWeight=FontWeight.SemiBold;who.TextWrapping=TextWrapping.NoWrap;who.TextTrimming=TextTrimming.CharacterEllipsis;who.Tag="account-name";names.Children.Add(who);
+    var detail=DialogText((current==null?"Private window":current.Name+" profile")+" · "+(account!=null?"Discord":Program.Private?"This device":"Sign in to sync"),11,"Muted");detail.Margin=new Thickness(0,2,0,0);names.Children.Add(detail);
     header.Children.Add(names);body.Children.Add(header);
+    // The account gets its own button, right on the card: sign in with Discord, or sign out.
+    if(!Program.Private) {
+     var signIn=new Button {Padding=new Thickness(14,8),Margin=new Thickness(12,8,12,0),HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Center,Tag="account-signin"};signIn.Classes.Add("flat");signIn.Classes.Add("on");
+     var signRow=new StackPanel {Orientation=Orientation.Horizontal};var sg=Glyph(Glyphs.Person,13,null);sg.Margin=new Thickness(0,0,8,0);signRow.Children.Add(sg);
+     signRow.Children.Add(new TextBlock {Text=account!=null?"Sign out":signingIn?"Signing in…":"Sign in with Discord",FontWeight=FontWeight.SemiBold,VerticalAlignment=VerticalAlignment.Center});
+     signIn.Content=signRow;signIn.IsEnabled=account!=null||!signingIn;
+     signIn.Click+=delegate {card.IsOpen=false;if(account!=null)SignOut();else SignInFromAccountCard();};body.Children.Add(signIn);
+     if(account!=null)ShowAvatar(account,picture);
+    }
     var folder=new Button {Padding=new Thickness(14,8),Margin=new Thickness(12,8,12,10),HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Center};folder.Classes.Add("flat");folder.Classes.Add("on");
     var folderRow=new StackPanel {Orientation=Orientation.Horizontal};var fg=Glyph(Glyphs.Folder,13,null);fg.Margin=new Thickness(0,0,8,0);folderRow.Children.Add(fg);folderRow.Children.Add(new TextBlock {Text="Profile folder",FontWeight=FontWeight.SemiBold,VerticalAlignment=VerticalAlignment.Center});
     folder.Content=folderRow;folder.Click+=delegate {card.IsOpen=false;OpenPath(profile,false);};body.Children.Add(folder);
@@ -78,6 +89,10 @@ namespace Mica {
    });
   }
 
+  async void ShowAvatar(SyncAccount account,Border picture) {
+   var image=await LoadAvatar(account);if(image==null)return;
+   picture.Child=new Border {Width=62,Height=62,CornerRadius=new CornerRadius(31),ClipToBounds=true,Background=new ImageBrush(image) {Stretch=Stretch.UniformToFill}};
+  }
   void ShowAddProfile() {
    StackPanel body,actions;var dialog=MicaDialog("Add profile",440,out body,out actions);
    body.Children.Add(DialogText("A profile is a separate you: its own sign-ins, cookies, extensions, tabs and history. Nothing is shared with your other profiles.",12,"Muted"));

@@ -20,12 +20,12 @@ namespace Mica {
   static string DialogGlyph(string title) {
    switch(title) {
     case "Keyboard shortcuts":return Glyphs.Keys;case "Clear browsing data":return Glyphs.Trash;case "Browser task manager":return Glyphs.Work;
-    case "Personalize":return Glyphs.Palette;case "About Mica":return Glyphs.Info;case "Print this page":return Glyphs.Print;case "AI side panel":return Glyphs.Chat;case "Your own AI address":return Glyphs.Chat;
+    case "Personalize":return Glyphs.Palette;case "Sign-in code":return Glyphs.Lock;case "About Mica":return Glyphs.Info;case "Print this page":return Glyphs.Print;case "AI side panel":return Glyphs.Chat;case "Your own AI address":return Glyphs.Chat;
    }
    return Glyphs.Info;
   }
   static string DialogSubtitle(string title) {
-   if(title=="Keyboard shortcuts")return "Quick reference";if(title=="About Mica")return "Version";if(title=="Print this page")return "Page tool";if(title=="Personalize")return "Look and feel";
+   if(title=="Keyboard shortcuts")return "Quick reference";if(title=="About Mica")return "Version";if(title=="Print this page")return "Page tool";if(title=="Personalize")return "Look and feel";if(title=="Sign-in code")return "Discord";
    return "Your data";
   }
   // Built and shown at once; close() takes it down. Escape closes it too. A page tool (Print) sits in the island's
@@ -45,8 +45,14 @@ namespace Mica {
    body=new StackPanel();var scroll=new ScrollViewer {Content=body,MaxHeight=Math.Max(200,Bounds.Height-220),HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled};Grid.SetRow(scroll,1);layout.Children.Add(scroll);
    actions=new StackPanel {Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,18,0,0)};Grid.SetRow(actions,2);layout.Children.Add(actions);
    var popup=corner?new Popup {Child=card,PlacementTarget=pages,Placement=PlacementMode.AnchorAndGravity,PlacementAnchor=Avalonia.Controls.Primitives.PopupPositioning.PopupAnchor.BottomRight,PlacementGravity=Avalonia.Controls.Primitives.PopupPositioning.PopupGravity.TopLeft,IsLightDismissEnabled=false}
-    :new Popup {Child=card,PlacementTarget=root,Placement=PlacementMode.Center,IsLightDismissEnabled=false};
+    :new Popup {Child=WithBackdrop(card),PlacementTarget=root,Placement=PlacementMode.Center,IsLightDismissEnabled=false};
    if(corner)card.Margin=new Thickness(26,22,8,14);
+   else {
+    // Behind the card, the window frosted over; a click on it closes the dialog (not the sign-in code card).
+    var glass=((Grid)popup.Child).Children[0];
+    glass.PointerPressed+=delegate(object s,PointerPressedEventArgs e) {e.Handled=true;if(!stayOnOutsideClick.Contains(popup))popup.IsOpen=false;};
+    popup.Closed+=delegate {stayOnOutsideClick.Remove(popup);};
+   }
    close.Click+=delegate {popup.IsOpen=false;};
    card.KeyDown+=delegate(object s,KeyEventArgs e) {if(e.Key==Key.Escape){popup.IsOpen=false;e.Handled=true;}};
    popup.Closed+=delegate {root.Children.Remove(popup);if(openDialog==popup)openDialog=null;};
@@ -55,6 +61,24 @@ namespace Mica {
    card.Transitions=new Avalonia.Animation.Transitions {new Avalonia.Animation.DoubleTransition {Property=OpacityProperty,Duration=TimeSpan.FromMilliseconds(160)},new Avalonia.Animation.TransformOperationsTransition {Property=RenderTransformProperty,Duration=TimeSpan.FromMilliseconds(200),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}};
    popup.Opened+=delegate {card.Opacity=1;card.RenderTransform=Avalonia.Media.Transformation.TransformOperations.Parse("translateY(0px)");};
    return popup;
+  }
+  // The frosted window behind a dialog (BrowserDialogs.cs AddDialogBackdrop). The dialog's popup covers the whole
+  // window: a small blurred picture of Mica taken once (an eighth of the size, stretched back, so it costs a few
+  // kilobytes), the theme's canvas over it, and the card in the middle. Pages are native views Avalonia can't
+  // picture, so the page's area frosts to the canvas colour.
+  internal static readonly System.Collections.Generic.HashSet<Popup> stayOnOutsideClick=new System.Collections.Generic.HashSet<Popup>();
+  Grid WithBackdrop(Control card) {
+   double w=Math.Max(1,root.Bounds.Width),h=Math.Max(1,root.Bounds.Height);
+   var glass=new Grid {Background=Brushes.Transparent,Tag="dialog-backdrop",Opacity=0,Transitions=new Avalonia.Animation.Transitions {new Avalonia.Animation.DoubleTransition {Property=OpacityProperty,Duration=TimeSpan.FromMilliseconds(140)}}};
+   try {
+    var picture=new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(Math.Max(1,(int)(w/8)),Math.Max(1,(int)(h/8))),new Vector(12,12));picture.Render(root);
+    glass.Children.Add(new Image {Source=picture,Stretch=Stretch.Fill,Margin=new Thickness(-12),Effect=new BlurEffect {Radius=10}});
+   } catch(Exception) {}
+   var tint=Res(new Border {Opacity=glass.Children.Count==0?0.6:state.Dark?0.45:0.35},Border.BackgroundProperty,"Canvas");glass.Children.Add(tint);
+   var layers=new Grid {Width=w,Height=h,ClipToBounds=true};layers.Children.Add(glass);
+   card.HorizontalAlignment=HorizontalAlignment.Center;card.VerticalAlignment=VerticalAlignment.Center;layers.Children.Add(card);
+   layers.AttachedToVisualTree+=delegate {glass.Opacity=1;};
+   return layers;
   }
   // About Mica (the Mac app menu): the version, its engine and where it's from.
   internal void ShowAbout() {

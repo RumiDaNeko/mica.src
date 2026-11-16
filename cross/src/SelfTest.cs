@@ -155,6 +155,8 @@ namespace Mica {
     var saved=StateStore.Load(statePath);
     Check("session saved through Core.cs",saved.Tabs.Count==1&&saved.Tabs[0].Url=="mica://2048"&&saved.Dark&&saved.RecentlyClosed.Count==(web?1:0),"tabs="+saved.Tabs.Count+" dark="+saved.Dark+" closed="+saved.RecentlyClosed.Count);
     Check("dates keep the Windows format",File.ReadAllText(statePath).Contains("\"\\/Date("),null);
+    await DialogAndPromptChecks();
+    await SyncChecks();
    } catch(Exception e) {Check("self-test ran",false,e.ToString());}
    results.Add(failures==0?"ALL PASSED":failures+" FAILED");
    if(failures>0){results.Add("--- engine events");results.AddRange(trace);}

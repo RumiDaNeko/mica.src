@@ -24,7 +24,9 @@ Shortcuts are the Windows set (Cmd for Ctrl on a Mac; Cmd+[ / ] for back and for
 
 Also as on Windows: the AI side panel (ChatGPT, Claude, Gemini, Copilot, Perplexity or your own; with Claude for Chrome or ChatGPT for Chrome it uses the extension), Personalize (text size, home backgrounds and your photo, frosted glass, frame colour), profiles, and Vietnamese (Menu → Language, from `src/Strings.vi.tsv`).
 
-Not in this shell yet: tab groups, split view, sign-in and sync, passwords, import, closing animations, YouTube ambient.
+Also as on Windows: sign in with Discord from the account card (the device-bound code; the session sits in `sync-account.json` in the profile, readable by you only) and settings sync with your other devices: dark, text size, reader size and font, frame colour and home glass apply here; YouTube ambient, strict tracking, tree tabs and the close effect travel through untouched, since this shell doesn't have them. Dialogs frost the window behind them and close on a click outside (not the sign-in code card); a new island prompt takes over from one left alone for 2 s; links from other apps open in a new tab and bring Mica to the front (macOS: the open-URL event; Linux: a second start hands the link to the running Mica through `launch.sock` in the profile).
+
+Not in this shell yet: tab groups, split view, passwords and the vault, import, closing animations, YouTube ambient.
 
 ## Run the test on a Mac (or Linux)
 
@@ -63,8 +65,8 @@ Your profile goes to `~/Library/Application Support/Mica`. To try Claude, click 
 - `src/JsonShim.cs`: stands in for `JavaScriptSerializer`, so the shared files compile unchanged.
 - `src/BrowserWindow.cs`, `src/AiPanel.cs`, `src/Extensions.cs`, `src/BuiltInPages.cs`: the window, the AI side panel, extension loading, the games and new tab hosts.
 - `src/Theme.axaml`, `src/Home.html`: Mica's look, matching the Windows build: its colors (light and dark), the sidebar with vertical tabs, the page in a rounded frame, and the new tab page.
-- `src/Commands.cs` (Spotlight, palette, menus, keys), `src/PageTools.cs` (find, zoom, bookmarks, error page, site icons, resting), `src/Library.cs` + `src/Library.html` (downloads, History and Downloads pages), `src/Extras.cs` (reading mode, extensions, site card, private window, Personalize, task manager), `src/Island.cs` + `src/Ticker.cs` (the island and its rolling numbers), `src/Personalize.cs`, `src/Account.cs` (account card, profiles, language), `src/Dialogs.cs` (Mica's dialogs), `src/Localization.cs` (Vietnamese), `src/Corners.cs` (rounded page corners).
-- `src/SelfTest.cs`, `src/SelfTestFeatures.cs`: `--self-test`. `src/Preview.cs`: `--preview <folder>` saves screenshots of a few scenes from the off-screen window. `test.sh`: build and test on macOS/Linux. `package.sh`: packages.
+- `src/Commands.cs` (Spotlight, palette, menus, keys), `src/PageTools.cs` (find, zoom, bookmarks, error page, site icons, resting), `src/Library.cs` + `src/Library.html` (downloads, History and Downloads pages), `src/Extras.cs` (reading mode, extensions, site card, private window, Personalize, task manager), `src/Island.cs` + `src/Ticker.cs` (the island and its rolling numbers), `src/Personalize.cs`, `src/Account.cs` (account card, profiles, language), `src/Sync.cs` (Discord sign-in, settings sync), `src/Launch.cs` (links from other apps), `src/Dialogs.cs` (Mica's dialogs, frosted backdrop), `src/Localization.cs` (Vietnamese), `src/Corners.cs` (rounded page corners).
+- `src/SelfTest.cs`, `src/SelfTestFeatures.cs`, `src/SelfTestSync.cs`: `--self-test`. The sign-in and sync checks run the real Worker on loopback (`server/worker/test/desktop-fixture.mjs`, needs `node` and `npm install` in `server/worker`) and are skipped when it isn't next to the build. `src/Preview.cs`: `--preview <folder>` saves screenshots of a few scenes from the off-screen window. `test.sh`: build and test on macOS/Linux. `package.sh`: packages.
 
 Profile folder: `%LOCALAPPDATA%\MicaCross` (Windows, kept apart from the real Mica profile), `~/Library/Application Support/Mica` (macOS), `~/.local/share/Mica` (Linux). `--profile <dir>` overrides it. `--install-extension <store id or URL>` installs a Chrome Web Store extension before start.
 

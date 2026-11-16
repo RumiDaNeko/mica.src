@@ -1373,4 +1373,7 @@ re:Closed (\d+) tabs?\. Ctrl\+Shift\+T brings them back\.	Đã đóng $1 tab. Ct
 re:Brought back (\d+) tabs?\.	Đã mở lại $1 tab.
 re:Bring back (\d+) closed tabs	Mở lại $1 tab vừa đóng
 Signed in. Your settings now sync with your other PCs.	Đã đăng nhập. Cài đặt của bạn giờ được đồng bộ với các máy khác.
+Signed in. Your settings now sync with your other devices.	Đã đăng nhập. Cài đặt của bạn giờ được đồng bộ với các thiết bị khác.
+Signed out. Settings stay on this device.	Đã đăng xuất. Cài đặt vẫn được giữ trên thiết bị này.
+Signing in…	Đang đăng nhập…
 Couldn't reach the sync service. Try again.	Không kết nối được dịch vụ đồng bộ. Hãy thử lại.

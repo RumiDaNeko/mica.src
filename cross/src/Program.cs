@@ -36,10 +36,13 @@ namespace Mica {
     else if(args[i]=="--install-extension"&&i+1<args.Length)installs.Add(args[++i]);
     else if(args[i]=="--private")Private=true;
     else if(args[i]=="--shots")Shots=true;
+    else if(!args[i].StartsWith("-",StringComparison.Ordinal))Launch.Urls.Add(args[i]); // A link or file from another app (mica.desktop: Exec=Mica %U).
    }
    if(Profile==null&&Private)Profile=Path.Combine(Path.GetTempPath(),"mica-private-"+Guid.NewGuid().ToString("N").Substring(0,8));
    if(Profile==null)Profile=SelfTestResult!=null?Path.Combine(Path.GetTempPath(),"mica-cross-test-"+Guid.NewGuid().ToString("N").Substring(0,8)):DefaultProfile();
    Directory.CreateDirectory(Profile);
+   // Mica is already running on this profile: it opens the links and comes to the front; this start ends here.
+   if(SelfTestResult==null&&PreviewFolder==null&&!Private&&Launch.Forward(Profile,Launch.Urls))return 0;
    string chosen=null;try {chosen=File.ReadAllText(Path.Combine(Profile,"language")).Trim();} catch(Exception) {}
    Localizer.Use(Localizer.Resolve(chosen));
    // --install-extension <store id or address>: installs before the engine starts, so it loads this run.
