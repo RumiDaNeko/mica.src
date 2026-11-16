@@ -314,4 +314,9 @@
     <string name="jar_shopping">Mua sắm</string>
     <string name="jar_banking">Ngân hàng</string>
     <string name="jar_social">Mạng xã hội</string>
+    <string name="appearance">Hiển thị</string>
+    <string name="browsing">Duyệt web</string>
+    <string name="theme_light">Sáng</string>
+    <string name="theme_dark">Tối</string>
+    <string name="sync_pitch">Đăng nhập bằng Discord để đồng bộ mật khẩu và cài đặt</string>
 </resources>

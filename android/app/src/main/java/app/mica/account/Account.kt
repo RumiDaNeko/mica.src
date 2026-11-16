@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
  * Vault state is touched on the main thread only; key derivation and network calls run on one worker.
  */
 class Account(private val context: Context) {
-    class User(val id: String, val username: String, val avatar: String?, val token: String)
+    class User(val id: String, val username: String, val avatar: String?, val token: String, val banner: String? = null, val accentColor: Int? = null)
 
     private val dir = context.filesDir
     private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "mica-sync").apply { priority = Thread.NORM_PRIORITY - 1 } }
@@ -58,8 +58,29 @@ class Account(private val context: Context) {
     // ---- Sign-in ----
 
     private fun loadUser(): User? = userFile.read()?.let { s ->
-        try { val m = Json.parse(s) as Map<*, *>; User(m["id"] as String, m["username"] as? String ?: "", m["avatar"] as? String, m["token"] as String) } catch (e: Exception) { null }
+        try { val m = Json.parse(s) as Map<*, *>; User(m["id"] as String, m["username"] as? String ?: "", m["avatar"] as? String, m["token"] as String, m["banner"] as? String, colour(m["accent_color"])) } catch (e: Exception) { null }
     }
+
+    private fun writeUser(u: User) = userFile.write(JsonOut.write(mapOf("id" to u.id, "username" to u.username, "avatar" to u.avatar, "token" to u.token, "banner" to u.banner, "accent_color" to u.accentColor)))
+
+    /** Discord's profile colour, 0xRRGGBB; anything else is ignored. */
+    private fun colour(v: Any?): Int? = (v as? Number)?.toLong()?.takeIf { it in 0..0xFFFFFF }?.toInt()
+
+    /** Picks up a changed Discord name, picture, banner or colour for the session (as desktop does once per run). */
+    fun refreshProfile() {
+        val u = user ?: return
+        if (profileRefreshed) return
+        profileRefreshed = true
+        bg({ authed("GET", "/v1/account")?.get("user") as? Map<*, *> }) { m, _ ->
+            if (m == null || user !== u || m["id"] != u.id) return@bg
+            val fresh = User(u.id, m["username"] as? String ?: u.username, m["avatar"] as? String, u.token, m["banner"] as? String, colour(m["accent_color"]))
+            if (fresh.username == u.username && fresh.avatar == u.avatar && fresh.banner == u.banner && fresh.accentColor == u.accentColor) return@bg
+            user = fresh
+            try { writeUser(fresh) } catch (e: Exception) {}
+            changed()
+        }
+    }
+    private var profileRefreshed = false
 
     class SignIn(val code: String, val url: String, val requestId: String, val verifier: String, val until: Long) { @Volatile var cancelled = false }
 
@@ -93,8 +114,8 @@ class Account(private val context: Context) {
             val token = r["token"] as? String
             val id = u?.get("id") as? String
             if (token.isNullOrEmpty() || id.isNullOrEmpty()) throw IllegalStateException("Invalid sign-in response.")
-            val user = User(id, u["username"] as? String ?: "", u["avatar"] as? String, token)
-            userFile.write(JsonOut.write(mapOf("id" to user.id, "username" to user.username, "avatar" to user.avatar, "token" to user.token)))
+            val user = User(id, u["username"] as? String ?: "", u["avatar"] as? String, token, u["banner"] as? String, colour(u["accent_color"]))
+            writeUser(user)
             return user
         }
         if (!s.cancelled) throw IllegalStateException("Sign-in timed out. Please try again.")

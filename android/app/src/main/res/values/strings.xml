@@ -366,4 +366,9 @@
     <string name="jar_shopping">Shopping</string>
     <string name="jar_banking">Banking</string>
     <string name="jar_social">Social</string>
+    <string name="appearance">Appearance</string>
+    <string name="browsing">Browsing</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="sync_pitch">Sign in with Discord to sync passwords and settings</string>
 </resources>
