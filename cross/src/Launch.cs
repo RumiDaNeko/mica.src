@@ -40,7 +40,18 @@ namespace Mica {
    } catch(Exception) {return false;}
   }
   // Listens until the window goes; each message is a JSON list of up to four links.
-  internal static Socket Listen(string profile,Action<string[]> received) {
+  // The listening end. Its own thread blocks in Accept, so links arrive however busy the thread pool is.
+  // Stopping wakes that Accept with a connection of its own and lets the thread close the socket: on macOS
+  // closing a socket doesn't wake a blocking Accept, and the close then waits for it forever.
+  internal sealed class Listener {
+   internal Socket Server;internal string Path;internal volatile bool Stopped;
+   internal void Stop() {
+    if(Stopped)return;Stopped=true;
+    try {using(var wake=new Socket(AddressFamily.Unix,SocketType.Stream,ProtocolType.Unspecified)){wake.SendTimeout=500;wake.Connect(new UnixDomainSocketEndPoint(Path));}} catch(Exception) {}
+    try {File.Delete(Path);} catch(Exception) {}
+   }
+  }
+  internal static Listener Listen(string profile,Action<string[]> received) {
    string path=SocketPath(profile);if(path==null)return null;
    try {
     if(File.Exists(path)){if(Forward(profile,new string[0]))return null;File.Delete(path);} // Left by a Mica that crashed.
@@ -48,11 +59,11 @@ namespace Mica {
     server.Bind(new UnixDomainSocketEndPoint(path));
     if(!OperatingSystem.IsWindows())File.SetUnixFileMode(path,UnixFileMode.UserRead|UnixFileMode.UserWrite);
     server.Listen(4);
-    // An asynchronous accept: on macOS closing the socket doesn't wake a blocking Accept, and the close
-    // then waits for it forever, so Mica never quits.
-    System.Threading.Tasks.Task.Run(async delegate {
+    var listener=new Listener {Server=server,Path=path};
+    var thread=new Thread(delegate() {
      while(true) {
-      Socket client;try {client=await server.AcceptAsync();} catch(Exception) {return;} // Closed with the window.
+      Socket client;try {client=server.Accept();} catch(Exception) {return;}
+      if(listener.Stopped){try {client.Dispose();server.Dispose();} catch(Exception) {}return;}
       try {
        using(client) {
         client.ReceiveTimeout=2000;var bytes=new List<byte>();var buffer=new byte[4096];
@@ -62,21 +73,20 @@ namespace Mica {
        }
       } catch(Exception) {}
      }
-    });
-    return server;
+    }) {IsBackground=true,Name="Mica launch"};
+    thread.Start();
+    return listener;
    } catch(Exception) {return null;}
   }
  }
  sealed partial class BrowserWindow {
-  Socket launchSocket;
+  Launch.Listener launchSocket;
   internal int broughtToFront;
   void StartLaunchListener() {
    if(Program.Private)return;
    launchSocket=Launch.Listen(profile,delegate(string[] urls) {Dispatcher.UIThread.Post(delegate {HandleLaunch(urls);});});
    Closing+=delegate {
-    var socket=launchSocket;launchSocket=null;if(socket==null)return;
-    System.Threading.Tasks.Task.Run(delegate {try {socket.Close();} catch(Exception) {}}); // Never holds up the window closing.
-    try {string path=Launch.SocketPath(profile);if(path!=null)File.Delete(path);} catch(Exception) {}
+    var listener=launchSocket;launchSocket=null;if(listener!=null)listener.Stop();
    };
    // The links Mica was started with.
    if(Launch.Urls.Count>0)Opened+=delegate {Dispatcher.UIThread.Post(delegate {foreach(var url in Launch.Urls)OpenExternal(url);},DispatcherPriority.Background);};
