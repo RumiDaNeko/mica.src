@@ -48,9 +48,11 @@ namespace Mica {
     server.Bind(new UnixDomainSocketEndPoint(path));
     if(!OperatingSystem.IsWindows())File.SetUnixFileMode(path,UnixFileMode.UserRead|UnixFileMode.UserWrite);
     server.Listen(4);
-    var thread=new Thread(delegate() {
+    // An asynchronous accept: on macOS closing the socket doesn't wake a blocking Accept, and the close
+    // then waits for it forever, so Mica never quits.
+    System.Threading.Tasks.Task.Run(async delegate {
      while(true) {
-      Socket client;try {client=server.Accept();} catch(Exception) {return;} // Closed with the window.
+      Socket client;try {client=await server.AcceptAsync();} catch(Exception) {return;} // Closed with the window.
       try {
        using(client) {
         client.ReceiveTimeout=2000;var bytes=new List<byte>();var buffer=new byte[4096];
@@ -60,8 +62,7 @@ namespace Mica {
        }
       } catch(Exception) {}
      }
-    }) {IsBackground=true,Name="Mica launch"};
-    thread.Start();
+    });
     return server;
    } catch(Exception) {return null;}
   }
@@ -73,8 +74,8 @@ namespace Mica {
    if(Program.Private)return;
    launchSocket=Launch.Listen(profile,delegate(string[] urls) {Dispatcher.UIThread.Post(delegate {HandleLaunch(urls);});});
    Closing+=delegate {
-    if(launchSocket==null)return;
-    try {launchSocket.Close();} catch(Exception) {}
+    var socket=launchSocket;launchSocket=null;if(socket==null)return;
+    System.Threading.Tasks.Task.Run(delegate {try {socket.Close();} catch(Exception) {}}); // Never holds up the window closing.
     try {string path=Launch.SocketPath(profile);if(path!=null)File.Delete(path);} catch(Exception) {}
    };
    // The links Mica was started with.
