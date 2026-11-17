@@ -40,6 +40,10 @@ namespace Mica {
     RegressionCheck("a click outside doesn't cancel a Discord sign-in in progress",delegate {Require(signInCodeWindow!=null&&signInCodeWindow.IsVisible&&!cancelled,"sign-in card closed");});
     close();await Task.Delay(300);
     RegressionCheck("the glass goes when the sign-in card does",delegate {Require(dialogBackdrop==null,"glass left behind");});
+    // A card that grows out of the island (Find, Print, Cast, a page's dialog) gets no glass.
+    System.Windows.Controls.StackPanel toolBody,toolActions;var docked=CreateMicaDialog(window,"Island test card",420,200,out toolBody,out toolActions);DockTool(docked);docked.Show();await Task.Delay(600);
+    RegressionCheck("island cards aren't frosted",delegate {Require(docked.IsVisible&&dialogBackdrop==null,"glass under an island card");});
+    docked.Close();await Task.Delay(200);
    }catch(Exception e){log.Add("ERROR "+e);regressionFailures++;}
    log.Add(regressionFailures==0?"ALL PASS":regressionFailures+" FAILURE(S)");
    File.WriteAllLines(Path.Combine(dir,"result.txt"),log);window.Close();

@@ -181,7 +181,7 @@ namespace Mica {
   // room, and closing runs it backwards into the island. One docked tool at a time.
   Window dockedTool;
   internal void DockToIsland(Window dialog,Border card,FrameworkElement content) {
-   if(dockedTool!=null&&dockedTool!=dialog)dockedTool.Close();dockedTool=dialog;
+   if(dockedTool!=null&&dockedTool!=dialog)dockedTool.Close();dockedTool=dialog;islandCards.Add(dialog);
    dialog.WindowStartupLocation=WindowStartupLocation.Manual;
    Size seed=Size.Empty;bool shrinking=false,shrunk=false,held=false;
    Action position=delegate {

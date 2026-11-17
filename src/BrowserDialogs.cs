@@ -42,11 +42,14 @@ namespace Mica {
   // The glass is a small blurred picture of the window taken once (PrintWindow also catches the web
   // page, which WPF can't draw over), shown in a borderless window between the browser and the dialog.
   internal static readonly System.Collections.Generic.HashSet<Window> stayOnOutsideClick=new System.Collections.Generic.HashSet<Window>();
+  // Cards that grow out of the island (Find, Print, Cast, a page's own dialogs) sit beside the page you're
+  // using, so they get no glass at all.
+  internal static readonly System.Collections.Generic.HashSet<Window> islandCards=new System.Collections.Generic.HashSet<Window>();
   void AddDialogBackdrop(Window dialog,Window owner) {
    if(owner==null||owner!=window||smoke&&!Environment.GetCommandLineArgs().Contains("--backdrop-test"))return;
    Window glass=null;
    dialog.SourceInitialized+=delegate {
-    if(closing||!owner.IsVisible||owner.WindowState==WindowState.Minimized)return;
+    if(closing||islandCards.Contains(dialog)||!owner.IsVisible||owner.WindowState==WindowState.Minimized)return;
     var handle=new System.Windows.Interop.WindowInteropHelper(owner).Handle;var source=PresentationSource.FromVisual(owner);
     BackdropNative.Box box;if(handle==IntPtr.Zero||source==null||!BackdropNative.GetWindowRect(handle,out box))return;
     var toDip=source.CompositionTarget.TransformFromDevice;var topLeft=toDip.Transform(new Point(box.Left,box.Top));var size=toDip.Transform(new Point(box.Right-box.Left,box.Bottom-box.Top));
@@ -68,7 +71,7 @@ namespace Mica {
    };
    // The dialog's see-through margin around its card catches clicks now; there it counts as outside too.
    dialog.MouseLeftButtonDown+=delegate(object sender,MouseButtonEventArgs e) {var card=dialog.Content as UIElement;if(glass==null||card==null||card.IsMouseOver||stayOnOutsideClick.Contains(dialog))return;e.Handled=true;dialog.Close();};
-   dialog.Closed+=delegate {stayOnOutsideClick.Remove(dialog);if(glass!=null){var g=glass;glass=null;if(dialogBackdrop==g)dialogBackdrop=null;g.Close();}};
+   dialog.Closed+=delegate {stayOnOutsideClick.Remove(dialog);islandCards.Remove(dialog);if(glass!=null){var g=glass;glass=null;if(dialogBackdrop==g)dialogBackdrop=null;g.Close();}};
   }
   internal Window dialogBackdrop;
   static System.Windows.Media.Imaging.BitmapSource BlurredOnce(System.Windows.Media.Imaging.BitmapSource picture,double radius) {
